@@ -16,7 +16,8 @@ export const PartnerSchema = z.object({
     status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED']).describe('Status').readonly()
 });
 
-export const partnerJsonSchema = zodToJsonSchema(PartnerSchema as any, 'partnerSchema');
+const generatedSchema = zodToJsonSchema(PartnerSchema as any, 'partnerSchema');
+export const partnerJsonSchema = (generatedSchema as any).definitions.partnerSchema;
 
 export const partnerUiSchema = {
     type: 'VerticalLayout',

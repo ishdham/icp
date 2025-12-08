@@ -13,7 +13,8 @@ export const UserSchema = z.object({
     discoverySource: z.string().optional().describe('Discovery Source')
 });
 
-export const userJsonSchema = zodToJsonSchema(UserSchema as any, 'userSchema');
+const generatedSchema = zodToJsonSchema(UserSchema as any, 'userSchema');
+export const userJsonSchema = (generatedSchema as any).definitions.userSchema;
 
 export const userUiSchema = {
     type: 'VerticalLayout',

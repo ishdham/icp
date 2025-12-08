@@ -17,7 +17,8 @@ export const TicketSchema = z.object({
     })).describe('Comments').readonly().optional()
 });
 
-export const ticketJsonSchema = zodToJsonSchema(TicketSchema as any, 'ticketSchema');
+const generatedSchema = zodToJsonSchema(TicketSchema as any, 'ticketSchema');
+export const ticketJsonSchema = (generatedSchema as any).definitions.ticketSchema;
 
 export const ticketUiSchema = {
     type: 'VerticalLayout',

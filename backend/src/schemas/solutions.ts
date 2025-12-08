@@ -12,7 +12,8 @@ export const SolutionSchema = z.object({
     status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status').readonly()
 });
 
-export const solutionJsonSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');
+const generatedSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');
+export const solutionJsonSchema = (generatedSchema as any).definitions.solutionSchema;
 
 export const solutionUiSchema = {
     type: 'VerticalLayout',
