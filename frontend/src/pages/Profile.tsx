@@ -3,9 +3,11 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
+import { Box, Typography, Container, CircularProgress } from '@mui/material';
 
 const Profile = () => {
     const { user } = useAuth();
+    const { schema: userSchema, uischema: userUiSchema, loading: schemaLoading } = useSchema('user');
     const [profileData, setProfileData] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -43,32 +45,30 @@ const Profile = () => {
         }
     };
 
-    const { schema, uischema, loading: schemaLoading, error: schemaError } = useSchema('user');
+    if (loading || schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+    if (!user) return <Typography p={4}>Please log in.</Typography>;
+    if (!userSchema || !userUiSchema) return <Typography p={4} color="error">Failed to load profile form.</Typography>;
 
-    if (loading || schemaLoading) return <div>Loading...</div>;
-    if (schemaError) return <div className="text-red-500">{schemaError}</div>;
-    if (!user) return <div>Please log in.</div>;
-
-    const profileSchema = schema ? {
-        ...schema,
+    const profileSchema = {
+        ...userSchema,
         properties: {
-            ...schema.properties,
-            role: { ...schema.properties.role, readOnly: true },
-            email: { ...schema.properties.email, readOnly: true }
+            ...userSchema.properties,
+            role: { ...userSchema.properties.role, readOnly: true },
+            email: { ...userSchema.properties.email, readOnly: true }
         }
-    } : {};
+    };
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <Container maxWidth="md">
             <DetailView
                 title="My Profile"
                 data={profileData || {}}
                 schema={profileSchema}
-                uischema={uischema}
+                uischema={userUiSchema}
                 canEdit={true}
                 onSave={handleUpdate}
             />
-        </div>
+        </Container>
     );
 };
 

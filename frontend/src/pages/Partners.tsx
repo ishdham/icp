@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
+import { Chip, Button, Box, CircularProgress } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 
 const Partners = () => {
     const { user } = useAuth();
+    const { schema, uischema, loading: schemaLoading } = useSchema('partner');
     const [partners, setPartners] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
@@ -55,31 +57,28 @@ const Partners = () => {
         }
     };
 
-    const { schema, uischema, loading: schemaLoading, error: schemaError } = useSchema('partner');
-
-    if (schemaLoading) return <div>Loading schema...</div>;
-    if (schemaError) return <div className="text-red-500">{schemaError}</div>;
-
     if (selectedPartner || isCreating) {
+        if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+
         return (
-            <div className="space-y-6">
-                <Link
-                    to="#"
+            <Box>
+                <Button
+                    startIcon={<ArrowBack />}
                     onClick={() => { setSelectedPartner(null); setIsCreating(false); }}
-                    className="text-brand-blue hover:text-brand-blue/80 mb-4 inline-block"
+                    sx={{ mb: 2 }}
                 >
-                    &larr; Back to List
-                </Link>
+                    Back to List
+                </Button>
                 <DetailView
                     title={isCreating ? 'Propose New Partner' : 'Partner Details'}
                     data={selectedPartner || {}}
                     schema={schema}
                     uischema={uischema}
-                    canEdit={!!user} // Allow edit attempt if logged in
+                    canEdit={!!user}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedPartner(null); setIsCreating(false); }}
                 />
-            </div>
+            </Box>
         );
     }
 
@@ -89,14 +88,14 @@ const Partners = () => {
         {
             key: 'status',
             label: 'Status',
-            render: (value: string) => (
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                        value === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {value}
-                </span>
-            )
+            render: (value: string) => {
+                let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
+                if (value === 'APPROVED') color = "success";
+                else if (value === 'REJECTED') color = "error";
+                else if (value === 'PROPOSED') color = "warning";
+
+                return <Chip label={value} color={color} size="small" />;
+            }
         }
     ];
 

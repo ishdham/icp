@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Typography,
+    TextField,
+    Button,
+    Box,
+    InputAdornment,
+    Toolbar
+} from '@mui/material';
+import { Search } from '@mui/icons-material';
 
 interface Column {
     key: string;
@@ -14,7 +29,7 @@ interface ListViewProps {
     onSelect: (item: any) => void;
     onCreate?: () => void;
     loading?: boolean;
-    searchKeys?: string[]; // Keys to search in
+    searchKeys?: string[];
 }
 
 const ListView: React.FC<ListViewProps> = ({
@@ -46,67 +61,94 @@ const ListView: React.FC<ListViewProps> = ({
     }, [searchTerm, items, searchKeys]);
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
+            <Toolbar sx={{ pl: 2, pr: 1 }}>
+                <Typography
+                    sx={{ flex: '1 1 100%' }}
+                    variant="h6"
+                    id="tableTitle"
+                    component="div"
+                >
+                    {title}
+                </Typography>
                 {onCreate && (
-                    <button
-                        onClick={onCreate}
-                        className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
+                    <Button variant="contained" onClick={onCreate}>
                         Create New
-                    </button>
+                    </Button>
                 )}
-            </div>
+            </Toolbar>
 
-            {/* Search Bar */}
-            <div className="relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                </div>
-                <input
-                    type="text"
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+            <Box sx={{ px: 2, pb: 2 }}>
+                <TextField
+                    fullWidth
+                    variant="outlined"
                     placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                    size="small"
+                    sx={{ mb: 2 }}
                 />
-            </div>
+            </Box>
 
-            {/* List */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                    {loading ? (
-                        <li className="px-4 py-4 text-center text-gray-500">Loading...</li>
-                    ) : filteredItems.length === 0 ? (
-                        <li className="px-4 py-4 text-center text-gray-500">No items found.</li>
-                    ) : (
-                        filteredItems.map((item, index) => (
-                            <li
-                                key={item.id || index}
-                                onClick={() => onSelect(item)}
-                                className="hover:bg-gray-50 cursor-pointer transition duration-150 ease-in-out"
-                            >
-                                <div className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
-                                        {columns.map((col, idx) => (
-                                            <div key={col.key} className={`${idx === 0 ? 'flex-1 font-medium text-indigo-600' : 'ml-4 flex-shrink-0 text-gray-500'}`}>
-                                                {col.render ? col.render(item[col.key], item) : item[col.key]}
-                                            </div>
-                                        ))}
-                                        <div className="ml-2 flex-shrink-0">
-                                            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        ))
-                    )}
-                </ul>
-            </div>
-        </div>
+            <TableContainer sx={{ maxHeight: 600 }}>
+                <Table stickyHeader aria-label="sticky table">
+                    <TableHead>
+                        <TableRow>
+                            {columns.map((col) => (
+                                <TableCell key={col.key} sx={{ fontWeight: 'bold' }}>
+                                    {col.label}
+                                </TableCell>
+                            ))}
+                            <TableCell align="right" /> {/* Action column placeholder */}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length + 1} align="center">
+                                    Loading...
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredItems.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={columns.length + 1} align="center">
+                                    No records found
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredItems.map((item, index) => (
+                                <TableRow
+                                    hover
+                                    role="checkbox"
+                                    tabIndex={-1}
+                                    key={item.id || index}
+                                    onClick={() => onSelect(item)}
+                                    sx={{ cursor: 'pointer' }}
+                                >
+                                    {columns.map((col) => (
+                                        <TableCell key={col.key}>
+                                            {col.render ? col.render(item[col.key], item) : item[col.key]}
+                                        </TableCell>
+                                    ))}
+                                    <TableCell align="right">
+                                        <Typography variant="body2" color="primary">
+                                            View
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Paper>
     );
 };
 

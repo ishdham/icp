@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
+import { Chip, Button, Box, Typography, CircularProgress } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 
 const Users = () => {
     const { user } = useAuth();
+    const { schema, uischema, loading: schemaLoading } = useSchema('user');
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -44,25 +46,22 @@ const Users = () => {
         }
     };
 
-    const { schema, uischema, loading: schemaLoading, error: schemaError } = useSchema('user');
-
     if (user?.role !== 'ADMIN') {
-        return <div className="p-4 text-red-500">Unauthorized: Admins only.</div>;
+        return <Typography color="error" sx={{ p: 3 }}>Unauthorized: Admins only.</Typography>;
     }
 
-    if (schemaLoading) return <div>Loading schema...</div>;
-    if (schemaError) return <div className="text-red-500">{schemaError}</div>;
-
     if (selectedUser) {
+        if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+
         return (
-            <div className="space-y-6">
-                <Link to="/" className="text-brand-blue hover:text-brand-blue/80 mb-4 inline-block">&larr; Back to Dashboard</Link>
-                <button
+            <Box>
+                <Button
+                    startIcon={<ArrowBack />}
                     onClick={() => setSelectedUser(null)}
-                    className="text-brand-blue hover:text-brand-blue/80 mb-4" // Changed className as per instruction
+                    sx={{ mb: 2 }}
                 >
-                    &larr; Back to List
-                </button>
+                    Back to List
+                </Button>
                 <DetailView
                     title="User Details"
                     data={selectedUser}
@@ -72,7 +71,7 @@ const Users = () => {
                     onSave={handleUpdate}
                     onCancel={() => setSelectedUser(null)}
                 />
-            </div>
+            </Box>
         );
     }
 
@@ -83,14 +82,13 @@ const Users = () => {
         {
             key: 'role',
             label: 'Role',
-            render: (value: string) => (
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                    value === 'ICP_SUPPORT' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                    }`}>
-                    {value || 'REGULAR'}
-                </span>
-            )
+            render: (value: string) => {
+                let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
+                if (value === 'ADMIN') color = "secondary";
+                else if (value === 'ICP_SUPPORT') color = "primary";
+
+                return <Chip label={value || 'REGULAR'} color={color} size="small" variant={value ? "filled" : "outlined"} />;
+            }
         }
     ];
 

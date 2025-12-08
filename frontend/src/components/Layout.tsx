@@ -1,15 +1,36 @@
-
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
-import { User, LogOut, Settings } from 'lucide-react';
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Button,
+    IconButton,
+    Menu,
+    MenuItem,
+    Container,
+    Box,
+    Avatar
+} from '@mui/material';
+import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon } from '@mui/icons-material';
 
 const Layout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const location = useLocation();
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
     const handleLogout = async () => {
+        handleClose();
         try {
             await logout();
             navigate('/login');
@@ -18,81 +39,112 @@ const Layout = () => {
         }
     };
 
+    const navItems = [
+        { label: 'Dashboard', path: '/' },
+        { label: 'Solutions', path: '/solutions' },
+        { label: 'Partners', path: '/partners' },
+        { label: 'Tickets', path: '/tickets' },
+    ];
+
+    if (user?.role === 'ADMIN') {
+        navItems.push({ label: 'Users', path: '/users' });
+    }
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex">
-                            <div className="flex-shrink-0 flex items-center">
-                                <Link to="/" className="text-xl font-bold text-brand-blue">ICP</Link>
-                            </div>
-                            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                                <Link to="/" className="border-transparent text-gray-500 hover:border-brand-gold hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-                                    Dashboard
-                                </Link>
-                                <Link to="/solutions" className="border-transparent text-gray-500 hover:border-brand-gold hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-                                    Solutions
-                                </Link>
-                                <Link to="/partners" className="border-transparent text-gray-500 hover:border-brand-gold hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-                                    Partners
-                                </Link>
-                                <Link to="/tickets" className="border-transparent text-gray-500 hover:border-brand-gold hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-                                    Tickets
-                                </Link>
-                                {user?.role === 'ADMIN' && (
-                                    <Link to="/users" className="border-transparent text-gray-500 hover:border-brand-gold hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors">
-                                        Users
-                                    </Link>
-                                )}
-                            </div>
-                        </div>
-                        <div className="hidden sm:ml-6 sm:flex sm:items-center">
+        <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="static">
+                <Container maxWidth="xl">
+                    <Toolbar disableGutters>
+                        <DashboardIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+                        <Typography
+                            variant="h6"
+                            noWrap
+                            component={Link}
+                            to="/"
+                            sx={{
+                                mr: 2,
+                                display: { xs: 'none', md: 'flex' },
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                letterSpacing: '.3rem',
+                                color: 'inherit',
+                                textDecoration: 'none',
+                            }}
+                        >
+                            ICP
+                        </Typography>
+
+                        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+                            {navItems.map((item) => (
+                                <Button
+                                    key={item.label}
+                                    component={Link}
+                                    to={item.path}
+                                    sx={{
+                                        my: 2,
+                                        color: 'white',
+                                        display: 'block',
+                                        borderBottom: location.pathname === item.path ? '2px solid white' : 'none',
+                                        borderRadius: 0
+                                    }}
+                                >
+                                    {item.label}
+                                </Button>
+                            ))}
+                        </Box>
+
+                        <Box sx={{ flexGrow: 0 }}>
                             {user ? (
-                                <div className="ml-3 relative">
-                                    <div>
-                                        <button
-                                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                            className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue items-center space-x-2"
-                                        >
-                                            <span className="sr-only">Open user menu</span>
-                                            <div className="h-8 w-8 rounded-full bg-brand-light flex items-center justify-center text-brand-blue">
-                                                <User size={20} />
-                                            </div>
-                                            <span className="text-gray-700 font-medium">{user.email}</span>
-                                        </button>
-                                    </div>
-                                    {isMenuOpen && (
-                                        <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                                            <Link
-                                                to="/profile"
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                                onClick={() => setIsMenuOpen(false)}
-                                            >
-                                                <Settings className="mr-2 h-4 w-4" /> Profile
-                                            </Link>
-                                            <button
-                                                onClick={handleLogout}
-                                                className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                            >
-                                                <LogOut className="mr-2 h-4 w-4" /> Sign out
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                <>
+                                    <IconButton
+                                        size="large"
+                                        aria-label="account of current user"
+                                        aria-controls="menu-appbar"
+                                        aria-haspopup="true"
+                                        onClick={handleMenu}
+                                        color="inherit"
+                                    >
+                                        <AccountCircle />
+                                        <Typography variant="body2" sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
+                                            {user.email}
+                                        </Typography>
+                                    </IconButton>
+                                    <Menu
+                                        id="menu-appbar"
+                                        anchorEl={anchorEl}
+                                        anchorOrigin={{
+                                            vertical: 'top',
+                                            horizontal: 'right',
+                                        }}
+                                        keepMounted
+                                        transformOrigin={{
+                                            vertical: 'top',
+                                            horizontal: 'right',
+                                        }}
+                                        open={Boolean(anchorEl)}
+                                        onClose={handleClose}
+                                    >
+                                        <MenuItem onClick={() => { handleClose(); navigate('/profile'); }}>
+                                            <Settings fontSize="small" sx={{ mr: 1 }} />
+                                            Profile
+                                        </MenuItem>
+                                        <MenuItem onClick={handleLogout}>
+                                            <Logout fontSize="small" sx={{ mr: 1 }} />
+                                            Sign out
+                                        </MenuItem>
+                                    </Menu>
+                                </>
                             ) : (
-                                <Link to="/login" className="text-sm font-medium text-brand-blue hover:text-brand-blue/80">
-                                    Sign in
-                                </Link>
+                                <Button color="inherit" component={Link} to="/login">Login</Button>
                             )}
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                        </Box>
+                    </Toolbar>
+                </Container>
+            </AppBar>
+            <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                 <Outlet />
-            </main>
-        </div>
+            </Container>
+        </Box>
     );
 };
 

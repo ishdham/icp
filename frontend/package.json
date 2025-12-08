@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@jsonforms/core": "^3.7.0",
+    "@jsonforms/material-renderers": "^3.7.0",
     "@jsonforms/react": "^3.7.0",
-    "@jsonforms/vanilla-renderers": "^3.7.0",
+    "@mui/icons-material": "^7.3.6",
+    "@mui/material": "^7.3.6",
     "axios": "^1.13.2",
     "firebase": "^12.6.0",
     "lucide-react": "^0.555.0",

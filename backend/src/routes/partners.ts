@@ -6,6 +6,7 @@ import { z } from 'zod';
 const router = Router();
 
 import { PartnerSchema } from '../schemas/partners';
+import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
 
 // GET /partners - List and Search Partners
 router.get('/', async (req: AuthRequest, res: Response) => {
@@ -58,7 +59,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // Force status to PROPOSED for non-admins
         let initialStatus = data.status;
-        if (req.user?.role !== 'ICP_SUPPORT' && req.user?.role !== 'ADMIN') {
+        if (!canApprovePartner(req.user)) {
             initialStatus = 'PROPOSED';
         }
 
@@ -100,17 +101,30 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 // PUT /partners/:id
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const docRef = db.collection('partners').doc(req.params.id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Partner not found' });
+        }
+
+        const existingPartner = { id: doc.id, ...doc.data() } as any;
+
+        if (!canEditPartner(req.user, existingPartner)) {
+            return res.status(403).json({ error: 'Unauthorized to edit this partner' });
+        }
+
         const data = req.body;
 
         // RBAC: Only Support/Admin can change status
-        if (data.status) {
-            if (req.user?.role !== 'ICP_SUPPORT' && req.user?.role !== 'ADMIN') {
+        if (data.status && data.status !== (existingPartner as any).status) {
+            if (!canApprovePartner(req.user)) {
                 return res.status(403).json({ error: 'Unauthorized to change status' });
             }
         }
 
         // Validate partial update? For now, just update
-        await db.collection('partners').doc(req.params.id).update(data);
+        await docRef.update(data);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });

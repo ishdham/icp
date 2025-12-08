@@ -3,11 +3,13 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
-import { Link } from 'react-router-dom';
 import { useSchema } from '../hooks/useSchema';
+import { Chip, Button, Box, CircularProgress } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 
 const Solutions = () => {
     const { user } = useAuth();
+    const { schema, uischema, loading: schemaLoading } = useSchema('solution');
     const [solutions, setSolutions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedSolution, setSelectedSolution] = useState<any | null>(null);
@@ -29,8 +31,6 @@ const Solutions = () => {
         fetchSolutions();
     }, []);
 
-    const { schema, uischema, loading: schemaLoading, error: schemaError } = useSchema('solution');
-
     const handleCreate = async (data: any) => {
         try {
             await client.post('/solutions', { ...data, status: 'DRAFT' });
@@ -46,7 +46,6 @@ const Solutions = () => {
     const handleUpdate = async (data: any) => {
         if (!selectedSolution?.id) return;
         try {
-            // Remove read-only fields if necessary, or backend handles it
             const { id, ...updateData } = data;
             await client.put(`/solutions/${selectedSolution.id}`, updateData);
             setSelectedSolution(null);
@@ -58,24 +57,28 @@ const Solutions = () => {
         }
     };
 
-    if (schemaLoading) return <div>Loading schema...</div>;
-    if (schemaError) return <div className="text-red-500">{schemaError}</div>;
-
     if (selectedSolution || isCreating) {
+        if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
+
         return (
-            <div className="space-y-6">
-                <Link to="/" className="text-brand-blue hover:text-brand-blue/80 mb-4 inline-block">&larr; Back to Dashboard</Link>
+            <Box>
+                <Button
+                    startIcon={<ArrowBack />}
+                    onClick={() => { setSelectedSolution(null); setIsCreating(false); }}
+                    sx={{ mb: 2 }}
+                >
+                    Back to List
+                </Button>
                 <DetailView
                     title={isCreating ? 'Submit New Solution' : 'Solution Details'}
                     data={selectedSolution || {}}
                     schema={schema}
                     uischema={uischema}
-                    readOnly={!isCreating && !user}
                     canEdit={!!user}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedSolution(null); setIsCreating(false); }}
                 />
-            </div>
+            </Box>
         );
     }
 
@@ -85,14 +88,15 @@ const Solutions = () => {
         {
             key: 'status',
             label: 'Status',
-            render: (value: string) => (
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${value === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                    value === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {value}
-                </span>
-            )
+            render: (value: string) => {
+                let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
+                if (value === 'APPROVED' || value === 'MATURE') color = "success";
+                else if (value === 'REJECTED') color = "error";
+                else if (value === 'PENDING' || value === 'DRAFT') color = "warning";
+                else if (value === 'PILOT') color = "info";
+
+                return <Chip label={value} color={color} size="small" />;
+            }
         }
     ];
 

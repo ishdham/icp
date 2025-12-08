@@ -7,6 +7,7 @@ import { z } from 'zod';
 const router = Router();
 
 import { TicketSchema } from '../schemas/tickets';
+import { canSeeTickets, canEditTickets } from '../../../shared/permissions';
 
 const StatusUpdateSchema = z.object({
     status: z.enum(['NEW', 'WIP', 'PENDING', 'RESOLVED', 'REJECTED_NO_RESOLUTION', 'CLOSED']),
@@ -28,7 +29,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             // The requirement says "assigned to the logged-in user".
             // Let's assume there's an 'assignedToUserId' field.
             query = query.where('assignedToUserId', '==', req.user.uid);
-        } else if (req.user?.role !== 'ICP_SUPPORT' && req.user?.role !== 'ADMIN') {
+        } else if (!canSeeTickets(req.user)) {
             // Regular users should only see their own tickets
             query = query.where('createdByUserId', '==', req.user?.uid);
         }
@@ -81,6 +82,13 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
         if (!ticketDoc.exists) {
             res.status(404).json({ error: 'Ticket not found' });
             return;
+        }
+
+        if (!canEditTickets(req.user)) {
+            // Optionally, allow creator to close/cancel? For now, imply only mods manage status.
+            // Or maybe check if (ticketDoc.data().createdBy === req.user.uid && status === 'CLOSED')?
+            // Sticking to strict moderator check for now as requested "specific helpers".
+            return res.status(403).json({ error: 'Unauthorized to update ticket status' });
         }
 
         // Add comment to history

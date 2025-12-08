@@ -6,6 +6,7 @@ import { z } from 'zod';
 const router = Router();
 
 import { SolutionSchema } from '../schemas/solutions';
+import { isModerator, canApproveSolution, canEditSolution } from '../../../shared/permissions';
 
 // GET /solutions - Search and Filter
 router.get('/', async (req: AuthRequest, res: Response) => {
@@ -62,7 +63,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // RBAC: Regular users can only create DRAFT or PENDING solutions
         let initialStatus = data.status;
-        if (req.user?.role !== 'ICP_SUPPORT' && req.user?.role !== 'ADMIN') {
+        if (!canApproveSolution(req.user)) {
             if (initialStatus === 'APPROVED' || initialStatus === 'MATURE' || initialStatus === 'PILOT') {
                 initialStatus = 'PENDING'; // Force to PENDING if they try to set it to public
             }
@@ -121,9 +122,29 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // PUT /solutions/:id
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        // Ideally check ownership here
-        const data = req.body; // Partial update allowed? Or full?
-        await db.collection('solutions').doc(req.params.id).update(data);
+        const docRef = db.collection('solutions').doc(req.params.id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Solution not found' });
+        }
+
+        const existingSolution = { id: doc.id, ...doc.data() } as any;
+
+        if (!canEditSolution(req.user, existingSolution)) {
+            return res.status(403).json({ error: 'Unauthorized to edit this solution' });
+        }
+
+        const data = req.body;
+
+        // Prevent status change if not authorized
+        if (data.status && data.status !== existingSolution.status) {
+            if (!canApproveSolution(req.user)) {
+                return res.status(403).json({ error: 'Unauthorized to change status' });
+            }
+        }
+
+        await docRef.update(data);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });

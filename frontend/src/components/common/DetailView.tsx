@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import JsonForm from './JsonForm';
+import { JsonForms } from '@jsonforms/react';
+import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
+import {
+    Button,
+    Paper,
+    Typography,
+    Box,
+    Toolbar,
+    AppBar
+} from '@mui/material';
 
 interface DetailViewProps {
     title: string;
@@ -23,7 +32,7 @@ const DetailView: React.FC<DetailViewProps> = ({
     canEdit = false
 }) => {
     const [data, setData] = useState(initialData);
-    const [isEditing, setIsEditing] = useState(!readOnly && !initialData.id); // Default to edit if creating new (no ID)
+    const [isEditing, setIsEditing] = useState(!readOnly && !initialData.id);
     const [errors, setErrors] = useState<any[]>([]);
 
     const handleSave = async () => {
@@ -39,54 +48,63 @@ const DetailView: React.FC<DetailViewProps> = ({
     };
 
     return (
-        <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">{title}</h3>
-                <div className="flex space-x-3">
-                    {canEdit && !isEditing && (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                        >
-                            Edit
-                        </button>
-                    )}
-                    {isEditing && (
-                        <>
-                            <button
-                                onClick={() => {
-                                    setIsEditing(false);
-                                    setData(initialData);
-                                    if (onCancel) onCancel();
-                                }}
-                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+        <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: 2 }}>
+            <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}>
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        {title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        {canEdit && !isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => setIsEditing(true)}
                             >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={errors.length > 0}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-                            >
-                                Save
-                            </button>
-                        </>
-                    )}
-                </div>
-            </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-                <JsonForm
+                                Edit
+                            </Button>
+                        )}
+                        {isEditing && (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setData(initialData);
+                                        if (onCancel) onCancel();
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleSave}
+                                    disabled={errors.length > 0}
+                                >
+                                    Save
+                                </Button>
+                            </>
+                        )}
+                    </Box>
+                </Toolbar>
+            </AppBar>
+            <Box sx={{ p: 3 }}>
+                <JsonForms
                     schema={schema}
                     uischema={uischema}
                     data={data}
+                    renderers={materialRenderers}
+                    cells={materialCells}
                     onChange={({ data, errors }) => {
                         setData(data);
                         setErrors(errors || []);
                     }}
                     readonly={!isEditing}
                 />
-            </div>
-        </div>
+            </Box>
+        </Paper>
     );
 };
 

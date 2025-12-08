@@ -1,35 +1,35 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
 
-interface UseSchemaResult {
+interface SchemaData {
     schema: any;
     uischema: any;
-    loading: boolean;
-    error: string | null;
 }
 
-export const useSchema = (type: string): UseSchemaResult => {
-    const [schema, setSchema] = useState<any>(null);
-    const [uischema, setUischema] = useState<any>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+export const useSchema = (type: string) => {
+    const [schemaData, setSchemaData] = useState<SchemaData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         const fetchSchema = async () => {
+            setLoading(true);
             try {
                 const response = await client.get(`/schemas/${type}`);
-                setSchema(response.data.schema);
-                setUischema(response.data.uischema);
+                setSchemaData(response.data);
+                setError(null);
             } catch (err: any) {
                 console.error(`Error fetching schema for ${type}:`, err);
-                setError(err.message || 'Failed to fetch schema');
+                setError(err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchSchema();
+        if (type) {
+            fetchSchema();
+        }
     }, [type]);
 
-    return { schema, uischema, loading, error };
+    return { ...schemaData, loading, error };
 };
