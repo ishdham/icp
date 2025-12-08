@@ -1,6 +1,6 @@
 import React from 'react';
 import { JsonForms } from '@jsonforms/react';
-import { vanillaRenderers, vanillaCells } from '@jsonforms/vanilla-renderers';
+import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
 
 interface JsonFormProps {
     data: any;
@@ -16,8 +16,8 @@ const JsonForm: React.FC<JsonFormProps> = ({
     data,
     schema,
     uischema,
-    renderers = vanillaRenderers,
-    cells = vanillaCells,
+    renderers = materialRenderers,
+    cells = materialCells,
     onChange,
     readonly
 }) => {

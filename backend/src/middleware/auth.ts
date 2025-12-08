@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { auth } from '../config/firebase';
+import { auth, db } from '../config/firebase';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -21,10 +21,13 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
     try {
         const decodedToken = await auth.verifyIdToken(token);
+        const validUser = await db.collection('users').doc(decodedToken.uid).get();
+        const userData = validUser.data();
+
         req.user = {
             uid: decodedToken.uid,
             email: decodedToken.email,
-            role: decodedToken.role,
+            role: userData?.role || 'REGULAR',
         };
         next();
     } catch (error) {

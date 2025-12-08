@@ -62,36 +62,50 @@ To run the full stack locally:
     npm run build
     ```
 
-### Utility Scripts (`backend/scripts`)
+## Technical Architecture
 
-These scripts help with data management and administration. Run them from the `backend/` directory using `npx ts-node`.
+### Frontend
+*   **Framework**: React (Vite) + TypeScript
+*   **UI Library**: **Material UI (MUI)**. Chosen for its robust component ecosystem, accessibility compliance, and professional aesthetic ("Google Material Design").
+*   **Form Management**: **JSON Forms**. Renders forms dynamically based on JSON Schemas fetched from the backend, ensuring a Single Source of Truth for data validation.
+*   **State Management**: React Context (`AuthContext`) for user state.
+
+### Backend
+*   **Runtime**: Node.js + Express
+*   **Database**: Firestore (NoSQL)
+*   **Authentication**: Firebase Admin SDK
+
+### Shared Architecture (Single Source of Truth)
+
+#### 1. Schema Sharing
+To ensure consistency between Backend validation and Frontend UI rendering, JSON Schemas are stored centrally in the Backend and served via API.
+*   **Backend**: validation middleware uses these schemas to validate requests.
+*   **Frontend**: `useSchema` hook fetches schemas from `/v1/schemas/:type` to render forms using JSON Forms.
+*   **Benefit**: Updating a schema in the backend automatically updates the frontend form validation and UI structure.
+
+#### 2. Permission Sharing (RBAC)
+Role-Based Access Control (RBAC) is enforced using **Firebase Custom Claims**.
+*   **Backend**: responsible for assigning roles (e.g., `ADMIN`) via Admin SDK (`setAdmin` script or API). Middleware checks `req.user.role` to authorize routes.
+*   **Frontend**: `AuthContext` decodes the Firebase ID Token to extract custom claims. The UI conditionally renders elements (e.g., "Users" menu, "Approve" buttons) based on the user's role.
+
+## Utility Scripts (`backend/scripts`)
+
+You can manage the system using these scripts:
 
 #### 1. Promote User to Admin
-Grant full administrative privileges to a registered user.
 ```bash
 npx ts-node scripts/setAdmin.ts <email_address>
 ```
+*Note: Make sure your backend `.env` variables (or Firebase credentials) match the project used by the frontend.*
 
-#### 2. Seed Database
-Populate Firestore with sample data (Users, Partners, Solutions, Tickets).
+#### 2. Create Admin User (Programmatic)
+If user does not exist, this creates a new user with ADMIN role:
+```bash
+npx ts-node scripts/createAdmin.ts
+```
+
+#### 3. Seed Database
+Populate Firestore with sample data:
 ```bash
 npx ts-node scripts/seed_all.ts
-```
-
-#### 3. Seed Users Only
-Generate sample users with different roles.
-```bash
-npx ts-node scripts/seed_users.ts
-```
-
-#### 4. Manage Custom Claims
-Manually set custom claims (like roles) for a specific UID.
-```bash
-npx ts-node scripts/set_claims.ts <uid> <claim_key> <claim_value>
-```
-
-#### 5. Generate Admin Token
-Generate an ID token for testing purposes (requires service account setup).
-```bash
-npx ts-node scripts/generate_token_admin.ts
 ```
