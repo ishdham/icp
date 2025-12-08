@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const SolutionSchema = z.object({
+    id: z.string().describe('ID').readonly().optional(),
+    providerId: z.string().describe('Provider ID').readonly().optional(),
+    createdAt: z.string().describe('Created At').readonly().optional(),
+    updatedAt: z.string().describe('Updated At').readonly().optional(),
     name: z.string().min(3).describe('Solution Name'),
     description: z.string().describe('Description'),
     domain: z.enum(['Water', 'Health', 'Energy', 'Education', 'Livelihood', 'Sustainability']).describe('Domain'),
@@ -9,7 +13,7 @@ export const SolutionSchema = z.object({
     uniqueValueProposition: z.string().describe('Unique Value Proposition'),
     launchYear: z.number().int().optional().describe('Launch Year'),
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
-    status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status').readonly()
+    status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
 });
 
 const generatedSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');
@@ -55,10 +59,7 @@ export const solutionUiSchema = {
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/status',
-                    options: {
-                        readonly: true
-                    }
+                    scope: '#/properties/status'
                 }
             ]
         },

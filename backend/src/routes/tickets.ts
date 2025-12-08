@@ -126,3 +126,34 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
 });
 
 export default router;
+
+// PUT /tickets/:id
+router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const docRef = db.collection('tickets').doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        if (!canEditTickets(req.user)) {
+            return res.status(403).json({ error: 'Unauthorized to edit tickets' });
+        }
+
+        const data = req.body;
+        // Don't allow changing sensitive fields via this endpoint
+        delete data.id;
+        delete data.ticketId;
+        delete data.createdByUserId;
+        delete data.createdAt;
+        delete data.status; // Status should be changed via PATCH /status
+
+        await docRef.update(data);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating ticket:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});

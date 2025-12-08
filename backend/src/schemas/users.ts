@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const UserSchema = z.object({
+    id: z.string().describe('ID').readonly().optional(),
+    uid: z.string().describe('UID').readonly().optional(),
+    createdAt: z.string().describe('Created At').readonly().optional(),
+    updatedAt: z.string().describe('Updated At').readonly().optional(),
     firstName: z.string().describe('First Name'),
     lastName: z.string().describe('Last Name'),
     email: z.string().email().describe('Email').readonly(),
@@ -10,7 +14,11 @@ export const UserSchema = z.object({
         countryCode: z.string().optional().describe('Country Code'),
         number: z.string().optional().describe('Number')
     }).optional().describe('Phone'),
-    discoverySource: z.string().optional().describe('Discovery Source')
+    discoverySource: z.string().optional().describe('Discovery Source'),
+    bookmarks: z.array(z.object({
+        solutionId: z.string(),
+        bookmarkedAt: z.string().optional()
+    })).optional().describe('Bookmarks')
 });
 
 const generatedSchema = zodToJsonSchema(UserSchema as any, 'userSchema');

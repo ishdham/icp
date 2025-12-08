@@ -20,9 +20,18 @@ describe('ICP AI API', () => {
         require('../services/ai').generateContent.mockReset();
     });
 
+    const mockAuthUser = (uid: string) => {
+        mockVerifyIdToken.mockResolvedValue({ uid, email: `${uid}@example.com`, role: 'REGULAR' });
+        // Mock Firestore User Doc Get for authenticate middleware
+        require('./mocks').mockGet.mockResolvedValueOnce({
+            exists: true,
+            data: () => ({ uid, role: 'REGULAR' })
+        });
+    };
+
     describe('POST /v1/ai/chat', () => {
         it('should return generated content', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
+            mockAuthUser('user123');
             const mockGenerate = require('../services/ai').generateContent;
             mockGenerate.mockResolvedValue('Mocked AI response');
 
@@ -36,7 +45,7 @@ describe('ICP AI API', () => {
         });
 
         it('should return 400 for invalid input', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
+            mockAuthUser('user123');
 
             const res = await request(app)
                 .post('/v1/ai/chat')

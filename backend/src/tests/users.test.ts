@@ -59,11 +59,20 @@ describe('ICP User API', () => {
     describe('GET /v1/users/:id', () => {
         it('should allow admin to view any user', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
-            mockGet.mockResolvedValue({
-                exists: true,
-                id: 'other456',
-                data: () => ({ firstName: 'Other' })
-            });
+
+            // First call for authenticate (admin user)
+            // Second call for route handler (target user)
+            mockGet
+                .mockResolvedValueOnce({
+                    exists: true,
+                    id: 'admin123',
+                    data: () => ({ role: 'ADMIN' })
+                })
+                .mockResolvedValueOnce({
+                    exists: true,
+                    id: 'other456',
+                    data: () => ({ firstName: 'Other' })
+                });
 
             const res = await request(app)
                 .get('/v1/users/other456')
@@ -76,6 +85,13 @@ describe('ICP User API', () => {
         it('should prevent regular user from viewing others', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
 
+            // Only used for authenticate
+            mockGet.mockResolvedValue({
+                exists: true,
+                id: 'user123',
+                data: () => ({ role: 'REGULAR' })
+            });
+
             const res = await request(app)
                 .get('/v1/users/other456')
                 .set('Authorization', 'Bearer token');
@@ -87,12 +103,20 @@ describe('ICP User API', () => {
     describe('GET /v1/users', () => {
         it('should list users for admin', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
-            mockGet.mockResolvedValue({
-                docs: [
-                    { id: 'u1', data: () => ({ email: 'u1@example.com' }) },
-                    { id: 'u2', data: () => ({ email: 'u2@example.com' }) }
-                ]
-            });
+
+            // First for authenticate, Second for query
+            mockGet
+                .mockResolvedValueOnce({
+                    exists: true,
+                    id: 'admin123',
+                    data: () => ({ role: 'ADMIN' })
+                })
+                .mockResolvedValueOnce({
+                    docs: [
+                        { id: 'u1', data: () => ({ email: 'u1@example.com' }) },
+                        { id: 'u2', data: () => ({ email: 'u2@example.com' }) }
+                    ]
+                });
 
             const res = await request(app)
                 .get('/v1/users')
@@ -105,6 +129,13 @@ describe('ICP User API', () => {
         it('should return 403 for non-admin', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
 
+            // Authenticate user
+            mockGet.mockResolvedValue({
+                exists: true,
+                id: 'user123',
+                data: () => ({ role: 'REGULAR' })
+            });
+
             const res = await request(app)
                 .get('/v1/users')
                 .set('Authorization', 'Bearer token');
@@ -116,6 +147,13 @@ describe('ICP User API', () => {
     describe('POST /v1/users/me/bookmarks', () => {
         it('should add bookmark', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
+
+            // For authenticate
+            mockGet.mockResolvedValue({
+                exists: true,
+                id: 'user123',
+                data: () => ({ role: 'REGULAR', bookmarks: [] })
+            });
 
             const res = await request(app)
                 .post('/v1/users/me/bookmarks')

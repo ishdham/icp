@@ -13,6 +13,15 @@ describe('ICP Backend API', () => {
         resetMocks();
     });
 
+    const mockAuthUser = (uid: string, role: string = 'REGULAR') => {
+        mockVerifyIdToken.mockResolvedValue({ uid, email: `${uid}@example.com`, role });
+        // Mock Firestore User Doc Get for authenticate middleware
+        mockGet.mockResolvedValueOnce({
+            exists: true,
+            data: () => ({ uid, role })
+        });
+    };
+
     describe('GET /v1/solutions', () => {
         it('should return a list of solutions', async () => {
             // Mock Firestore response
@@ -33,8 +42,7 @@ describe('ICP Backend API', () => {
 
     describe('POST /v1/solutions', () => {
         it('should create a solution when authenticated', async () => {
-            // Mock Auth
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', email: 'test@example.com' });
+            mockAuthUser('user123', 'REGULAR');
 
             // Mock Firestore Add
             mockAdd.mockResolvedValue({
@@ -61,7 +69,7 @@ describe('ICP Backend API', () => {
         });
 
         it('should force status to PENDING and create a ticket for regular users', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', email: 'regular@example.com', role: 'REGULAR' });
+            mockAuthUser('user123', 'REGULAR');
 
             mockAdd.mockResolvedValue({
                 id: 'new-sol-id',
@@ -96,7 +104,7 @@ describe('ICP Backend API', () => {
         });
 
         it('should allow ADMIN to create APPROVED solution without ticket', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', email: 'admin@example.com', role: 'ADMIN' });
+            mockAuthUser('admin123', 'ADMIN');
 
             mockAdd.mockResolvedValue({
                 id: 'admin-sol-id',
@@ -120,9 +128,6 @@ describe('ICP Backend API', () => {
                 status: 'APPROVED'
             }));
 
-            // Should NOT create a ticket (mockAdd called only once for solution)
-            // Note: In our current mock setup, we can't easily count calls per collection without more complex mocks.
-            // But we can check that it wasn't called with type: 'SOLUTION_APPROVAL'
             expect(mockAdd).not.toHaveBeenCalledWith(expect.objectContaining({
                 type: 'SOLUTION_APPROVAL'
             }));
@@ -139,12 +144,17 @@ describe('ICP Backend API', () => {
 
     describe('GET /v1/tickets', () => {
         it('should return tickets for authenticated user', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
-            mockGet.mockResolvedValue({
-                docs: [
-                    { id: 't1', data: () => ({ title: 'Fix Bug', status: 'NEW' }) }
-                ]
-            });
+            // Setup Auth User (MockGet call 1)
+            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', email: 'user@example.com', role: 'REGULAR' });
+
+            // Chain mockGet: 1. User Doc, 2. Tickets query result
+            mockGet
+                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'REGULAR' }) }) // Auth
+                .mockResolvedValueOnce({ // Ticket Query
+                    docs: [
+                        { id: 't1', data: () => ({ title: 'Fix Bug', status: 'NEW' }) }
+                    ]
+                });
 
             const res = await request(app)
                 .get('/v1/tickets')
@@ -159,15 +169,17 @@ describe('ICP Backend API', () => {
         it('should approve solution when ticket is RESOLVED', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'support123', role: 'ICP_SUPPORT' });
 
-            // Mock Ticket Get
-            mockGet.mockResolvedValue({
-                exists: true,
-                data: () => ({
-                    type: 'SOLUTION_APPROVAL',
-                    solutionId: 'sol-123',
-                    status: 'NEW'
-                })
-            });
+            // Chain mockGet: 1. User Doc (Auth), 2. Ticket Doc (Route)
+            mockGet
+                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'ICP_SUPPORT' }) }) // Auth
+                .mockResolvedValueOnce({ // Ticket Doc
+                    exists: true,
+                    data: () => ({
+                        type: 'SOLUTION_APPROVAL',
+                        solutionId: 'sol-123',
+                        status: 'NEW'
+                    })
+                });
 
             const res = await request(app)
                 .patch('/v1/tickets/t1/status')
@@ -199,13 +211,16 @@ describe('ICP Backend API', () => {
                     phone: { number: '1234567890' }
                 });
 
-            expect(res.status).toBe(200);
+            expect(res.status).toBe(201);
         });
     });
 
     describe('POST /v1/partners', () => {
         it('should force status to PROPOSED and create ticket for regular users', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
+
+            // Auth User
+            mockGet.mockResolvedValueOnce({ exists: true, data: () => ({ role: 'REGULAR' }) });
 
             mockAdd.mockResolvedValue({
                 id: 'p1',
@@ -237,6 +252,13 @@ describe('ICP Backend API', () => {
         it('should prevent regular users from updating status', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
 
+            mockGet
+                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'REGULAR' }) }) // Auth
+                .mockResolvedValueOnce({ // Partner Doc
+                    exists: true,
+                    data: () => ({ status: 'PROPOSED' })
+                });
+
             const res = await request(app)
                 .put('/v1/partners/p1')
                 .set('Authorization', 'Bearer token')
@@ -249,6 +271,13 @@ describe('ICP Backend API', () => {
 
         it('should allow ADMIN to update status', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
+
+            mockGet
+                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'ADMIN' }) }) // Auth
+                .mockResolvedValueOnce({ // Partner Doc
+                    exists: true,
+                    data: () => ({ status: 'PROPOSED' })
+                });
 
             const res = await request(app)
                 .put('/v1/partners/p1')

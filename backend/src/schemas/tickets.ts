@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const TicketSchema = z.object({
+    id: z.string().describe('ID').readonly().optional(),
+    createdByUserId: z.string().describe('Creator ID').readonly().optional(),
+    createdAt: z.string().describe('Created At').readonly().optional(),
+    updatedAt: z.string().describe('Updated At').readonly().optional(),
     title: z.string().describe('Title'),
     description: z.string().describe('Description'),
     type: z.enum([
@@ -9,7 +13,7 @@ export const TicketSchema = z.object({
         'TRAINING', 'SUCCESS_STORIES', 'PARTNER_INFO', 'USER_GROUP_CHANGE',
         'PARTNER_CONNECT', 'SOLUTION_VALIDATION', 'SOLUTION_APPROVAL', 'PARTNER_APPROVAL'
     ]).describe('Ticket Type'),
-    status: z.enum(['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']).describe('Status').readonly(),
+    status: z.enum(['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']).describe('Status'),
     comments: z.array(z.object({
         content: z.string().describe('Message'),
         createdAt: z.string().datetime().describe('Date'),
@@ -31,7 +35,7 @@ export const ticketUiSchema = {
             type: 'HorizontalLayout',
             elements: [
                 { type: 'Control', scope: '#/properties/type' },
-                { type: 'Control', scope: '#/properties/status', options: { readonly: true } }
+                { type: 'Control', scope: '#/properties/status' }
             ]
         },
         {

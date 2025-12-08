@@ -36,10 +36,54 @@ const DetailView: React.FC<DetailViewProps> = ({
     const [errors, setErrors] = useState<any[]>([]);
 
     const handleSave = async () => {
+        let currentData = data;
+        const additionalErrors = errors.filter(e => e.keyword === 'additionalProperties');
+
+        if (additionalErrors.length > 0) {
+            const props = additionalErrors.map(e => e.params.additionalProperty).join(', ');
+            if (window.confirm(`The following extra fields were found: ${props}.\nDo you want to remove them and save?`)) {
+                // Clone data to avoid mutating state directly
+                const newData = JSON.parse(JSON.stringify(data));
+
+                // Remove the extra properties
+                additionalErrors.forEach(error => {
+                    const path = error.instancePath.split('/').filter((p: string) => p);
+                    let target = newData;
+                    // Navigate to the object containing the property
+                    for (const segment of path) {
+                        if (target && target[segment]) {
+                            target = target[segment];
+                        }
+                    }
+                    // Delete the property
+                    if (target && typeof target === 'object') {
+                        delete target[error.params.additionalProperty];
+                    }
+                });
+
+                currentData = newData;
+
+                // If there are other errors besides additionalProperties, update state and stop
+                if (errors.length > additionalErrors.length) {
+                    setData(currentData);
+                    alert("Extra fields removed, but other validation errors remain. Please fix them.");
+                    return;
+                }
+            } else {
+                return; // User cancelled
+            }
+        } else if (errors.length > 0) {
+            const errorMessages = errors.map(e => `${e.instancePath || 'Form'} ${e.message}`).join('\n');
+            alert(`Please fix the following validation errors:\n${errorMessages}`);
+            return;
+        }
+
         if (onSave) {
             try {
-                await onSave(data);
+                await onSave(currentData);
                 setIsEditing(false);
+                // Update local state with the cleaned data
+                setData(currentData);
             } catch (error) {
                 console.error("Save failed", error);
                 alert("Failed to save changes.");
@@ -72,7 +116,8 @@ const DetailView: React.FC<DetailViewProps> = ({
                                     onClick={() => {
                                         setIsEditing(false);
                                         setData(initialData);
-                                        if (onCancel) onCancel();
+                                        // Only close the view if we are creating a new item
+                                        if (!initialData.id && onCancel) onCancel();
                                     }}
                                 >
                                     Cancel
@@ -81,7 +126,6 @@ const DetailView: React.FC<DetailViewProps> = ({
                                     variant="contained"
                                     color="primary"
                                     onClick={handleSave}
-                                    disabled={errors.length > 0}
                                 >
                                     Save
                                 </Button>

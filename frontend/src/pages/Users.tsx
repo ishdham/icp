@@ -6,6 +6,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, Typography, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
+import { canSeeUsers, canEditUsers } from '../utils/permissions';
 
 const Users = () => {
     const { user } = useAuth();
@@ -27,7 +28,7 @@ const Users = () => {
     };
 
     useEffect(() => {
-        if (user?.role === 'ADMIN') {
+        if (canSeeUsers(user)) {
             fetchUsers();
         }
     }, [user]);
@@ -46,7 +47,7 @@ const Users = () => {
         }
     };
 
-    if (user?.role !== 'ADMIN') {
+    if (!canSeeUsers(user)) {
         return <Typography color="error" sx={{ p: 3 }}>Unauthorized: Admins only.</Typography>;
     }
 
@@ -67,7 +68,7 @@ const Users = () => {
                     data={selectedUser}
                     schema={schema}
                     uischema={uischema}
-                    canEdit={true}
+                    canEdit={canEditUsers(user)}
                     onSave={handleUpdate}
                     onCancel={() => setSelectedUser(null)}
                 />

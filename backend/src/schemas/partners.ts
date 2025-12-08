@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const PartnerSchema = z.object({
+    id: z.string().describe('ID').readonly().optional(),
+    proposedByUserId: z.string().describe('Proposer ID').readonly().optional(),
+    createdAt: z.string().describe('Created At').readonly().optional(),
+    updatedAt: z.string().describe('Updated At').readonly().optional(),
     organizationName: z.string().min(3).describe('Organization Name'),
     entityType: z.enum(['NGO', 'Social Impact Entity', 'Academic', 'Corporate']).describe('Entity Type'),
     websiteUrl: z.string().url().optional().describe('Website URL'),
@@ -13,7 +17,7 @@ export const PartnerSchema = z.object({
         city: z.string().optional().describe('City'),
         country: z.string().optional().describe('Country')
     }).optional().describe('Address'),
-    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED']).describe('Status').readonly()
+    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED']).describe('Status')
 });
 
 const generatedSchema = zodToJsonSchema(PartnerSchema as any, 'partnerSchema');
@@ -35,8 +39,7 @@ export const partnerUiSchema = {
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/status',
-                    options: { readonly: true }
+                    scope: '#/properties/status'
                 }
             ]
         },

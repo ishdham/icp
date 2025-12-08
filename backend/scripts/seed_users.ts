@@ -67,9 +67,23 @@ async function seedUsers() {
                             displayName: `${user.firstName} ${user.lastName}`,
                             emailVerified: true
                         });
+                        console.log(`Setting custom claims for ${user.email} with role ${user.role}`);
+                        await auth.setCustomUserClaims(user.uid, { role: user.role });
                     } else {
                         throw e;
                     }
+                }
+            }
+
+            // Ensure claims are set even if user already exists (important for fixing existing users)
+            if (password) {
+                try {
+                    // We might have already set it above if new, but setting it again is safe/idempotent
+                    // optimize: checking if claims are already set would be better but this is a seed script
+                    console.log(`Ensuring custom claims for ${user.email} with role ${user.role}`);
+                    await auth.setCustomUserClaims(user.uid, { role: user.role });
+                } catch (e) {
+                    console.error(`Failed to set claims for ${user.email}:`, e);
                 }
             }
 

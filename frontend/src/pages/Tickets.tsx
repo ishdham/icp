@@ -6,6 +6,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
+import { canEditTickets } from '../utils/permissions';
 
 const Tickets = () => {
     const { user } = useAuth();
@@ -46,6 +47,20 @@ const Tickets = () => {
         }
     };
 
+    const handleUpdate = async (data: any) => {
+        if (!selectedTicket?.id) return;
+        try {
+            const { id, ...updateData } = data;
+            await client.put(`/tickets/${selectedTicket.id}`, updateData);
+            setSelectedTicket(null);
+            fetchTickets();
+            alert('Ticket updated successfully!');
+        } catch (error) {
+            console.error('Error updating ticket:', error);
+            alert('Failed to update ticket.');
+        }
+    };
+
     const canApprove = (user?.role === 'ADMIN' || user?.role === 'ICP_SUPPORT') &&
         selectedTicket?.status !== 'RESOLVED' &&
         (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
@@ -77,8 +92,10 @@ const Tickets = () => {
                     data={selectedTicket}
                     schema={schema}
                     uischema={uischema}
-                    readOnly={true}
-                    canEdit={false}
+                    readOnly={false}
+                    canEdit={canEditTickets(user)}
+                    onSave={handleUpdate}
+                    onCancel={() => setSelectedTicket(null)}
                 />
             </Box>
         );

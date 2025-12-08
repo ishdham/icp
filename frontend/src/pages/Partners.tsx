@@ -6,6 +6,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
+import { canEditPartner } from '../utils/permissions';
 
 const Partners = () => {
     const { user } = useAuth();
@@ -74,7 +75,7 @@ const Partners = () => {
                     data={selectedPartner || {}}
                     schema={schema}
                     uischema={uischema}
-                    canEdit={!!user}
+                    canEdit={isCreating ? false : canEditPartner(user, selectedPartner)}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedPartner(null); setIsCreating(false); }}
                 />

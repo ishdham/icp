@@ -17,15 +17,14 @@ describe('ICP Schema API', () => {
             expect(res.body).toHaveProperty('schema');
             expect(res.body).toHaveProperty('uischema');
             // zod-to-json-schema returns a structure with definitions and a $ref at the root
-            expect(res.body.schema).toHaveProperty('definitions');
-            expect(res.body.schema).toHaveProperty('$ref');
+            expect(res.body.schema).toHaveProperty('properties');
+            expect(res.body.schema).toHaveProperty('type', 'object');
         });
 
         it('should return partner schema', async () => {
             const res = await request(app).get('/v1/schemas/partner');
             expect(res.status).toBe(200);
-            expect(res.body.schema).toHaveProperty('definitions');
-            expect(res.body.schema.definitions).toHaveProperty('partnerSchema');
+            expect(res.body.schema).toHaveProperty('properties');
         });
 
         it('should return solution schema', async () => {

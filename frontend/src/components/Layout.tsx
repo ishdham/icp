@@ -11,9 +11,11 @@ import {
     MenuItem,
     Container,
     Box,
-    Avatar
+    // Avatar removed
+    // Avatar removed
 } from '@mui/material';
 import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon } from '@mui/icons-material';
+import { canSeeUsers } from '../utils/permissions';
 
 const Layout = () => {
     const { user, logout } = useAuth();
@@ -46,7 +48,7 @@ const Layout = () => {
         { label: 'Tickets', path: '/tickets' },
     ];
 
-    if (user?.role === 'ADMIN') {
+    if (canSeeUsers(user)) {
         navItems.push({ label: 'Users', path: '/users' });
     }
 
