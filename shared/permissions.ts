@@ -15,14 +15,36 @@ export const canSubmitPartner = (user: PermissionUser | null | undefined): boole
 
 export const canEditSolution = (user: PermissionUser | null | undefined, solution: any): boolean => {
     if (!user) return false;
+    if (user.role === 'ADMIN' || user.role === 'ICP_SUPPORT') return true;
+
+    // Provider can edit
     const userId = user.uid || user.id;
-    return !!(user.role === 'ADMIN' || user.role === 'ICP_SUPPORT' || (userId && solution.providerId === userId));
+    if (userId && solution.providerId === userId) return true;
+
+    // Associated partner can edit
+    if (solution.partnerId && user.associatedPartners) {
+        const association = user.associatedPartners.find((p: any) => p.partnerId === solution.partnerId);
+        if (association && association.status === 'APPROVED') return true;
+    }
+
+    return false;
 };
 
 export const canEditPartner = (user: PermissionUser | null | undefined, partner: any): boolean => {
     if (!user) return false;
+    if (user.role === 'ADMIN' || user.role === 'ICP_SUPPORT') return true;
+
     const userId = user.uid || user.id;
-    return !!(user.role === 'ADMIN' || user.role === 'ICP_SUPPORT' || (userId && partner.proposedByUserId === userId));
+    if (userId && partner.proposedByUserId === userId) return true;
+
+    // Associated partner can edit
+    const partnerId = partner.id || partner.objectID; // Handle Algolia objects if needed
+    if (partnerId && user.associatedPartners) {
+        const association = user.associatedPartners.find((p: any) => p.partnerId === partnerId);
+        if (association && association.status === 'APPROVED') return true;
+    }
+
+    return false;
 };
 
 export const canSeeTickets = (user: PermissionUser | null | undefined): boolean => {

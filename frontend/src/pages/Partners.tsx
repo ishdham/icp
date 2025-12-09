@@ -79,6 +79,12 @@ const Partners = () => {
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedPartner(null); setIsCreating(false); }}
                 />
+
+                {!isCreating && selectedPartner?.id && (
+                    <Box mt={4}>
+                        <PartnerSolutions partnerId={selectedPartner.id} />
+                    </Box>
+                )}
             </Box>
         );
     }
@@ -110,6 +116,59 @@ const Partners = () => {
             onCreate={user ? () => setIsCreating(true) : undefined}
             searchKeys={['organizationName', 'entityType']}
         />
+    );
+};
+
+const PartnerSolutions = ({ partnerId }: { partnerId: string }) => {
+    const [solutions, setSolutions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSolutions = async () => {
+            setLoading(true);
+            try {
+                const response = await client.get(`/partners/${partnerId}/solutions`);
+                setSolutions(response.data || []);
+            } catch (error) {
+                console.error('Error fetching partner solutions:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSolutions();
+    }, [partnerId]);
+
+    if (loading) return <CircularProgress size={24} />;
+    if (solutions.length === 0) return <Box mt={2}><Chip label="No associated solutions found" /></Box>;
+
+    // Reuse ListView? Or just a simple list.
+    // Let's use a simple list for now since ListView takes full page typically. 
+    // Or we can construct a small table.
+
+    return (
+        <Box>
+            <h3>Associated Solutions</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+                        <th style={{ padding: '8px' }}>Name</th>
+                        <th style={{ padding: '8px' }}>Domain</th>
+                        <th style={{ padding: '8px' }}>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {solutions.map((s) => (
+                        <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
+                            <td style={{ padding: '8px' }}>{s.name}</td>
+                            <td style={{ padding: '8px' }}>{s.domain}</td>
+                            <td style={{ padding: '8px' }}>
+                                <Chip label={s.status} size="small" />
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </Box>
     );
 };
 

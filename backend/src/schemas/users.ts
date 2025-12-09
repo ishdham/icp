@@ -16,9 +16,16 @@ export const UserSchema = z.object({
     }).optional().describe('Phone'),
     discoverySource: z.string().optional().describe('Discovery Source'),
     bookmarks: z.array(z.object({
-        solutionId: z.string(),
-        bookmarkedAt: z.string().optional()
-    })).optional().describe('Bookmarks')
+        solutionId: z.string().describe('Solution ID').readonly(),
+        solutionName: z.string().describe('Solution Name').readonly().optional(),
+        bookmarkedAt: z.string().describe('Bookmarked At').readonly().optional()
+    })).optional().describe('Bookmarks'),
+    associatedPartners: z.array(z.object({
+        partnerId: z.string(),
+        status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+        requestedAt: z.string().optional(),
+        approvedAt: z.string().optional()
+    })).optional().describe('Associated Partners')
 });
 
 const generatedSchema = zodToJsonSchema(UserSchema as any, 'userSchema');
@@ -27,6 +34,26 @@ export const userJsonSchema = (generatedSchema as any).definitions.userSchema;
 export const userUiSchema = {
     type: 'VerticalLayout',
     elements: [
+        {
+            type: 'Group',
+            label: 'System Info',
+            elements: [
+                {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/id' },
+                        { type: 'Control', scope: '#/properties/uid' }
+                    ]
+                },
+                {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/createdAt' },
+                        { type: 'Control', scope: '#/properties/updatedAt' }
+                    ]
+                }
+            ]
+        },
         {
             type: 'HorizontalLayout',
             elements: [
@@ -54,6 +81,33 @@ export const userUiSchema = {
                 }
             ]
         },
-        { type: 'Control', scope: '#/properties/discoverySource' }
+        { type: 'Control', scope: '#/properties/discoverySource' },
+        {
+            type: 'Control',
+            scope: '#/properties/bookmarks',
+            options: {
+                detail: {
+                    type: 'VerticalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/solutionName' },
+                        { type: 'Control', scope: '#/properties/bookmarkedAt' }
+                    ]
+                },
+                showSort: true
+            }
+        },
+        {
+            type: 'Control',
+            scope: '#/properties/associatedPartners',
+            options: {
+                detail: {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/partnerId' },
+                        { type: 'Control', scope: '#/properties/status', options: { readonly: true } }
+                    ]
+                }
+            }
+        }
     ]
 };

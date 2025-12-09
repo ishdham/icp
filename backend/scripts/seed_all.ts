@@ -2,6 +2,7 @@ import { db } from '../src/config/firebase';
 
 const partners = [
     {
+        id: "PARTNER-501",
         organizationName: "Green Earth NGO",
         entityType: "NGO",
         status: "APPROVED",
@@ -12,6 +13,7 @@ const partners = [
         proposedByUserId: "USER-101"
     },
     {
+        id: "PARTNER-502",
         organizationName: "Tech for Good",
         entityType: "Social Impact Entity",
         status: "PROPOSED",
@@ -29,6 +31,7 @@ const solutions = [
         status: "APPROVED",
         uniqueValueProposition: "Low cost, high efficiency.",
         providerId: "USER-101",
+        partnerId: "PARTNER-501",
         createdAt: new Date().toISOString()
     },
     {
@@ -38,6 +41,7 @@ const solutions = [
         status: "DRAFT",
         uniqueValueProposition: "Decentralized power generation.",
         providerId: "USER-105",
+        partnerId: "PARTNER-502",
         createdAt: new Date().toISOString()
     }
 ];
@@ -60,6 +64,7 @@ const tickets = [
         status: "PENDING",
         createdByUserId: "USER-102",
         ticketId: `TKT-${Date.now() + 1}`,
+        relatedPartnerId: "PARTNER-502",
         createdAt: new Date().toISOString(),
         comments: []
     }
@@ -69,7 +74,12 @@ async function seedAll() {
     try {
         console.log("Seeding Partners...");
         for (const p of partners) {
-            await db.collection('partners').add(p);
+            const { id, ...data } = p;
+            if (id) {
+                await db.collection('partners').doc(id).set(data);
+            } else {
+                await db.collection('partners').add(data);
+            }
         }
 
         console.log("Seeding Solutions...");

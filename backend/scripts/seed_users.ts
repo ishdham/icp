@@ -42,6 +42,18 @@ async function seedUsers() {
             }
 
             user.createdAt = values[9];
+            user.associatedPartners = [];
+
+            // Map legacy organizationId to associatedPartners
+            if (user.organizationId) {
+                user.associatedPartners.push({
+                    partnerId: user.organizationId,
+                    status: 'APPROVED',
+                    requestedAt: user.createdAt,
+                    approvedAt: user.createdAt
+                });
+            }
+
             user.bookmarks = []; // Default empty bookmarks
 
             // 1. Create in Firebase Auth if password is provided

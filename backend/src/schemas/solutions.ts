@@ -4,6 +4,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 export const SolutionSchema = z.object({
     id: z.string().describe('ID').readonly().optional(),
     providerId: z.string().describe('Provider ID').readonly().optional(),
+    providerName: z.string().describe('Provider Name').readonly().optional(),
     createdAt: z.string().describe('Created At').readonly().optional(),
     updatedAt: z.string().describe('Updated At').readonly().optional(),
     name: z.string().min(3).describe('Solution Name'),
@@ -13,6 +14,7 @@ export const SolutionSchema = z.object({
     uniqueValueProposition: z.string().describe('Unique Value Proposition'),
     launchYear: z.number().int().optional().describe('Launch Year'),
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
+    partnerId: z.string().describe('Partner ID').optional(),
     status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
 });
 
@@ -23,49 +25,67 @@ export const solutionUiSchema = {
     type: 'VerticalLayout',
     elements: [
         {
-            type: 'Control',
-            scope: '#/properties/name'
-        },
-        {
-            type: 'Control',
-            scope: '#/properties/description',
-            options: {
-                multi: true
-            }
-        },
-        {
-            type: 'HorizontalLayout',
+            type: 'Group',
+            label: 'System Info',
             elements: [
                 {
-                    type: 'Control',
-                    scope: '#/properties/domain'
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/id' },
+                        { type: 'Control', scope: '#/properties/status' }
+                    ]
                 },
                 {
-                    type: 'Control',
-                    scope: '#/properties/verticalDomain'
-                }
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/createdAt' },
+                        { type: 'Control', scope: '#/properties/updatedAt' }
+                    ]
+                },
+                { type: 'Control', scope: '#/properties/providerName' }
             ]
         },
         {
-            type: 'Control',
-            scope: '#/properties/uniqueValueProposition'
-        },
-        {
-            type: 'HorizontalLayout',
+            type: 'Group',
+            label: 'Solution Details',
             elements: [
+                {
+                    type: 'Control',
+                    scope: '#/properties/name'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/description',
+                    options: {
+                        multi: true
+                    }
+                },
+                {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        {
+                            type: 'Control',
+                            scope: '#/properties/domain'
+                        },
+                        {
+                            type: 'Control',
+                            scope: '#/properties/verticalDomain'
+                        }
+                    ]
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/uniqueValueProposition'
+                },
                 {
                     type: 'Control',
                     scope: '#/properties/launchYear'
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/status'
+                    scope: '#/properties/targetBeneficiaries'
                 }
             ]
-        },
-        {
-            type: 'Control',
-            scope: '#/properties/targetBeneficiaries'
         }
     ]
 };

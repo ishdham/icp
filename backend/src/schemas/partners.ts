@@ -4,6 +4,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 export const PartnerSchema = z.object({
     id: z.string().describe('ID').readonly().optional(),
     proposedByUserId: z.string().describe('Proposer ID').readonly().optional(),
+    proposedByUserName: z.string().describe('Proposed By').readonly().optional(),
     createdAt: z.string().describe('Created At').readonly().optional(),
     updatedAt: z.string().describe('Updated At').readonly().optional(),
     organizationName: z.string().min(3).describe('Organization Name'),
@@ -27,48 +28,66 @@ export const partnerUiSchema = {
     type: 'VerticalLayout',
     elements: [
         {
-            type: 'Control',
-            scope: '#/properties/organizationName'
+            type: 'Group',
+            label: 'System Info',
+            elements: [
+                {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/id' },
+                        { type: 'Control', scope: '#/properties/status' }
+                    ]
+                },
+                {
+                    type: 'HorizontalLayout',
+                    elements: [
+                        { type: 'Control', scope: '#/properties/createdAt' },
+                        { type: 'Control', scope: '#/properties/updatedAt' }
+                    ]
+                },
+                { type: 'Control', scope: '#/properties/proposedByUserName' }
+            ]
         },
         {
-            type: 'HorizontalLayout',
+            type: 'Group',
+            label: 'Organization Details',
             elements: [
+                {
+                    type: 'Control',
+                    scope: '#/properties/organizationName'
+                },
                 {
                     type: 'Control',
                     scope: '#/properties/entityType'
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/status'
-                }
-            ]
-        },
-        {
-            type: 'Control',
-            scope: '#/properties/websiteUrl'
-        },
-        {
-            type: 'Group',
-            label: 'Contact Details',
-            elements: [
+                    scope: '#/properties/websiteUrl'
+                },
                 {
-                    type: 'HorizontalLayout',
+                    type: 'Group',
+                    label: 'Contact Details',
                     elements: [
-                        { type: 'Control', scope: '#/properties/contact/properties/email' },
-                        { type: 'Control', scope: '#/properties/contact/properties/phone' }
+                        {
+                            type: 'HorizontalLayout',
+                            elements: [
+                                { type: 'Control', scope: '#/properties/contact/properties/email' },
+                                { type: 'Control', scope: '#/properties/contact/properties/phone' }
+                            ]
+                        }
                     ]
-                }
-            ]
-        },
-        {
-            type: 'Group',
-            label: 'Location',
-            elements: [
+                },
                 {
-                    type: 'HorizontalLayout',
+                    type: 'Group',
+                    label: 'Location',
                     elements: [
-                        { type: 'Control', scope: '#/properties/address/properties/city' },
-                        { type: 'Control', scope: '#/properties/address/properties/country' }
+                        {
+                            type: 'HorizontalLayout',
+                            elements: [
+                                { type: 'Control', scope: '#/properties/address/properties/city' },
+                                { type: 'Control', scope: '#/properties/address/properties/country' }
+                            ]
+                        }
                     ]
                 }
             ]

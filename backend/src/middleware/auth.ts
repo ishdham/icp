@@ -6,6 +6,9 @@ export interface AuthRequest extends Request {
         uid: string;
         email?: string;
         role?: string;
+        firstName?: string;
+        lastName?: string;
+        associatedPartners?: any[];
     };
 }
 
@@ -28,6 +31,9 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             uid: decodedToken.uid,
             email: decodedToken.email,
             role: userData?.role || 'REGULAR',
+            firstName: userData?.firstName,
+            lastName: userData?.lastName,
+            associatedPartners: userData?.associatedPartners || [],
         };
         next();
     } catch (error) {

@@ -31,7 +31,23 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             );
         }
 
-        res.json(filteredPartners);
+        // Aggregate Proposer Names
+        const partnersWithNames = await Promise.all(filteredPartners.map(async (p: any) => {
+            if (p.proposedByUserId) {
+                try {
+                    const userDoc = await db.collection('users').doc(p.proposedByUserId).get();
+                    if (userDoc.exists) {
+                        const u = userDoc.data();
+                        return { ...p, proposedByUserName: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() };
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch proposer for partner ${p.id}`, e);
+                }
+            }
+            return { ...p, proposedByUserName: 'Unknown' };
+        }));
+
+        res.json(partnersWithNames);
     } catch (error) {
         console.error('Error fetching partners:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -46,7 +62,18 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             res.status(404).json({ error: 'Partner not found' });
             return;
         }
-        res.json({ id: doc.id, ...doc.data() });
+
+        const data = doc.data() as any;
+        let proposedByUserName = 'Unknown';
+        if (data.proposedByUserId) {
+            const userDoc = await db.collection('users').doc(data.proposedByUserId).get();
+            if (userDoc.exists) {
+                const u = userDoc.data();
+                proposedByUserName = `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
+            }
+        }
+
+        res.json({ id: doc.id, ...data, proposedByUserName });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -127,6 +154,39 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         await docRef.update(data);
         res.json({ success: true });
     } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// GET /partners/:id/solutions - List Solutions for a Partner
+router.get('/:id/solutions', async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const snapshot = await db.collection('solutions')
+            .where('partnerId', '==', id)
+            .get(); // Should we filter by status? Yes, normal rules apply. 
+
+        const solutions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Reuse the logic from solutions GET /? 
+        // Or just return raw list. Let's return raw list but filter public statuses if not logged in / admin?
+        // Actually, let's keep it simple. If it's public API, filter. 
+        // But if I am the content provider, I want to see my drafts.
+        // Let's filter in memory for now based on viewer.
+
+        const canSeeAll = canEditPartner(req.user, { id }); // Heuristic: if I can edit this partner, I can see its drafts?
+        // Or more strictly:
+        // isModerator || (user.associatedPartners contains this partner)
+
+        // Let's filter statuses that are PUBLIC (APPROVED, MATURE, PILOT) unless viewer has rights.
+        let visibleSolutions = solutions;
+        if (!req.user || (!isModerator(req.user) && !req.user.associatedPartners?.some((p: any) => p.partnerId === id && p.status === 'APPROVED'))) {
+            visibleSolutions = solutions.filter((s: any) => ['APPROVED', 'MATURE', 'PILOT'].includes(s.status));
+        }
+
+        res.json(visibleSolutions);
+    } catch (error) {
+        console.error('Error fetching partner solutions:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

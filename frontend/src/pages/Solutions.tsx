@@ -16,6 +16,8 @@ const Solutions = () => {
     const [selectedSolution, setSelectedSolution] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
+    const [partners, setPartners] = useState<any[]>([]);
+
     const fetchSolutions = async () => {
         setLoading(true);
         try {
@@ -28,8 +30,18 @@ const Solutions = () => {
         }
     };
 
+    const fetchPartners = async () => {
+        try {
+            const response = await client.get('/partners');
+            setPartners(response.data || []);
+        } catch (error) {
+            console.error('Error fetching partners:', error);
+        }
+    };
+
     useEffect(() => {
         fetchSolutions();
+        fetchPartners();
     }, []);
 
     const handleCreate = async (data: any) => {
@@ -58,6 +70,42 @@ const Solutions = () => {
         }
     };
 
+    // Inject partners into schema
+    const activeSchema = (schema && partners.length > 0) ? {
+        ...schema,
+        properties: {
+            ...schema.properties,
+            partnerId: {
+                type: 'string',
+                title: 'Partner',
+                oneOf: partners.map(p => ({
+                    const: p.id,
+                    title: p.organizationName
+                }))
+            }
+        }
+    } : schema;
+
+    // Add partnerId to UI schema if not present (simple check)
+    // We assume backend uischema might not have it yet? 
+    // Actually, backend uiSchema for solution doesn't have it.
+    // We should modify backend uiSchema or patch it here.
+    // Let's patch it here for now to ensure it shows up.
+
+    // Check if partnerId is already in uiSchema specific layout?
+    // If not, we append it.
+    // For simplicity, we just pass modified schema but if uiSchema controls layout, it needs to be there.
+    // Let's rely on JSONForms showing it if in schema but not uischema? No, usually it hides it.
+    // We need to add it to uischema.
+
+    const activeUiSchema = (uischema && !JSON.stringify(uischema).includes('partnerId')) ? {
+        ...uischema,
+        elements: [
+            ...uischema.elements,
+            { type: 'Control', scope: '#/properties/partnerId' }
+        ]
+    } : uischema;
+
     if (selectedSolution || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
 
@@ -73,8 +121,8 @@ const Solutions = () => {
                 <DetailView
                     title={isCreating ? 'Submit New Solution' : 'Solution Details'}
                     data={selectedSolution || {}}
-                    schema={schema}
-                    uischema={uischema}
+                    schema={activeSchema}
+                    uischema={activeUiSchema}
                     canEdit={isCreating ? false : canEditSolution(user, selectedSolution)}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedSolution(null); setIsCreating(false); }}

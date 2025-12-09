@@ -3,5 +3,8 @@ export interface PermissionUser {
     id?: string;
     role?: string;
     email?: string | null;
+    firstName?: string;
+    lastName?: string;
+    associatedPartners?: any[];
     [key: string]: any;
 }

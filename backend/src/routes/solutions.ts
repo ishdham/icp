@@ -21,10 +21,6 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
         if (status) {
             query = query.where('status', '==', status);
-        } else {
-            // Default to public statuses if not specified, or show all?
-            // For now, let's just show APPROVED/MATURE/PILOT if not specified, or maybe all for simplicity
-            // query = query.where('status', 'in', ['APPROVED', 'MATURE', 'PILOT']);
         }
 
         // Basic pagination
@@ -32,14 +28,10 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             query = query.limit(parseInt(limit as string));
         }
 
-        // Note: 'q' (keyword search) is hard in standard Firestore. 
-        // We'll implement basic filtering here, but for real semantic search we'd need Vector Search.
-        // For this MVP, we'll skip 'q' filtering on DB side or do client-side filtering if dataset is small.
-
         const snapshot = await query.get();
         const solutions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Simple in-memory filter for 'q' if provided (inefficient for large datasets)
+        // Simple in-memory filter for 'q'
         let filteredSolutions = solutions;
         if (q) {
             const search = (q as string).toLowerCase();
@@ -49,7 +41,23 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             );
         }
 
-        res.json({ items: filteredSolutions });
+        // Aggregate Provider Names
+        const solutionWithProviders = await Promise.all(filteredSolutions.map(async (s: any) => {
+            if (s.providerId) {
+                try {
+                    const userDoc = await db.collection('users').doc(s.providerId).get();
+                    if (userDoc.exists) {
+                        const u = userDoc.data();
+                        return { ...s, providerName: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() };
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch provider for solution ${s.id}`, e);
+                }
+            }
+            return { ...s, providerName: 'Unknown' };
+        }));
+
+        res.json({ items: solutionWithProviders });
     } catch (error) {
         console.error('Error fetching solutions:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -63,9 +71,27 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         // RBAC: Regular users can only create DRAFT or PENDING solutions
         let initialStatus = data.status;
-        if (!canApproveSolution(req.user)) {
+        const canApprove = canApproveSolution(req.user);
+        if (!canApprove) {
             if (initialStatus === 'APPROVED' || initialStatus === 'MATURE' || initialStatus === 'PILOT') {
                 initialStatus = 'PENDING'; // Force to PENDING if they try to set it to public
+            }
+        }
+
+        // Prevent unauthorized setting of partnerId
+        let partnerId = data.partnerId;
+        if (partnerId) {
+            // If user is not admin/support, they can only set partnerId if they are associated
+            if (!canApprove) {
+                const isAssociated = req.user?.associatedPartners?.some((p: any) => p.partnerId === partnerId && p.status === 'APPROVED');
+                if (!isAssociated) {
+                    // If not associated, they CANNOT set partnerId? 
+                    // Or maybe they can, but it needs approval?
+                    // For now, let's allow it if they are creating it, maybe they are proposing it for a partner.
+                    // But strictly speaking, they should only link to partners they belong to.
+                    // Let's enforce association.
+                    return res.status(403).json({ error: 'You are not associated with this partner' });
+                }
             }
         }
 
@@ -78,6 +104,9 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         const docRef = await db.collection('solutions').add(solutionData);
         const newSolution = await docRef.get();
+
+        // Enrich response with providerName (cached from current user)
+        const providerName = req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : 'Unknown';
 
         // Auto-create approval ticket if not approved
         if (initialStatus !== 'APPROVED' && initialStatus !== 'MATURE' && initialStatus !== 'PILOT') {
@@ -94,7 +123,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             });
         }
 
-        res.status(201).json({ id: docRef.id, ...newSolution.data() });
+        res.status(201).json({ id: docRef.id, ...newSolution.data(), providerName });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ error: error.issues });
@@ -113,7 +142,26 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             res.status(404).json({ error: 'Solution not found' });
             return;
         }
-        res.json({ id: doc.id, ...doc.data() });
+
+        const data = doc.data() as any;
+        let providerName = 'Unknown';
+        if (data.providerId) {
+            const userDoc = await db.collection('users').doc(data.providerId).get();
+            if (userDoc.exists) {
+                const u = userDoc.data();
+                providerName = `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
+            }
+        }
+
+        let partnerName = undefined;
+        if (data.partnerId) {
+            const partnerDoc = await db.collection('partners').doc(data.partnerId).get();
+            if (partnerDoc.exists) {
+                partnerName = partnerDoc.data()?.organizationName;
+            }
+        }
+
+        res.json({ id: doc.id, ...data, providerName, partnerName });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -141,6 +189,16 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         if (data.status && data.status !== existingSolution.status) {
             if (!canApproveSolution(req.user)) {
                 return res.status(403).json({ error: 'Unauthorized to change status' });
+            }
+        }
+
+        // Prevent changing partnerId if not authorized (Admin or Associated)
+        if (data.partnerId && data.partnerId !== existingSolution.partnerId) {
+            if (!canApproveSolution(req.user)) {
+                const isAssociated = req.user?.associatedPartners?.some((p: any) => p.partnerId === data.partnerId && p.status === 'APPROVED');
+                if (!isAssociated) {
+                    return res.status(403).json({ error: 'You are not associated with this partner' });
+                }
             }
         }
 

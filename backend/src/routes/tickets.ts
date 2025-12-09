@@ -36,7 +36,24 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         const snapshot = await query.get();
         const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.json(tickets);
+
+        // Aggregate Creator Names
+        const ticketsWithNames = await Promise.all(tickets.map(async (t: any) => {
+            if (t.createdByUserId) {
+                try {
+                    const userDoc = await db.collection('users').doc(t.createdByUserId).get();
+                    if (userDoc.exists) {
+                        const u = userDoc.data();
+                        return { ...t, createdByUserName: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() };
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch creator for ticket ${t.id}`, e);
+                }
+            }
+            return { ...t, createdByUserName: 'Unknown' };
+        }));
+
+        res.json(ticketsWithNames);
     } catch (error) {
         console.error('Error fetching tickets:', error);
         res.status(500).json({ error: 'Internal Server Error' });
