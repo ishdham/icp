@@ -35,8 +35,7 @@ export const ticketUiSchema = {
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/id' },
-                        { type: 'Control', scope: '#/properties/status' }
+                        { type: 'Control', scope: '#/properties/id' }
                     ]
                 },
                 {
@@ -53,13 +52,7 @@ export const ticketUiSchema = {
             type: 'Control',
             scope: '#/properties/title'
         },
-        {
-            type: 'HorizontalLayout',
-            elements: [
-                { type: 'Control', scope: '#/properties/type' },
-                { type: 'Control', scope: '#/properties/status' }
-            ]
-        },
+
         {
             type: 'Control',
             scope: '#/properties/description',

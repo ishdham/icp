@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { db } from '../config/firebase';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
 
 const router = Router();
@@ -9,36 +9,94 @@ import { SolutionSchema } from '../schemas/solutions';
 import { isModerator, canApproveSolution, canEditSolution } from '../../../shared/permissions';
 
 // GET /solutions - Search and Filter
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { q, domain, status, limit = '20', pageToken } = req.query;
+        const limitNum = parseInt(limit as string);
 
-        let query: FirebaseFirestore.Query = db.collection('solutions');
+        // Helper to run a query
+        const runQuery = async (baseQuery: FirebaseFirestore.Query) => {
+            let query = baseQuery;
+            if (domain) query = query.where('domain', '==', domain);
 
-        if (domain) {
-            query = query.where('domain', '==', domain);
+            // Apply status filter if provided, otherwise it depends on user role which statuses are implicit
+            if (status) query = query.where('status', '==', status);
+
+            if (limit) query = query.limit(limitNum);
+
+            const snap = await query.get();
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        let results: any[] = [];
+        const isMod = isModerator(req.user);
+
+        // CASE 1: Moderator -> See everything (or filtered by status if provided)
+        if (isMod) {
+            let query: FirebaseFirestore.Query = db.collection('solutions');
+            // If explicit status requested, applied in runQuery. 
+            // If no status requested, they see all statuses.
+            results = await runQuery(query);
         }
+        // CASE 2: Regular User -> See MATURE OR Own
+        else if (req.user) {
+            // Sub-query A: Mature Solutions
+            let matureQuery = db.collection('solutions').where('status', '==', 'MATURE');
+            // If user explicitly asked for a status that is NOT Mature, valid?
+            // If they ask for "DRAFT", they should only see their own DRAFT.
+            // If they ask for "MATURE", they see all MATURE.
+            // The logic: "Mature OR Own".
 
-        if (status) {
-            query = query.where('status', '==', status);
+            // If specific status requested:
+            if (status) {
+                if (status === 'MATURE') {
+                    results = await runQuery(matureQuery);
+                } else {
+                    // Asking for non-mature, can only be own
+                    let ownQuery = db.collection('solutions')
+                        .where('providerId', '==', req.user.uid)
+                        .where('status', '==', status); // Redundant if runQuery adds it, but clearer here
+                    results = await runQuery(ownQuery);
+                }
+            } else {
+                // No status specified: Combined View
+                const [matureDocs, ownDocs] = await Promise.all([
+                    runQuery(matureQuery),
+                    runQuery(db.collection('solutions').where('providerId', '==', req.user.uid))
+                ]);
+
+                // Merge by ID to avoid duplicates (if I create a Mature solution)
+                const map = new Map();
+                matureDocs.forEach((d: any) => map.set(d.id, d));
+                ownDocs.forEach((d: any) => map.set(d.id, d));
+                results = Array.from(map.values());
+            }
         }
-
-        // Basic pagination
-        if (limit) {
-            query = query.limit(parseInt(limit as string));
+        // CASE 3: Anonymous -> See MATURE only
+        else {
+            // If they ask for non-MATURE status, they get nothing
+            if (status && status !== 'MATURE') {
+                results = [];
+            } else {
+                let matureQuery = db.collection('solutions').where('status', '==', 'MATURE');
+                results = await runQuery(matureQuery);
+            }
         }
-
-        const snapshot = await query.get();
-        const solutions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Simple in-memory filter for 'q'
-        let filteredSolutions = solutions;
+        let filteredSolutions = results;
         if (q) {
             const search = (q as string).toLowerCase();
-            filteredSolutions = solutions.filter((s: any) =>
+            filteredSolutions = results.filter((s: any) =>
                 s.name?.toLowerCase().includes(search) ||
                 s.description?.toLowerCase().includes(search)
             );
+        }
+
+        // Apply strict limit after merge/filter? 
+        // Requirements didn't specify strict pagination behavior on merge, but good UX:
+        if (filteredSolutions.length > limitNum) {
+            filteredSolutions = filteredSolutions.slice(0, limitNum);
         }
 
         // Aggregate Provider Names
@@ -69,17 +127,12 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const data = SolutionSchema.parse(req.body);
 
-        // RBAC: Regular users can only create DRAFT or PENDING solutions
-        let initialStatus = data.status;
-        const canApprove = canApproveSolution(req.user);
-        if (!canApprove) {
-            if (initialStatus === 'APPROVED' || initialStatus === 'MATURE' || initialStatus === 'PILOT') {
-                initialStatus = 'PENDING'; // Force to PENDING if they try to set it to public
-            }
-        }
+        // All created solutions start as PROPOSED
+        const initialStatus = 'PROPOSED';
 
         // Prevent unauthorized setting of partnerId
         let partnerId = data.partnerId;
+        const canApprove = canApproveSolution(req.user);
         if (partnerId) {
             // If user is not admin/support, they can only set partnerId if they are associated
             if (!canApprove) {
@@ -108,20 +161,19 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         // Enrich response with providerName (cached from current user)
         const providerName = req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : 'Unknown';
 
-        // Auto-create approval ticket if not approved
-        if (initialStatus !== 'APPROVED' && initialStatus !== 'MATURE' && initialStatus !== 'PILOT') {
-            await db.collection('tickets').add({
-                title: `Approval Request: ${data.name}`,
-                description: `Approval request for solution: ${data.name}`,
-                type: 'SOLUTION_APPROVAL',
-                status: 'NEW',
-                solutionId: docRef.id,
-                createdByUserId: req.user?.uid,
-                createdAt: new Date().toISOString(),
-                comments: [],
-                ticketId: `TKT-${Date.now()}`
-            });
-        }
+        // Auto-create approval ticket
+        // Since initialStatus is always PROPOSED, we always create a ticket
+        await db.collection('tickets').add({
+            title: `Approval Request: ${data.name}`,
+            description: `Approval request for solution: ${data.name}`,
+            type: 'SOLUTION_APPROVAL',
+            status: 'NEW',
+            solutionId: docRef.id,
+            createdByUserId: req.user?.uid,
+            createdAt: new Date().toISOString(),
+            comments: [],
+            ticketId: `TKT-${Date.now()}`
+        });
 
         res.status(201).json({ id: docRef.id, ...newSolution.data(), providerName });
     } catch (error) {

@@ -45,8 +45,11 @@ const Layout = () => {
         { label: 'Dashboard', path: '/' },
         { label: 'Solutions', path: '/solutions' },
         { label: 'Partners', path: '/partners' },
-        { label: 'Tickets', path: '/tickets' },
     ];
+
+    if (user) {
+        navItems.push({ label: 'Tickets', path: '/tickets' });
+    }
 
     if (canSeeUsers(user)) {
         navItems.push({ label: 'Users', path: '/users' });

@@ -34,7 +34,7 @@ const Partners = () => {
 
     const handleCreate = async (data: any) => {
         try {
-            await client.post('/partners', data);
+            await client.post('/partners', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
             fetchPartners();
             alert('Partner proposed successfully!');

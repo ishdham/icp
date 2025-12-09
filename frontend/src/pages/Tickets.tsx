@@ -14,6 +14,7 @@ const Tickets = () => {
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
 
     const fetchTickets = async () => {
         setLoading(true);
@@ -30,6 +31,22 @@ const Tickets = () => {
     useEffect(() => {
         fetchTickets();
     }, []);
+
+    const handleCreate = async (data: any) => {
+        try {
+            await client.post('/tickets', {
+                ...data,
+                type: 'PROBLEM_SUBMISSION',
+                status: 'NEW'
+            });
+            setIsCreating(false);
+            fetchTickets();
+            alert('Ticket created successfully!');
+        } catch (error) {
+            console.error('Error creating ticket:', error);
+            alert('Failed to create ticket.');
+        }
+    };
 
     const handleResolve = async () => {
         if (!selectedTicket || !confirm('Are you sure you want to resolve this ticket and approve the request?')) return;
@@ -65,7 +82,9 @@ const Tickets = () => {
         selectedTicket?.status !== 'RESOLVED' &&
         (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
 
-    if (selectedTicket) {
+    (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
+
+    if (selectedTicket || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
 
         return (
@@ -73,11 +92,11 @@ const Tickets = () => {
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                     <Button
                         startIcon={<ArrowBack />}
-                        onClick={() => setSelectedTicket(null)}
+                        onClick={() => { setSelectedTicket(null); setIsCreating(false); }}
                     >
                         Back to List
                     </Button>
-                    {canApprove && (
+                    {!isCreating && canApprove && (
                         <Button
                             variant="contained"
                             color="success"
@@ -88,14 +107,14 @@ const Tickets = () => {
                     )}
                 </Box>
                 <DetailView
-                    title="Ticket Details"
-                    data={selectedTicket}
+                    title={isCreating ? 'Submit New Ticket' : 'Ticket Details'}
+                    data={selectedTicket || {}}
                     schema={schema}
                     uischema={uischema}
                     readOnly={false}
-                    canEdit={canEditTickets(user)}
-                    onSave={handleUpdate}
-                    onCancel={() => setSelectedTicket(null)}
+                    canEdit={isCreating ? true : canEditTickets(user, selectedTicket)}
+                    onSave={isCreating ? handleCreate : handleUpdate}
+                    onCancel={() => { setSelectedTicket(null); setIsCreating(false); }}
                 />
             </Box>
         );
@@ -126,6 +145,7 @@ const Tickets = () => {
             columns={columns}
             loading={loading}
             onSelect={(item) => setSelectedTicket(item)}
+            onCreate={user ? () => setIsCreating(true) : undefined}
             searchKeys={['title', 'description', 'type']}
         />
     );

@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { db } from '../config/firebase';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
 
 const router = Router();
@@ -9,23 +9,62 @@ import { PartnerSchema } from '../schemas/partners';
 import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
 
 // GET /partners - List and Search Partners
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { status, q } = req.query;
-        let query: FirebaseFirestore.Query = db.collection('partners');
 
-        if (status) {
-            query = query.where('status', '==', status);
+        // Helper to run query
+        const runQuery = async (baseQuery: FirebaseFirestore.Query) => {
+            let query = baseQuery;
+            if (status) query = query.where('status', '==', status);
+            const snap = await query.get();
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        let results: any[] = [];
+        const isMod = isModerator(req.user);
+
+        // CASE 1: Moderator -> All
+        if (isMod) {
+            results = await runQuery(db.collection('partners'));
+        }
+        // CASE 2: Regular -> Mature OR Proposed By Me
+        else if (req.user) {
+            if (status) {
+                if (status === 'MATURE') {
+                    results = await runQuery(db.collection('partners').where('status', '==', 'MATURE'));
+                } else {
+                    // Specific non-mature status, only own
+                    results = await runQuery(db.collection('partners')
+                        .where('proposedByUserId', '==', req.user.uid)
+                        .where('status', '==', status));
+                }
+            } else {
+                // Combined
+                const [matureDocs, ownDocs] = await Promise.all([
+                    runQuery(db.collection('partners').where('status', '==', 'MATURE')),
+                    runQuery(db.collection('partners').where('proposedByUserId', '==', req.user.uid))
+                ]);
+                const map = new Map();
+                matureDocs.forEach((d: any) => map.set(d.id, d));
+                ownDocs.forEach((d: any) => map.set(d.id, d));
+                results = Array.from(map.values());
+            }
+        }
+        // CASE 3: Anonymous -> Mature Only
+        else {
+            if (status && status !== 'MATURE') {
+                results = [];
+            } else {
+                results = await runQuery(db.collection('partners').where('status', '==', 'MATURE'));
+            }
         }
 
-        const snapshot = await query.get();
-        const partners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
         // In-memory search
-        let filteredPartners = partners;
+        let filteredPartners = results;
         if (q) {
             const search = (q as string).toLowerCase();
-            filteredPartners = partners.filter((p: any) =>
+            filteredPartners = results.filter((p: any) =>
                 p.organizationName?.toLowerCase().includes(search) ||
                 p.entityType?.toLowerCase().includes(search)
             );
@@ -84,11 +123,8 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const data = PartnerSchema.parse(req.body);
 
-        // Force status to PROPOSED for non-admins
-        let initialStatus = data.status;
-        if (!canApprovePartner(req.user)) {
-            initialStatus = 'PROPOSED';
-        }
+        // All created partners start as PROPOSED
+        const initialStatus = 'PROPOSED';
 
         const partnerData = {
             ...data,

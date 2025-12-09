@@ -52,9 +52,17 @@ export const canSeeTickets = (user: PermissionUser | null | undefined): boolean 
     return user.role === 'ADMIN' || user.role === 'ICP_SUPPORT';
 };
 
-export const canEditTickets = (user: PermissionUser | null | undefined): boolean => {
+export const canEditTickets = (user: PermissionUser | null | undefined, ticket?: any): boolean => {
     if (!user) return false;
-    return user.role === 'ADMIN' || user.role === 'ICP_SUPPORT';
+    if (user.role === 'ADMIN' || user.role === 'ICP_SUPPORT') return true;
+
+    // Creator can edit
+    if (ticket && ticket.createdByUserId) {
+        const userId = user.uid || user.id;
+        return ticket.createdByUserId === userId;
+    }
+
+    return false;
 };
 
 export const canSeeUsers = (user: PermissionUser | null | undefined): boolean => {

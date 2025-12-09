@@ -69,6 +69,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             ...data,
             ticketId: `TKT-${Date.now()}`, // Simple ID generation
             status: 'NEW',
+            type: 'PROBLEM_SUBMISSION', // Enforce type
             createdByUserId: req.user?.uid,
             createdAt: new Date().toISOString(),
             comments: [],
@@ -155,7 +156,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Ticket not found' });
         }
 
-        if (!canEditTickets(req.user)) {
+        if (!canEditTickets(req.user, doc.data())) {
             return res.status(403).json({ error: 'Unauthorized to edit tickets' });
         }
 

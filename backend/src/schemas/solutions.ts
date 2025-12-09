@@ -15,7 +15,7 @@ export const SolutionSchema = z.object({
     launchYear: z.number().int().optional().describe('Launch Year'),
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
     partnerId: z.string().describe('Partner ID').optional(),
-    status: z.enum(['DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
+    status: z.enum(['PROPOSED', 'DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
 });
 
 const generatedSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');
@@ -31,8 +31,7 @@ export const solutionUiSchema = {
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/id' },
-                        { type: 'Control', scope: '#/properties/status' }
+                        { type: 'Control', scope: '#/properties/id' }
                     ]
                 },
                 {

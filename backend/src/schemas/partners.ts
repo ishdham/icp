@@ -34,8 +34,7 @@ export const partnerUiSchema = {
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/id' },
-                        { type: 'Control', scope: '#/properties/status' }
+                        { type: 'Control', scope: '#/properties/id' }
                     ]
                 },
                 {

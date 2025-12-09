@@ -46,7 +46,7 @@ const Solutions = () => {
 
     const handleCreate = async (data: any) => {
         try {
-            await client.post('/solutions', { ...data, status: 'DRAFT' });
+            await client.post('/solutions', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
             fetchSolutions();
             alert('Solution submitted successfully!');

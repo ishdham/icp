@@ -25,9 +25,17 @@ export const canEditPartner = (user: any, partner: any): boolean => {
     return !!(user.role === 'ADMIN' || user.role === 'ICP_SUPPORT' || (userId && partner.proposedByUserId === userId));
 };
 
-export const canEditTickets = (user: any): boolean => {
+export const canEditTickets = (user: any, ticket?: any): boolean => {
     if (!user) return false;
-    return user.role === 'ADMIN' || user.role === 'ICP_SUPPORT';
+    if (user.role === 'ADMIN' || user.role === 'ICP_SUPPORT') return true;
+
+    // Creator can edit
+    if (ticket && ticket.createdByUserId) {
+        const userId = user.uid || user.id;
+        return ticket.createdByUserId === userId;
+    }
+
+    return false;
 };
 
 export const canSeeUsers = (user: any): boolean => {
