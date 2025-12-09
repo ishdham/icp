@@ -3,8 +3,10 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 
 export const SolutionSchema = z.object({
     id: z.string().describe('ID').readonly().optional(),
-    providerId: z.string().describe('Provider ID').readonly().optional(),
-    providerName: z.string().describe('Provider Name').readonly().optional(),
+    providedByPartnerId: z.string().describe('Provided By Partner ID').optional(),
+    providedByPartnerName: z.string().describe('Provided By Partner Name').readonly().optional(),
+    proposedByUserId: z.string().describe('Proposed By User ID').readonly().optional(),
+    proposedByUserName: z.string().describe('Proposed By User Name').readonly().optional(),
     createdAt: z.string().describe('Created At').readonly().optional(),
     updatedAt: z.string().describe('Updated At').readonly().optional(),
     name: z.string().min(3).describe('Solution Name'),
@@ -14,7 +16,6 @@ export const SolutionSchema = z.object({
     uniqueValueProposition: z.string().describe('Unique Value Proposition'),
     launchYear: z.number().int().optional().describe('Launch Year'),
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
-    partnerId: z.string().describe('Partner ID').optional(),
     status: z.enum(['PROPOSED', 'DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
 });
 
@@ -31,17 +32,18 @@ export const solutionUiSchema = {
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/id' }
+                        { type: 'Control', scope: '#/properties/id', options: { readonly: true } },
+                        { type: 'Control', scope: '#/properties/createdAt', options: { readonly: true } },
+                        { type: 'Control', scope: '#/properties/updatedAt', options: { readonly: true } }
                     ]
                 },
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/createdAt' },
-                        { type: 'Control', scope: '#/properties/updatedAt' }
+                        { type: 'Control', scope: '#/properties/providedByPartnerName', options: { readonly: true } },
+                        { type: 'Control', scope: '#/properties/proposedByUserName', options: { readonly: true } }
                     ]
-                },
-                { type: 'Control', scope: '#/properties/providerName' }
+                }
             ]
         },
         {
@@ -83,6 +85,14 @@ export const solutionUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/targetBeneficiaries'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/providedByPartnerId'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/status'
                 }
             ]
         }

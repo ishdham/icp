@@ -9,6 +9,18 @@ jest.mock('../config/firebase', () => ({
 
 import app from '../app';
 
+// Helper to recursively find a control by scope
+const findControl = (elements: any[], scope: string): any => {
+    for (const el of elements) {
+        if (el.type === 'Control' && el.scope === scope) return el;
+        if (el.elements) {
+            const found = findControl(el.elements, scope);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
 describe('ICP Schema API', () => {
     describe('GET /v1/schemas/:type', () => {
         it('should return user schema', async () => {
@@ -25,11 +37,17 @@ describe('ICP Schema API', () => {
             const res = await request(app).get('/v1/schemas/partner');
             expect(res.status).toBe(200);
             expect(res.body.schema).toHaveProperty('properties');
+            // Check that Status is in UI Schema
+            const statusControl = findControl(res.body.uischema.elements, '#/properties/status');
+            expect(statusControl).toBeDefined();
         });
 
         it('should return solution schema', async () => {
             const res = await request(app).get('/v1/schemas/solution');
             expect(res.status).toBe(200);
+            // Check that Status is in UI Schema
+            const statusControl = findControl(res.body.uischema.elements, '#/properties/status');
+            expect(statusControl).toBeDefined();
         });
 
         it('should return ticket schema', async () => {

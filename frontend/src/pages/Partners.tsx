@@ -6,7 +6,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { canEditPartner } from '../utils/permissions';
+import { canEditPartner, isModerator } from '../utils/permissions';
 
 const Partners = () => {
     const { user } = useAuth();
@@ -61,6 +61,34 @@ const Partners = () => {
     if (selectedPartner || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
 
+        let finalUiSchema = uischema;
+        if (isCreating && finalUiSchema && finalUiSchema.elements) {
+            finalUiSchema = {
+                ...finalUiSchema,
+                elements: finalUiSchema.elements.filter((e: any) => e.label !== 'System Info')
+            };
+        }
+
+        // Status Restriction: Only Moderators can edit status
+        if (finalUiSchema && !isModerator(user)) {
+            finalUiSchema = JSON.parse(JSON.stringify(finalUiSchema));
+
+            const patchStatus = (elements: any[]) => {
+                elements.forEach((element: any) => {
+                    if (element.scope === '#/properties/status') {
+                        element.options = { ...element.options, readonly: true };
+                    }
+                    if (element.elements) {
+                        patchStatus(element.elements);
+                    }
+                });
+            };
+
+            if (finalUiSchema.elements) {
+                patchStatus(finalUiSchema.elements);
+            }
+        }
+
         return (
             <Box>
                 <Button
@@ -72,9 +100,9 @@ const Partners = () => {
                 </Button>
                 <DetailView
                     title={isCreating ? 'Propose New Partner' : 'Partner Details'}
-                    data={selectedPartner || {}}
+                    data={selectedPartner || (isCreating ? { status: 'PROPOSED' } : {})}
                     schema={schema}
-                    uischema={uischema}
+                    uischema={finalUiSchema}
                     canEdit={isCreating ? false : canEditPartner(user, selectedPartner)}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedPartner(null); setIsCreating(false); }}
@@ -97,7 +125,7 @@ const Partners = () => {
             label: 'Status',
             render: (value: string) => {
                 let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
-                if (value === 'APPROVED') color = "success";
+                if (value === 'APPROVED' || value === 'MATURE') color = "success";
                 else if (value === 'REJECTED') color = "error";
                 else if (value === 'PROPOSED') color = "warning";
 

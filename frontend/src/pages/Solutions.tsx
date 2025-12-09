@@ -6,7 +6,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { canEditSolution } from '../utils/permissions';
+import { canEditSolution, isModerator } from '../utils/permissions';
 
 const Solutions = () => {
     const { user } = useAuth();
@@ -70,14 +70,14 @@ const Solutions = () => {
         }
     };
 
-    // Inject partners into schema
+    // Inject partners into schema (for providedByPartnerId)
     const activeSchema = (schema && partners.length > 0) ? {
         ...schema,
         properties: {
             ...schema.properties,
-            partnerId: {
+            providedByPartnerId: {
                 type: 'string',
-                title: 'Partner',
+                title: 'Provided By Partner',
                 oneOf: partners.map(p => ({
                     const: p.id,
                     title: p.organizationName
@@ -86,25 +86,44 @@ const Solutions = () => {
         }
     } : schema;
 
-    // Add partnerId to UI schema if not present (simple check)
-    // We assume backend uischema might not have it yet? 
-    // Actually, backend uiSchema for solution doesn't have it.
-    // We should modify backend uiSchema or patch it here.
-    // Let's patch it here for now to ensure it shows up.
-
-    // Check if partnerId is already in uiSchema specific layout?
-    // If not, we append it.
-    // For simplicity, we just pass modified schema but if uiSchema controls layout, it needs to be there.
-    // Let's rely on JSONForms showing it if in schema but not uischema? No, usually it hides it.
-    // We need to add it to uischema.
-
-    const activeUiSchema = (uischema && !JSON.stringify(uischema).includes('partnerId')) ? {
+    // Add providedByPartnerId to UI schema if not present
+    let finalUiSchema = (uischema && !JSON.stringify(uischema).includes('providedByPartnerId')) ? {
         ...uischema,
         elements: [
             ...uischema.elements,
-            { type: 'Control', scope: '#/properties/partnerId' }
+            { type: 'Control', scope: '#/properties/providedByPartnerId' }
         ]
     } : uischema;
+
+    // Status Restriction: Only Moderators can edit status
+    if (finalUiSchema && !isModerator(user)) {
+        // Deep clone to avoid mutation issues if uischema is reused (though currently it's from hook)
+        finalUiSchema = JSON.parse(JSON.stringify(finalUiSchema));
+
+        // Helper to find and patch status control
+        const patchStatus = (elements: any[]) => {
+            elements.forEach((element: any) => {
+                if (element.scope === '#/properties/status') {
+                    element.options = { ...element.options, readonly: true };
+                }
+                if (element.elements) {
+                    patchStatus(element.elements);
+                }
+            });
+        };
+
+        if (finalUiSchema.elements) {
+            patchStatus(finalUiSchema.elements);
+        }
+    }
+
+    // If creating, hide "System Info" group
+    if (isCreating && finalUiSchema && finalUiSchema.elements) {
+        finalUiSchema = {
+            ...finalUiSchema,
+            elements: finalUiSchema.elements.filter((e: any) => e.label !== 'System Info')
+        };
+    }
 
     if (selectedSolution || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
@@ -120,9 +139,9 @@ const Solutions = () => {
                 </Button>
                 <DetailView
                     title={isCreating ? 'Submit New Solution' : 'Solution Details'}
-                    data={selectedSolution || {}}
+                    data={selectedSolution || (isCreating ? { status: 'PROPOSED' } : {})}
                     schema={activeSchema}
-                    uischema={activeUiSchema}
+                    uischema={finalUiSchema}
                     canEdit={isCreating ? false : canEditSolution(user, selectedSolution)}
                     onSave={isCreating ? handleCreate : handleUpdate}
                     onCancel={() => { setSelectedSolution(null); setIsCreating(false); }}

@@ -18,7 +18,7 @@ export const PartnerSchema = z.object({
         city: z.string().optional().describe('City'),
         country: z.string().optional().describe('Country')
     }).optional().describe('Address'),
-    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED']).describe('Status')
+    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED', 'MATURE']).describe('Status')
 });
 
 const generatedSchema = zodToJsonSchema(PartnerSchema as any, 'partnerSchema');
@@ -34,17 +34,17 @@ export const partnerUiSchema = {
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/id' }
+                        { type: 'Control', scope: '#/properties/id', options: { readonly: true } }
                     ]
                 },
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        { type: 'Control', scope: '#/properties/createdAt' },
-                        { type: 'Control', scope: '#/properties/updatedAt' }
+                        { type: 'Control', scope: '#/properties/createdAt', options: { readonly: true } },
+                        { type: 'Control', scope: '#/properties/updatedAt', options: { readonly: true } }
                     ]
                 },
-                { type: 'Control', scope: '#/properties/proposedByUserName' }
+                { type: 'Control', scope: '#/properties/proposedByUserName', options: { readonly: true } }
             ]
         },
         {
@@ -62,6 +62,10 @@ export const partnerUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/websiteUrl'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/status'
                 },
                 {
                     type: 'Group',

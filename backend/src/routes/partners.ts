@@ -126,11 +126,15 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         // All created partners start as PROPOSED
         const initialStatus = 'PROPOSED';
 
+        const proposedByUserName = req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : 'Unknown';
+
         const partnerData = {
             ...data,
             status: initialStatus,
             proposedByUserId: req.user?.uid,
+            proposedByUserName,
             createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
 
         const docRef = await db.collection('partners').add(partnerData);
@@ -156,6 +160,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         if (error instanceof z.ZodError) {
             res.status(400).json({ error: error.issues });
         } else {
+            console.error('Error creating partner:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
@@ -186,7 +191,8 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Validate partial update? For now, just update
+        data.updatedAt = new Date().toISOString();
+
         await docRef.update(data);
         res.json({ success: true });
     } catch (error) {

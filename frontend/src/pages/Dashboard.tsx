@@ -10,7 +10,6 @@ import {
     CardActions,
     Button,
     Box,
-    Container,
     Paper
 } from '@mui/material';
 import {
@@ -32,11 +31,19 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [solRes, partnerRes, ticketRes] = await Promise.all([
+                const promises = [
                     client.get('/solutions'),
-                    client.get('/partners'),
-                    client.get('/tickets')
-                ]);
+                    client.get('/partners')
+                ];
+
+                if (user) {
+                    promises.push(client.get('/tickets'));
+                }
+
+                const results = await Promise.all(promises);
+                const solRes = results[0];
+                const partnerRes = results[1];
+                const ticketRes = user ? results[2] : { data: [] };
 
                 setStats({
                     solutions: solRes.data.items?.length || 0,
@@ -50,46 +57,18 @@ const Dashboard = () => {
             }
         };
 
-        if (user) {
-            fetchStats();
-        } else {
-            setLoading(false);
-        }
+        fetchStats();
     }, [user]);
-
-    if (!user) {
-        return (
-            <Container maxWidth="md" sx={{ mt: 8, textAlign: 'center' }}>
-                <Typography variant="h2" component="h1" gutterBottom>
-                    Welcome to ICP
-                </Typography>
-                <Typography variant="h5" color="textSecondary" paragraph>
-                    Impact Collaboration Platform
-                </Typography>
-                <Box mt={4}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        component={Link}
-                        to="/login"
-                    >
-                        Get Started
-                    </Button>
-                </Box>
-            </Container>
-        );
-    }
 
     return (
         <Box>
             <Typography variant="h4" gutterBottom component="div" sx={{ mb: 4 }}>
                 Dashboard
             </Typography>
-
-            <Grid container spacing={3}>
+            {/* Dashboard Stats */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
                 {/* Stats Cards */}
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: user ? 4 : 6 }}>
                     <Card elevation={2}>
                         <CardContent>
                             <Box display="flex" alignItems="center" mb={1}>
@@ -108,7 +87,7 @@ const Dashboard = () => {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: user ? 4 : 6 }}>
                     <Card elevation={2}>
                         <CardContent>
                             <Box display="flex" alignItems="center" mb={1}>
@@ -127,83 +106,87 @@ const Dashboard = () => {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card elevation={2}>
-                        <CardContent>
-                            <Box display="flex" alignItems="center" mb={1}>
-                                <ConfirmationNumber color="primary" sx={{ mr: 1 }} />
-                                <Typography color="textSecondary" gutterBottom>
-                                    My Tickets
+                {user && (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Card elevation={2}>
+                            <CardContent>
+                                <Box display="flex" alignItems="center" mb={1}>
+                                    <ConfirmationNumber color="primary" sx={{ mr: 1 }} />
+                                    <Typography color="textSecondary" gutterBottom>
+                                        My Tickets
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h4">
+                                    {loading ? '...' : stats.tickets}
                                 </Typography>
-                            </Box>
-                            <Typography variant="h4">
-                                {loading ? '...' : stats.tickets}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Button size="small" component={Link} to="/tickets">View All</Button>
-                        </CardActions>
-                    </Card>
-                </Grid>
+                            </CardContent>
+                            <CardActions>
+                                <Button size="small" component={Link} to="/tickets">View All</Button>
+                            </CardActions>
+                        </Card>
+                    </Grid>
+                )}
             </Grid>
 
             {/* Quick Actions */}
-            <Box mt={6}>
-                <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                    Quick Actions
-                </Typography>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                        <Paper
-                            elevation={1}
-                            sx={{
-                                p: 3,
-                                display: 'flex',
-                                alignItems: 'center',
-                                textDecoration: 'none',
-                                color: 'inherit',
-                                '&:hover': { bgcolor: 'action.hover' },
-                                transition: '0.3s'
-                            }}
-                            component={Link}
-                            to="/solutions"
-                        >
-                            <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
-                            <Box>
-                                <Typography variant="h6">Submit a Solution</Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    Share your innovative solution with the platform.
-                                </Typography>
-                            </Box>
-                        </Paper>
-                    </Grid>
+            {user && (
+                <Box mt={6}>
+                    <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+                        Quick Actions
+                    </Typography>
+                    <Grid container spacing={3}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Paper
+                                elevation={1}
+                                sx={{
+                                    p: 3,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    textDecoration: 'none',
+                                    color: 'inherit',
+                                    '&:hover': { bgcolor: 'action.hover' },
+                                    transition: '0.3s'
+                                }}
+                                component={Link}
+                                to="/solutions"
+                            >
+                                <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
+                                <Box>
+                                    <Typography variant="h6">Submit a Solution</Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Share your innovative solution with the platform.
+                                    </Typography>
+                                </Box>
+                            </Paper>
+                        </Grid>
 
-                    <Grid item xs={12} sm={6}>
-                        <Paper
-                            elevation={1}
-                            sx={{
-                                p: 3,
-                                display: 'flex',
-                                alignItems: 'center',
-                                textDecoration: 'none',
-                                color: 'inherit',
-                                '&:hover': { bgcolor: 'action.hover' },
-                                transition: '0.3s'
-                            }}
-                            component={Link}
-                            to="/partners"
-                        >
-                            <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
-                            <Box>
-                                <Typography variant="h6">Propose a Partner</Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                    Recommend a new partner organization.
-                                </Typography>
-                            </Box>
-                        </Paper>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Paper
+                                elevation={1}
+                                sx={{
+                                    p: 3,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    textDecoration: 'none',
+                                    color: 'inherit',
+                                    '&:hover': { bgcolor: 'action.hover' },
+                                    transition: '0.3s'
+                                }}
+                                component={Link}
+                                to="/partners"
+                            >
+                                <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
+                                <Box>
+                                    <Typography variant="h6">Propose a Partner</Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        Recommend a new partner organization.
+                                    </Typography>
+                                </Box>
+                            </Paper>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Box>
+                </Box>
+            )}
         </Box>
     );
 };
