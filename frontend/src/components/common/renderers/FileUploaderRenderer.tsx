@@ -7,7 +7,10 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import axios from 'axios';
 
-// Update with your API base URL
+import { auth } from '../../../config/firebase'; // Import auth directly
+
+// Update with your API base URL if needed, or use relative if proxy is set up
+// But usually for localhost dev:
 const API_BASE_URL = 'http://localhost:3000/v1';
 
 const FileUploaderControl = (props: ControlProps) => {
@@ -28,11 +31,12 @@ const FileUploaderControl = (props: ControlProps) => {
         setError(null);
 
         try {
-            // Get current token if authentication is required (assuming localStorage or similar)
-            // For now, relying on axios interceptors or just global config if set, otherwise need token
-            const token = await (window as any).firebase?.auth().currentUser?.getIdToken();
+            // Get current token
+            const token = await auth.currentUser?.getIdToken();
             const headers: any = { 'Content-Type': 'multipart/form-data' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            console.log('Uploading file with token:', token ? 'Token present' : 'No token');
 
             // We can also leverage existing axios instance if it has interceptors
             const response = await axios.post(`${API_BASE_URL}/common/upload`, formData, {
