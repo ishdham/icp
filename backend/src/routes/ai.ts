@@ -1,31 +1,35 @@
-import { Router, Response } from 'express';
-import { authenticate, AuthRequest } from '../middleware/auth';
-import { generateContent } from '../services/ai';
-import { z } from 'zod';
+import { Router, Request, Response } from 'express';
+import { aiService } from '../services/ai.service';
 
 const router = Router();
 
-const ChatSchema = z.object({
-    message: z.string(),
-});
-
-// POST /ai/chat
-router.post('/chat', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/chat', async (req: Request, res: Response) => {
     try {
-        const { message } = ChatSchema.parse(req.body);
+        const { message, history } = req.body;
 
-        // TODO: Add context from vector DB or other tools here
-        const prompt = `You are an AI assistant for the Impact Collaboration Platform (ICP). 
-    User: ${message}
-    AI:`;
+        if (!message) {
+            res.status(400).json({ error: 'Message is required' });
+            return;
+        }
 
-        const response = await generateContent(prompt);
-        res.json({ response });
+        const stream = await aiService.chatStream(message, history || []);
+
+        // Set headers for streaming
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        for await (const chunk of stream) {
+            const chunkText = chunk.text();
+            res.write(chunkText);
+        }
+
+        res.end();
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ error: error.issues });
-        } else {
+        console.error('Error in AI chat endpoint:', error);
+        if (!res.headersSent) {
             res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.end();
         }
     }
 });

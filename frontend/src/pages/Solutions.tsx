@@ -4,9 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
-import { Chip, Button, Box, CircularProgress } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { Chip, Button, Box, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { ArrowBack, ViewList, SmartToy } from '@mui/icons-material';
 import { canEditSolution, isModerator } from '../utils/permissions';
+import AiChatView from '../components/common/AiChatView';
 
 const Solutions = () => {
     const { user } = useAuth();
@@ -15,6 +16,7 @@ const Solutions = () => {
     const [loading, setLoading] = useState(true);
     const [selectedSolution, setSelectedSolution] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'ai'>('list');
 
     const [partners, setPartners] = useState<any[]>([]);
 
@@ -169,15 +171,38 @@ const Solutions = () => {
     ];
 
     return (
-        <ListView
-            title="Solutions"
-            items={solutions}
-            columns={columns}
-            loading={loading}
-            onSelect={(item) => setSelectedSolution(item)}
-            onCreate={user ? () => setIsCreating(true) : undefined}
-            searchKeys={['name', 'domain', 'description']}
-        />
+        <Box>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={(_e, newView) => { if (newView) setViewMode(newView); }}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="list" aria-label="list view">
+                        <ViewList sx={{ mr: 1 }} /> List
+                    </ToggleButton>
+                    <ToggleButton value="ai" aria-label="ai chat">
+                        <SmartToy sx={{ mr: 1 }} /> AI Assistant
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+
+            {viewMode === 'ai' ? (
+                <AiChatView />
+            ) : (
+                <ListView
+                    title="Solutions"
+                    items={solutions}
+                    columns={columns}
+                    loading={loading}
+                    onSelect={(item) => setSelectedSolution(item)}
+                    onCreate={user ? () => setIsCreating(true) : undefined}
+                    searchKeys={['name', 'domain', 'description']}
+                />
+            )}
+        </Box>
     );
 };
 
