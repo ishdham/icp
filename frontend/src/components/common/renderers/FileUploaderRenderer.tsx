@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { rankWith, type ControlProps } from '@jsonforms/core';
+import { withJsonFormsControlProps } from '@jsonforms/react';
 import { Box, Button, Typography, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, CircularProgress, Link } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -112,10 +113,10 @@ const FileUploaderControl = (props: ControlProps) => {
 };
 
 export const fileUploaderTester = rankWith(
-    3,
+    5,
     (uischema) => {
         return (uischema.options as any)?.renderer === 'file-uploader';
     }
 );
 
-export default FileUploaderControl;
+export default withJsonFormsControlProps(FileUploaderControl);

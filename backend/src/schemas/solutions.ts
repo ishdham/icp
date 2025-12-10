@@ -78,11 +78,13 @@ export const solutionUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/benefit',
+                    label: 'Unique Value Proposition (Benefit)',
                     options: { format: 'markdown' } // Label comes from schema: Unique Value Proposition (Benefit)
                 },
                 {
                     type: 'Control',
                     scope: '#/properties/returnOnInvestment',
+                    label: 'Return on Investment (ROI)',
                     options: { format: 'markdown' } // Label comes from schema: Return on Investment (ROI)
                 },
                 {
@@ -101,6 +103,7 @@ export const solutionUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/costAndEffort',
+                    label: 'Cost and Effort',
                     options: { format: 'markdown' }
                 },
                 { type: 'Control', scope: '#/properties/launchYear' },
@@ -119,6 +122,7 @@ export const solutionUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/attachments',
+                    label: 'Attachments',
                     options: {
                         renderer: 'file-uploader'
                     }

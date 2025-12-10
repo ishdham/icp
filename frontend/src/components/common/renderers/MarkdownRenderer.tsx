@@ -1,5 +1,6 @@
 import React from 'react';
 import { rankWith, optionIs, type ControlProps } from '@jsonforms/core';
+import { withJsonFormsControlProps } from '@jsonforms/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { TextField, Box, Tabs, Tab, Typography } from '@mui/material';
@@ -62,4 +63,4 @@ export const markdownRendererTester = rankWith(
     optionIs('format', 'markdown')
 );
 
-export default MarkdownControl;
+export default withJsonFormsControlProps(MarkdownControl);

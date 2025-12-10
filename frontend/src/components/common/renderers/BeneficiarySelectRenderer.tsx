@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { rankWith, type ControlProps } from '@jsonforms/core';
+import { withJsonFormsControlProps } from '@jsonforms/react';
 import { Autocomplete, TextField, Chip } from '@mui/material';
 import axios from 'axios';
 
@@ -83,6 +84,7 @@ const BeneficiarySelectControl = (props: ControlProps) => {
     );
 };
 
+
 export const beneficiarySelectTester = rankWith(
     3,
     (uischema) => {
@@ -90,4 +92,4 @@ export const beneficiarySelectTester = rankWith(
     }
 );
 
-export default BeneficiarySelectControl;
+export default withJsonFormsControlProps(BeneficiarySelectControl);
