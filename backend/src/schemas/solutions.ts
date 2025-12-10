@@ -9,14 +9,19 @@ export const SolutionSchema = z.object({
     proposedByUserName: z.string().describe('Proposed By User Name').readonly().optional(),
     createdAt: z.string().describe('Created At').readonly().optional(),
     updatedAt: z.string().describe('Updated At').readonly().optional(),
-    name: z.string().min(3).describe('Solution Name'),
-    description: z.string().describe('Description'),
+    name: z.string().min(3, 'Required').describe('Solution Name'),
+    summary: z.string().max(200).min(1, 'Required').describe('Summary (One Line)'),
+    detail: z.string().min(1, 'Required').describe('Detailed Description'), // Renamed from description
     domain: z.enum(['Water', 'Health', 'Energy', 'Education', 'Livelihood', 'Sustainability']).describe('Domain'),
     verticalDomain: z.string().optional().describe('Vertical Domain'),
-    uniqueValueProposition: z.string().describe('Unique Value Proposition'),
+    benefit: z.string().min(1, 'Required').describe('Unique Value Proposition (Benefit)'), // Renamed from uniqueValueProposition
+    costAndEffort: z.string().min(1, 'Required').describe('Cost and Effort'),
+    returnOnInvestment: z.string().min(1, 'Required').describe('Return on Investment (ROI)'),
     launchYear: z.number().int().optional().describe('Launch Year'),
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
-    status: z.enum(['PROPOSED', 'DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status')
+    status: z.enum(['PROPOSED', 'DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status'),
+    references: z.array(z.string()).optional().describe('References (Links)'),
+    attachments: z.array(z.string()).optional().describe('Attachments')
 });
 
 const generatedSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');
@@ -48,51 +53,75 @@ export const solutionUiSchema = {
         },
         {
             type: 'Group',
-            label: 'Solution Details',
+            label: 'Solution Overview',
             elements: [
+                { type: 'Control', scope: '#/properties/name' },
+                { type: 'Control', scope: '#/properties/summary' },
                 {
                     type: 'Control',
-                    scope: '#/properties/name'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/description',
-                    options: {
-                        multi: true
-                    }
+                    scope: '#/properties/detail',
+                    options: { format: 'markdown' }
                 },
                 {
                     type: 'HorizontalLayout',
                     elements: [
-                        {
-                            type: 'Control',
-                            scope: '#/properties/domain'
-                        },
-                        {
-                            type: 'Control',
-                            scope: '#/properties/verticalDomain'
-                        }
+                        { type: 'Control', scope: '#/properties/domain' },
+                        { type: 'Control', scope: '#/properties/verticalDomain' }
                     ]
+                }
+            ]
+        },
+        {
+            type: 'Group',
+            label: 'Impact & Benefits',
+            elements: [
+                {
+                    type: 'Control',
+                    scope: '#/properties/benefit',
+                    options: { format: 'markdown' } // Label comes from schema: Unique Value Proposition (Benefit)
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/uniqueValueProposition'
+                    scope: '#/properties/returnOnInvestment',
+                    options: { format: 'markdown' } // Label comes from schema: Return on Investment (ROI)
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/launchYear'
+                    scope: '#/properties/targetBeneficiaries',
+                    options: {
+                        renderer: 'beneficiary-select'
+                    }
+                }
+            ]
+        },
+        {
+            type: 'Group',
+            label: 'Implementation Details',
+            elements: [
+                {
+                    type: 'Control',
+                    scope: '#/properties/costAndEffort',
+                    options: { format: 'markdown' }
+                },
+                { type: 'Control', scope: '#/properties/launchYear' },
+                { type: 'Control', scope: '#/properties/providedByPartnerId' },
+                { type: 'Control', scope: '#/properties/status' }
+            ]
+        },
+        {
+            type: 'Group',
+            label: 'Resources',
+            elements: [
+                {
+                    type: 'Control',
+                    scope: '#/properties/references'
                 },
                 {
                     type: 'Control',
-                    scope: '#/properties/targetBeneficiaries'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/providedByPartnerId'
-                },
-                {
-                    type: 'Control',
-                    scope: '#/properties/status'
+                    scope: '#/properties/attachments',
+                    options: {
+                        renderer: 'file-uploader'
+                    }
                 }
             ]
         }

@@ -1,6 +1,16 @@
 import React from 'react';
 import { JsonForms } from '@jsonforms/react';
 import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
+import MarkdownControl, { markdownRendererTester } from './renderers/MarkdownRenderer';
+import BeneficiarySelectControl, { beneficiarySelectTester } from './renderers/BeneficiarySelectRenderer';
+import FileUploaderControl, { fileUploaderTester } from './renderers/FileUploaderRenderer';
+
+const customRenderers = [
+    ...materialRenderers,
+    { tester: markdownRendererTester, renderer: MarkdownControl },
+    { tester: beneficiarySelectTester, renderer: BeneficiarySelectControl },
+    { tester: fileUploaderTester, renderer: FileUploaderControl }
+];
 
 interface JsonFormProps {
     data: any;
@@ -16,7 +26,7 @@ const JsonForm: React.FC<JsonFormProps> = ({
     data,
     schema,
     uischema,
-    renderers = materialRenderers,
+    renderers = customRenderers,
     cells = materialCells,
     onChange,
     readonly

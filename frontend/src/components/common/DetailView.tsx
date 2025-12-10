@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { JsonForms } from '@jsonforms/react';
-import { materialRenderers, materialCells } from '@jsonforms/material-renderers';
+import JsonForm from './JsonForm';
 import {
     Button,
     Paper,
@@ -147,12 +146,10 @@ const DetailView: React.FC<DetailViewProps> = ({
             </AppBar>
             <Box sx={{ p: 3 }}>
                 <form onSubmit={(e) => e.preventDefault()} noValidate>
-                    <JsonForms
+                    <JsonForm
                         schema={schema}
                         uischema={uischema}
                         data={data}
-                        renderers={materialRenderers}
-                        cells={materialCells}
                         onChange={({ data, errors }) => {
                             setData(data);
                             setErrors(errors || []);

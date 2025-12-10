@@ -7,6 +7,7 @@ if (!admin.apps.length) {
     try {
         admin.initializeApp({
             credential: admin.credential.applicationDefault(),
+            storageBucket: 'icp-demo-480309.firebasestorage.app'
             // Or use service account from env if needed:
             // credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}'))
         });
