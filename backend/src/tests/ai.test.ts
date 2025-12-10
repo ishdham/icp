@@ -9,20 +9,27 @@ jest.mock('../config/firebase', () => ({
 }));
 
 // Mock the AI service
-jest.mock('../services/ai', () => ({
-    generateContent: jest.fn()
-}));
+jest.mock('../services/ai.service', () => {
+    return {
+        aiService: {
+            chatStream: jest.fn(),
+            initialize: jest.fn(), // If needed
+        }
+    };
+});
 
 describe('ICP AI API', () => {
     beforeEach(() => {
         resetMocks();
-        // Clear mock for generateContent
-        require('../services/ai').generateContent.mockReset();
+        // Clear mock for chatStream
+        // We need to access the mock we created
+        const { aiService } = require('../services/ai.service');
+        (aiService.chatStream as jest.Mock).mockReset();
     });
 
     const mockAuthUser = (uid: string) => {
         mockVerifyIdToken.mockResolvedValue({ uid, email: `${uid}@example.com`, role: 'REGULAR' });
-        // Mock Firestore User Doc Get for authenticate middleware
+        // Mock Firestore User for auth middleware
         require('./mocks').mockGet.mockResolvedValueOnce({
             exists: true,
             data: () => ({ uid, role: 'REGULAR' })
@@ -32,8 +39,22 @@ describe('ICP AI API', () => {
     describe('POST /v1/ai/chat', () => {
         it('should return generated content', async () => {
             mockAuthUser('user123');
-            const mockGenerate = require('../services/ai').generateContent;
-            mockGenerate.mockResolvedValue('Mocked AI response');
+            const { aiService } = require('../services/ai.service');
+
+            // Mock chatStream to return simple stream or string-like behavior
+            // Since route iterates over stream, we need an async generator or similar
+            // Or we just mock it returning something that meets expectations?
+            // Route expects `stream` which is iterable.
+
+            const mockStream = {
+                async *[Symbol.asyncIterator]() {
+                    yield { text: () => 'Mocked ' };
+                    yield { text: () => 'AI ' };
+                    yield { text: () => 'response' };
+                }
+            };
+
+            (aiService.chatStream as jest.Mock).mockResolvedValue(mockStream);
 
             const res = await request(app)
                 .post('/v1/ai/chat')
@@ -41,7 +62,9 @@ describe('ICP AI API', () => {
                 .send({ message: 'Hello' });
 
             expect(res.status).toBe(200);
-            expect(res.body.response).toBe('Mocked AI response');
+            expect(res.status).toBe(200);
+            // Route streams text, so supertest aggregates it in res.text
+            expect(res.text).toBe('Mocked AI response');
         });
 
         it('should return 400 for invalid input', async () => {

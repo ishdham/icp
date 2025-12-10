@@ -16,7 +16,29 @@ const MarkdownControl = (props: ControlProps) => {
                     {props.label}
                 </Typography>
                 <Box sx={{ p: 2, border: '1px solid #eee', borderRadius: 1, backgroundColor: '#fafafa' }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            img: (props) => (
+                                <Box
+                                    component="img"
+                                    src={props.src}
+                                    alt={props.alt}
+                                    sx={{ maxWidth: '100%', height: 'auto', display: 'block', mt: 1, mb: 1 }}
+                                />
+                            ),
+                            a: (props) => (
+                                <a
+                                    href={props.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#1976d2', textDecoration: 'underline' }}
+                                >
+                                    {props.children}
+                                </a>
+                            )
+                        }}
+                    >
                         {data || ''}
                     </ReactMarkdown>
                 </Box>
@@ -50,7 +72,29 @@ const MarkdownControl = (props: ControlProps) => {
                 />
             </Box>
             <Box hidden={tab !== 1} sx={{ mt: 1, p: 2, border: '1px solid #ccc', borderRadius: 1, minHeight: '100px', backgroundColor: '#fafafa' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        img: (props) => (
+                            <Box
+                                component="img"
+                                src={props.src}
+                                alt={props.alt}
+                                sx={{ maxWidth: '100%', height: 'auto', display: 'block', mt: 1, mb: 1 }}
+                            />
+                        ),
+                        a: (props) => (
+                            <a
+                                href={props.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: '#1976d2', textDecoration: 'underline' }}
+                            >
+                                {props.children}
+                            </a>
+                        )
+                    }}
+                >
                     {data || ''}
                 </ReactMarkdown>
             </Box>

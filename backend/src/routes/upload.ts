@@ -34,7 +34,9 @@ router.post('/upload', authenticate as any, upload.single('file'), async (req: a
             // Make public
             try {
                 await file.makePublic();
-                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+                // Encode the path but preserve slashes if any (file.name includes 'uploads/')
+                const encodedPath = file.name.split('/').map(part => encodeURIComponent(part)).join('/');
+                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${encodedPath}`;
                 res.json({ url: publicUrl, filename: req.file.originalname });
             } catch (error) {
                 console.error('Error making file public:', error);

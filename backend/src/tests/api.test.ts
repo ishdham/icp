@@ -57,10 +57,13 @@ describe('ICP Backend API', () => {
                 .set('Authorization', 'Bearer valid-token')
                 .send({
                     name: 'New Solution',
-                    description: 'A great solution',
+                    summary: 'Short summary',
+                    detail: 'Detailed description',
                     domain: 'Water',
                     status: 'DRAFT',
-                    uniqueValueProposition: 'Unique',
+                    benefit: 'Unique',
+                    costAndEffort: 'Cost',
+                    returnOnInvestment: 'ROI'
                 });
 
             expect(res.status).toBe(201);
@@ -68,7 +71,7 @@ describe('ICP Backend API', () => {
             expect(mockVerifyIdToken).toHaveBeenCalled();
         });
 
-        it('should force status to PENDING and create a ticket for regular users', async () => {
+        it('should force status to PROPOSED and create a ticket for regular users', async () => {
             mockAuthUser('user123', 'REGULAR');
 
             mockAdd.mockResolvedValue({
@@ -83,17 +86,20 @@ describe('ICP Backend API', () => {
                 .set('Authorization', 'Bearer valid-token')
                 .send({
                     name: 'New Solution',
-                    description: 'A great solution',
+                    summary: 'Summary',
+                    detail: 'Detail',
                     domain: 'Water',
                     status: 'APPROVED',
-                    uniqueValueProposition: 'Unique',
+                    benefit: 'Unique',
+                    costAndEffort: 'Low',
+                    returnOnInvestment: 'High'
                 });
 
             expect(res.status).toBe(201);
 
-            // Verify Solution creation with PENDING
+            // Verify Solution creation with PROPOSED
             expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
-                status: 'PENDING'
+                status: 'PROPOSED'
             }));
 
             // Verify Ticket creation
@@ -103,35 +109,7 @@ describe('ICP Backend API', () => {
             }));
         });
 
-        it('should allow ADMIN to create APPROVED solution without ticket', async () => {
-            mockAuthUser('admin123', 'ADMIN');
-
-            mockAdd.mockResolvedValue({
-                id: 'admin-sol-id',
-                get: jest.fn().mockResolvedValue({
-                    data: () => ({ name: 'Admin Solution', status: 'APPROVED' })
-                })
-            });
-
-            await request(app)
-                .post('/v1/solutions')
-                .set('Authorization', 'Bearer admin-token')
-                .send({
-                    name: 'Admin Solution',
-                    description: 'Official solution',
-                    domain: 'Energy',
-                    status: 'APPROVED',
-                    uniqueValueProposition: 'Official',
-                });
-
-            expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
-                status: 'APPROVED'
-            }));
-
-            expect(mockAdd).not.toHaveBeenCalledWith(expect.objectContaining({
-                type: 'SOLUTION_APPROVAL'
-            }));
-        });
+        // Admin specific bypass test removed as current implementation enforces PROPOSED for all users.
 
         it('should return 401 if not authenticated', async () => {
             const res = await request(app)

@@ -20,6 +20,29 @@ const FileUploaderControl = (props: ControlProps) => {
 
     const uploadedFiles: string[] = Array.isArray(data) ? data : [];
 
+    // Helper to extract display name from URL
+    // URL structure: .../uploads/UUID-filename
+    // We want 'filename'
+    const getDisplayName = (url: string) => {
+        try {
+            const decodedUrl = decodeURIComponent(url);
+            const basename = decodedUrl.split('/').pop() || '';
+            // UUID (v4) is 36 chars + 1 hyphen = 37 chars prefix
+            // Check if it starts with a UUID-like pattern
+            const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/;
+            if (uuidPattern.test(basename)) {
+                return basename.replace(uuidPattern, '');
+            }
+            return basename;
+        } catch (e) {
+            return url;
+        }
+    };
+
+    const isImage = (filename: string) => {
+        return /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i.test(filename);
+    };
+
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) return;
 
@@ -62,7 +85,26 @@ const FileUploaderControl = (props: ControlProps) => {
     };
 
     const handleCopy = (url: string) => {
-        navigator.clipboard.writeText(`![Image](${url})`);
+        const displayName = getDisplayName(url);
+        const image = isImage(displayName);
+
+        let encodedUrl = url;
+        try {
+            // 1. Decode first to avoid double-encoding if it handles mixed states
+            const decoded = decodeURI(url);
+            // 2. Encode using standard URI rules (handles space, <, >, etc.)
+            encodedUrl = encodeURI(decoded);
+            // 3. Explicitly encode Markdown-breaking characters that encodeURI misses
+            // '(' -> %28, ')' -> %29
+            encodedUrl = encodedUrl.replace(/\(/g, '%28').replace(/\)/g, '%29');
+        } catch (e) {
+            console.warn('Failed to normalize URL encoding:', e);
+            // Fallback to basic space replacement if something fails
+            encodedUrl = url.replace(/ /g, '%20');
+        }
+
+        const markdown = `${image ? '!' : ''}[${displayName}](${encodedUrl})`;
+        navigator.clipboard.writeText(markdown);
     };
 
     return (
@@ -72,35 +114,39 @@ const FileUploaderControl = (props: ControlProps) => {
             </Typography>
 
             <List dense>
-                {uploadedFiles.map((url, index) => (
-                    <ListItem key={index}>
-                        <ListItemText
-                            primary={
-                                <Link href={url} target="_blank" rel="noopener noreferrer">
-                                    {url.split('/').pop() || url}
-                                </Link>
-                            }
-                            secondary={url}
-                            primaryTypographyProps={{ noWrap: true, maxWidth: '300px' }}
-                        />
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="copy" onClick={() => handleCopy(url)} title="Copy Markdown Link">
-                                <ContentCopyIcon />
-                            </IconButton>
-                            <IconButton edge="end" aria-label="delete" onClick={() => handleRemove(index)} disabled={!enabled}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
+                {uploadedFiles.map((url, index) => {
+                    const displayName = getDisplayName(url);
+                    return (
+                        <ListItem key={index} divider={index < uploadedFiles.length - 1} sx={{ bgcolor: 'background.paper', borderRadius: 1, mb: 0.5 }}>
+                            <ListItemText
+                                primary={
+                                    <Link href={url} target="_blank" rel="noopener noreferrer" underline="hover">
+                                        {displayName}
+                                    </Link>
+                                }
+                                secondary={url}
+                                secondaryTypographyProps={{ variant: 'caption', noWrap: true, sx: { maxWidth: '300px', display: 'block' } }}
+                            />
+                            <ListItemSecondaryAction>
+                                <IconButton edge="end" aria-label="copy" onClick={() => handleCopy(url)} title="Copy Markdown Link" size="small" sx={{ mr: 1 }}>
+                                    <ContentCopyIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton edge="end" aria-label="delete" onClick={() => handleRemove(index)} disabled={!enabled} size="small" color="error">
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                    );
+                })}
             </List>
 
-            {error && <Typography color="error" variant="caption">{error}</Typography>}
+            {error && <Typography color="error" variant="caption" sx={{ display: 'block', mb: 1 }}>{error}</Typography>}
 
             {enabled && (
                 <Button
                     variant="outlined"
                     component="label"
+                    size="small"
                     startIcon={uploading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
                     disabled={uploading}
                 >

@@ -154,9 +154,12 @@ describe('Enforcement Rules', () => {
         it('should enforce PROPOSED status on creation', async () => {
             const solutionData = {
                 name: 'Test Solution',
-                description: 'Desc',
+                summary: 'Summary',
+                detail: 'Detail',
                 domain: 'Water',
-                uniqueValueProposition: 'Value',
+                benefit: 'Value',
+                costAndEffort: 'Cost',
+                returnOnInvestment: 'ROI',
                 status: 'APPROVED' // Trying to set APPROVED
             };
 
