@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 // Genkit Imports
 import { genkit, z as genkitZ } from 'genkit';
-import { vertexAI, gemini15Flash, gemini15Pro } from '@genkit-ai/vertexai';
+import { vertexAI, gemini15Flash, gemini15Pro, textEmbedding004 } from '@genkit-ai/vertexai';
 
 
 dotenv.config();
@@ -98,12 +98,14 @@ export class AIService {
     }
 
     private async generateEmbedding(text: string): Promise<number[]> {
-        // Using text-embedding-004 via Genkit (requires configuring embedder, for now simplify or mock if not using strict Vertex embedding yet)
-        // NOTE: Genkit requires configuring an embedder model. For simple migration step, we'll try to use a basic text generation or skip embedding if complex setup needed.
-        // Assuming text-embedding-004 is available in Vertex or we can use a helper. 
-        // For now, let's use a dummy embedding to unblock, or a model call if desired.
-        // TODO: Properly implement Vertex Embedding with Genkit.
-        return new Array(768).fill(0).map(() => Math.random());
+        // Cleaning text slightly
+        const cleanText = text.replace(/\n/g, ' ');
+        // Using real Vertex AI Embeddings via Genkit
+        const result = await ai.embed({
+            embedder: textEmbedding004,
+            content: cleanText
+        });
+        return result[0].embedding;
     }
 
     // Cosine similarity search
@@ -111,8 +113,18 @@ export class AIService {
         if (!this.isInitialized) {
             await this.initialize();
         }
-        // Dummy search for now since embedding is mocked
-        return this.vectorStore.slice(0, limit);
+
+        const queryEmbedding = await this.generateEmbedding(query);
+
+        const scoredDocs = this.vectorStore.map(doc => {
+            const score = this.cosineSimilarity(queryEmbedding, doc.embedding);
+            return { ...doc, score };
+        });
+
+        // Sort by score descending and take top N
+        return scoredDocs
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit);
     }
 
     private cosineSimilarity(vecA: number[], vecB: number[]): number {
@@ -133,7 +145,7 @@ export class AIService {
         if (!this.isInitialized) await this.initialize();
 
         // 1. Search for context (Mocked for now)
-        const relevantDocs = await this.search(message, 5); // Returns top docs
+        const relevantDocs = await this.search(message, 20); // Returns top docs - Increased limit to 20 for better context
         const contextText = relevantDocs.map(d => d.content).join('\n---\n');
 
         // 2. Construct System Prompt with Context
@@ -215,7 +227,8 @@ export class AIService {
                 model: 'vertexai/gemini-2.5-flash',
                 prompt: researchPrompt,
                 config: {
-                    temperature: 0.7
+                    temperature: 0.7,
+                    googleSearchRetrieval: {}
                 }
             });
             const researchText = researchResult.text;
