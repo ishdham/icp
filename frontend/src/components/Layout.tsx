@@ -44,6 +44,7 @@ const Layout = () => {
     const navItems = [
         { label: 'Dashboard', path: '/' },
         { label: 'Solutions', path: '/solutions' },
+        { label: 'Reports', path: '/reports' },
         { label: 'Partners', path: '/partners' },
     ];
 

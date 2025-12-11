@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, TextField, Typography, Paper, IconButton, CircularProgress, Chip } from '@mui/material';
 import { Send, SmartToy, Person } from '@mui/icons-material';
 import client from '../../api/client';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Link } from 'react-router-dom';
 
 interface Message {
     id: string;
@@ -122,10 +125,35 @@ const AiChatView = () => {
                                 p: 2,
                                 bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper',
                                 color: msg.role === 'user' ? 'primary.contrastText' : 'text.primary',
-                                borderRadius: 2
+                                borderRadius: 2,
+                                '& p': { m: 0 }
                             }}
                         >
-                            <Typography sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                            {msg.role === 'user' ? (
+                                <Typography sx={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Typography>
+                            ) : (
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        a: ({ node, ...props }) => {
+                                            if (props.href && props.href.startsWith('/')) {
+                                                return <Link to={props.href} style={{ color: '#1976d2', textDecoration: 'underline' }}>{props.children}</Link>;
+                                            }
+                                            return <a target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2', textDecoration: 'underline' }} {...props} />;
+                                        },
+                                        img: ({ node, ...props }) => (
+                                            <Box
+                                                component="img"
+                                                src={props.src}
+                                                alt={props.alt}
+                                                sx={{ maxWidth: '100%', height: 'auto', display: 'block', mt: 1, mb: 1, borderRadius: 1 }}
+                                            />
+                                        )
+                                    }}
+                                >
+                                    {msg.content}
+                                </ReactMarkdown>
+                            )}
                         </Paper>
                         {msg.role === 'user' && <Person color="action" sx={{ mt: 1 }} />}
                     </Box>

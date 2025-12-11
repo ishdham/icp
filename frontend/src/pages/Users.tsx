@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
@@ -9,19 +10,45 @@ import { ArrowBack } from '@mui/icons-material';
 import { canSeeUsers, canEditUsers } from '../utils/permissions';
 
 const Users = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const { schema, uischema, loading: schemaLoading } = useSchema('user');
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
+    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (pageToken?: string) => {
         setLoading(true);
         try {
-            const response = await client.get('/users');
-            setUsers(response.data || []);
+            const params: any = { limit: 20 };
+            if (pageToken) params.pageToken = pageToken;
+
+            const response = await client.get('/users', { params });
+            const newItems = response.data.items || [];
+
+            setUsers(prev => pageToken ? [...prev, ...newItems] : newItems);
+            setNextPageToken(response.data.nextPageToken || null);
+            if (response.data.total !== undefined) {
+                setTotalItems(response.data.total);
+            }
         } catch (error) {
             console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchUser = async (userId: string) => {
+        setLoading(true);
+        try {
+            const response = await client.get(`/users/${userId}`);
+            setSelectedUser(response.data);
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            navigate('/users');
         } finally {
             setLoading(false);
         }
@@ -33,13 +60,34 @@ const Users = () => {
         }
     }, [user]);
 
+    useEffect(() => {
+        if (canSeeUsers(user)) {
+            if (id) {
+                const found = users.find(u => u.id === id);
+                if (found) {
+                    setSelectedUser(found);
+                } else {
+                    if (!loading && users.length > 0) {
+                        fetchUser(id);
+                    } else if (!loading && users.length === 0) {
+                        fetchUser(id);
+                    }
+                    if (!selectedUser || selectedUser.id !== id) {
+                        fetchUser(id);
+                    }
+                }
+            } else {
+                setSelectedUser(null);
+            }
+        }
+    }, [id, user, users.length]);
+
     const handleUpdate = async (data: any) => {
         if (!selectedUser?.id) return;
         try {
             const { id, ...updateData } = data;
             await client.put(`/users/${selectedUser.id}`, updateData);
-            setSelectedUser(null);
-            fetchUsers();
+            fetchUser(selectedUser.id);
             alert('User updated successfully!');
         } catch (error) {
             console.error('Error updating user:', error);
@@ -58,7 +106,7 @@ const Users = () => {
             <Box>
                 <Button
                     startIcon={<ArrowBack />}
-                    onClick={() => setSelectedUser(null)}
+                    onClick={() => navigate('/users')}
                     sx={{ mb: 2 }}
                 >
                     Back to List
@@ -70,7 +118,7 @@ const Users = () => {
                     uischema={uischema}
                     canEdit={canEditUsers(user)}
                     onSave={handleUpdate}
-                    onCancel={() => setSelectedUser(null)}
+                    onCancel={() => navigate('/users')}
                 />
             </Box>
         );
@@ -99,8 +147,11 @@ const Users = () => {
             items={users}
             columns={columns}
             loading={loading}
-            onSelect={(item) => setSelectedUser(item)}
+            onSelect={(item) => navigate(`/users/${item.id}`)}
             searchKeys={['email', 'firstName', 'lastName']}
+            hasMore={!!nextPageToken}
+            onLoadMore={() => nextPageToken && fetchUsers(nextPageToken)}
+            totalItems={totalItems}
         />
     );
 };

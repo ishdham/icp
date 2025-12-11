@@ -7,60 +7,112 @@ const router = Router();
 
 import { PartnerSchema } from '../schemas/partners';
 import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
+import { paginate } from '../utils/pagination';
 
 // GET /partners - List and Search Partners
 router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { status, q } = req.query;
+        const { status, q, limit = '20', pageToken } = req.query;
+        const limitNum = parseInt(limit as string) || 20;
+        const token = pageToken as string | undefined;
 
-        // Helper to run query
-        const runQuery = async (baseQuery: FirebaseFirestore.Query) => {
-            let query = baseQuery;
-            if (status) query = query.where('status', '==', status);
-            const snap = await query.get();
-            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Base Query Helper
+        const buildQuery = (collection: FirebaseFirestore.Query) => {
+            return collection;
         };
 
         let results: any[] = [];
-        const isMod = isModerator(req.user);
+        let nextPageToken: string | null = null;
+        let total: number = 0;
 
-        // CASE 1: Moderator -> All
+        const isMod = req.user && (req.user.role === 'ADMIN' || req.user.role === 'ICP_SUPPORT');
+
+        // Pagination wrapper
+        const runPaged = async (query: FirebaseFirestore.Query) => {
+            return paginate(query, limitNum, token, 'partners');
+        };
+
+        // CASE 1: Mod
         if (isMod) {
-            results = await runQuery(db.collection('partners'));
+            let query = buildQuery(db.collection('partners'));
+            if (status) query = query.where('status', '==', status);
+
+            const paged = await runPaged(query);
+            results = paged.items;
+            nextPageToken = paged.nextPageToken;
+            total = paged.total;
         }
-        // CASE 2: Regular -> Mature OR Proposed By Me
+        // CASE 2: Regular
         else if (req.user) {
+            const partnersRef = db.collection('partners');
             if (status) {
                 if (status === 'MATURE') {
-                    results = await runQuery(db.collection('partners').where('status', '==', 'MATURE'));
+                    let query = buildQuery(partnersRef).where('status', '==', 'MATURE');
+                    const paged = await runPaged(query);
+                    results = paged.items;
+                    nextPageToken = paged.nextPageToken;
+                    total = paged.total;
                 } else {
                     // Specific non-mature status, only own
-                    results = await runQuery(db.collection('partners')
+                    let query = buildQuery(partnersRef)
                         .where('proposedByUserId', '==', req.user.uid)
-                        .where('status', '==', status));
+                        .where('status', '==', status);
+                    const paged = await runPaged(query);
+                    results = paged.items;
+                    nextPageToken = paged.nextPageToken;
+                    total = paged.total;
                 }
             } else {
                 // Combined
-                const [matureDocs, ownDocs] = await Promise.all([
-                    runQuery(db.collection('partners').where('status', '==', 'MATURE')),
-                    runQuery(db.collection('partners').where('proposedByUserId', '==', req.user.uid))
+                const matureQuery = buildQuery(partnersRef).where('status', '==', 'MATURE');
+                const ownQuery = buildQuery(partnersRef).where('proposedByUserId', '==', req.user.uid);
+
+                const [maturePaged, ownPaged] = await Promise.all([
+                    runPaged(matureQuery),
+                    runPaged(ownQuery)
                 ]);
+
+                // Merge and Sort
                 const map = new Map();
-                matureDocs.forEach((d: any) => map.set(d.id, d));
-                ownDocs.forEach((d: any) => map.set(d.id, d));
-                results = Array.from(map.values());
+                maturePaged.items.forEach((d: any) => map.set(d.id, d));
+                ownPaged.items.forEach((d: any) => map.set(d.id, d));
+
+                let combined = Array.from(map.values());
+                combined.sort((a, b) => a.id.localeCompare(b.id));
+
+                if (combined.length > limitNum) {
+                    combined = combined.slice(0, limitNum);
+                }
+                results = combined;
+                total = maturePaged.total + ownPaged.total; // Approx total
+
+                if (results.length > 0) {
+                    nextPageToken = results[results.length - 1].id;
+                } else {
+                    nextPageToken = null;
+                }
+
+                if (!maturePaged.nextPageToken && !ownPaged.nextPageToken) {
+                    if (combined.length <= limitNum && map.size <= limitNum) nextPageToken = null;
+                }
             }
         }
-        // CASE 3: Anonymous -> Mature Only
+        // CASE 3: Anonymous
         else {
             if (status && status !== 'MATURE') {
                 results = [];
+                nextPageToken = null;
+                total = 0;
             } else {
-                results = await runQuery(db.collection('partners').where('status', '==', 'MATURE'));
+                let query = buildQuery(db.collection('partners')).where('status', '==', 'MATURE');
+                const paged = await runPaged(query);
+                results = paged.items;
+                nextPageToken = paged.nextPageToken;
+                total = paged.total;
             }
         }
 
-        // In-memory search
+        // In-memory search (Applied AFTER pagination)
         let filteredPartners = results;
         if (q) {
             const search = (q as string).toLowerCase();
@@ -86,7 +138,7 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
             return { ...p, proposedByUserName: 'Unknown' };
         }));
 
-        res.json(partnersWithNames);
+        res.json({ items: partnersWithNames, nextPageToken, total });
     } catch (error) {
         console.error('Error fetching partners:', error);
         res.status(500).json({ error: 'Internal Server Error' });

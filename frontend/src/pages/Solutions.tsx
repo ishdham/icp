@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
@@ -8,8 +9,11 @@ import { Chip, Button, Box, CircularProgress, ToggleButton, ToggleButtonGroup } 
 import { ArrowBack, ViewList, SmartToy } from '@mui/icons-material';
 import { canEditSolution, isModerator } from '../utils/permissions';
 import AiChatView from '../components/common/AiChatView';
+import AiImportDialog from '../components/common/AiImportDialog';
 
 const Solutions = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const { schema, uischema, loading: schemaLoading } = useSchema('solution');
     const [solutions, setSolutions] = useState<any[]>([]);
@@ -17,16 +21,44 @@ const Solutions = () => {
     const [selectedSolution, setSelectedSolution] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'ai'>('list');
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [creationData, setCreationData] = useState<any>({ status: 'PROPOSED' });
 
     const [partners, setPartners] = useState<any[]>([]);
 
-    const fetchSolutions = async () => {
+    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
+
+    const fetchSolutions = async (pageToken?: string) => {
         setLoading(true);
         try {
-            const response = await client.get('/solutions');
-            setSolutions(response.data.items || []);
+            const params: any = { limit: 20 };
+            if (pageToken) params.pageToken = pageToken;
+
+            const response = await client.get('/solutions', { params });
+            const newItems = response.data.items || [];
+
+            setSolutions(prev => pageToken ? [...prev, ...newItems] : newItems);
+            setNextPageToken(response.data.nextPageToken || null);
+            if (response.data.total !== undefined) {
+                setTotalItems(response.data.total);
+            }
         } catch (error) {
             console.error('Error fetching solutions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSolution = async (solutionId: string) => {
+        setLoading(true);
+        try {
+            const response = await client.get(`/solutions/${solutionId}`);
+            setSelectedSolution(response.data);
+        } catch (error) {
+            console.error('Error fetching solution:', error);
+            // Optionally navigate back to list if not found
+            navigate('/solutions');
         } finally {
             setLoading(false);
         }
@@ -46,12 +78,47 @@ const Solutions = () => {
         fetchPartners();
     }, []);
 
+    useEffect(() => {
+        if (id) {
+            // Check if we already have it in the list to save a call, otherwise fetch
+            const found = solutions.find(s => s.id === id);
+            if (found) {
+                setSelectedSolution(found);
+            } else {
+                // If list is empty or not found, we might need to fetch individual.
+                // However, fetchSolutions is called on mount.
+                // If solutions are loading, wait.
+                if (!loading && solutions.length > 0) {
+                    // Loaded but not found in list -> maybe filtered or pagination?
+                    // Fetch individually.
+                    fetchSolution(id);
+                } else if (!loading && solutions.length === 0) {
+                    // Loaded and empty -> fetch individual
+                    fetchSolution(id);
+                }
+                // If loading, do nothing, the fetchSolutions might find it, or we rely on this fallback?
+                // Actually, fetchSolutions sets loading=false.
+                // It's safer to just fetch individual if we have an ID and it's not currently selected.
+                if (!selectedSolution || selectedSolution.id !== id) {
+                    fetchSolution(id);
+                }
+            }
+            setIsCreating(false);
+        } else {
+            setSelectedSolution(null);
+        }
+    }, [id, solutions.length]);
+    // solutions.length dependency is a bit tricky. Better to rely on id change.
+    // If we land on /solutions/123, fetchSolutions runs, fetchPartners runs. 
+    // useEffect[id] runs. 
+
     const handleCreate = async (data: any) => {
         try {
             await client.post('/solutions', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
             fetchSolutions();
             alert('Solution submitted successfully!');
+            navigate('/solutions');
         } catch (error) {
             console.error('Error creating solution:', error);
             alert('Failed to create solution.');
@@ -63,13 +130,19 @@ const Solutions = () => {
         try {
             const { id, ...updateData } = data;
             await client.put(`/solutions/${selectedSolution.id}`, updateData);
-            setSelectedSolution(null);
-            fetchSolutions();
+            // Update local state or refetch?
+            // If we refetch, we might lose selection if we don't handle it.
+            // But we have ID in URL, so refetching list works well.
+            fetchSolution(selectedSolution.id);
             alert('Solution updated successfully!');
         } catch (error) {
             console.error('Error updating solution:', error);
             alert('Failed to update solution.');
         }
+    };
+
+    const handleImport = (data: any) => {
+        setCreationData((prev: any) => ({ ...prev, ...data }));
     };
 
     // Inject partners into schema (for providedByPartnerId)
@@ -134,21 +207,46 @@ const Solutions = () => {
             <Box>
                 <Button
                     startIcon={<ArrowBack />}
-                    onClick={() => { setSelectedSolution(null); setIsCreating(false); }}
+                    onClick={() => {
+                        if (isCreating) {
+                            setIsCreating(false);
+                            navigate('/solutions');
+                        } else {
+                            navigate('/solutions');
+                        }
+                    }}
                     sx={{ mb: 2 }}
                 >
                     Back to List
                 </Button>
+                {isCreating && (
+                    <Button
+                        startIcon={<SmartToy />}
+                        variant="outlined"
+                        sx={{ ml: 2, mb: 2 }}
+                        onClick={() => setImportDialogOpen(true)}
+                    >
+                        AI Assisted Import
+                    </Button>
+                )}
                 <DetailView
                     title={isCreating ? 'Submit New Solution' : 'Solution Details'}
-                    data={selectedSolution || (isCreating ? { status: 'PROPOSED' } : {})}
+                    data={selectedSolution || (isCreating ? creationData : {})}
                     schema={activeSchema}
                     uischema={finalUiSchema}
                     canEdit={isCreating ? false : canEditSolution(user, selectedSolution)}
                     onSave={isCreating ? handleCreate : handleUpdate}
-                    onCancel={() => { setSelectedSolution(null); setIsCreating(false); }}
+                    onCancel={() => {
+                        if (isCreating) setIsCreating(false);
+                        navigate('/solutions');
+                    }}
                 />
-            </Box>
+                <AiImportDialog
+                    open={importDialogOpen}
+                    onClose={() => setImportDialogOpen(false)}
+                    onImport={handleImport}
+                />
+            </Box >
         );
     }
 
@@ -197,11 +295,19 @@ const Solutions = () => {
                     items={solutions}
                     columns={columns}
                     loading={loading}
-                    onSelect={(item) => setSelectedSolution(item)}
-                    onCreate={user ? () => setIsCreating(true) : undefined}
+                    onSelect={(item) => navigate(`/solutions/${item.id}`)}
+                    onCreate={user ? () => { setIsCreating(true); setCreationData({ status: 'PROPOSED' }); } : undefined}
                     searchKeys={['name', 'domain', 'description']}
+                    hasMore={!!nextPageToken}
+                    onLoadMore={() => nextPageToken && fetchSolutions(nextPageToken)}
+                    totalItems={totalItems}
                 />
             )}
+            <AiImportDialog
+                open={importDialogOpen}
+                onClose={() => setImportDialogOpen(false)}
+                onImport={handleImport}
+            />
         </Box>
     );
 };

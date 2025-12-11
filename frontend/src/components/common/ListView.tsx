@@ -12,7 +12,8 @@ import {
     Button,
     Box,
     InputAdornment,
-    Toolbar
+    Toolbar,
+    CircularProgress
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 
@@ -30,6 +31,9 @@ interface ListViewProps {
     onCreate?: () => void;
     loading?: boolean;
     searchKeys?: string[];
+    hasMore?: boolean;
+    onLoadMore?: () => void;
+    totalItems?: number;
 }
 
 const ListView: React.FC<ListViewProps> = ({
@@ -39,7 +43,10 @@ const ListView: React.FC<ListViewProps> = ({
     onSelect,
     onCreate,
     loading = false,
-    searchKeys = ['name', 'title']
+    searchKeys = ['name', 'title'],
+    hasMore = false,
+    onLoadMore,
+    totalItems
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredItems, setFilteredItems] = useState(items);
@@ -69,7 +76,7 @@ const ListView: React.FC<ListViewProps> = ({
                     id="tableTitle"
                     component="div"
                 >
-                    {title}
+                    {title} {totalItems !== undefined && `(${totalItems})`}
                 </Typography>
                 {onCreate && (
                     <Button variant="contained" onClick={onCreate}>
@@ -110,7 +117,7 @@ const ListView: React.FC<ListViewProps> = ({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {loading ? (
+                        {loading && items.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={columns.length + 1} align="center">
                                     Loading...
@@ -145,9 +152,30 @@ const ListView: React.FC<ListViewProps> = ({
                                 </TableRow>
                             ))
                         )}
+                        {loading && items.length > 0 && (
+                            <TableRow>
+                                <TableCell colSpan={columns.length + 1} align="center">
+                                    <CircularProgress size={24} />
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* Pagination Controls */}
+            <Box display="flex" flexDirection="column" alignItems="center" p={2}>
+                {totalItems !== undefined && items.length > 0 && (
+                    <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                        Showing {items.length} of {totalItems}
+                    </Typography>
+                )}
+                {hasMore && onLoadMore && (
+                    <Button onClick={onLoadMore} disabled={loading} variant="outlined">
+                        {loading ? 'Loading...' : 'Load More'}
+                    </Button>
+                )}
+            </Box>
         </Paper>
     );
 };

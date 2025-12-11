@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
@@ -9,18 +10,31 @@ import { ArrowBack } from '@mui/icons-material';
 import { canEditTickets } from '../utils/permissions';
 
 const Tickets = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const { schema, uischema, loading: schemaLoading } = useSchema('ticket');
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
-    const fetchTickets = async () => {
+    const fetchTickets = async (pageToken?: string) => {
         setLoading(true);
         try {
-            const response = await client.get('/tickets');
-            setTickets(response.data || []);
+            const params: any = { limit: 20 };
+            if (pageToken) params.pageToken = pageToken;
+
+            const response = await client.get('/tickets', { params });
+            const newItems = response.data.items || [];
+
+            setTickets(prev => pageToken ? [...prev, ...newItems] : newItems);
+            setNextPageToken(response.data.nextPageToken || null);
+            if (response.data.total !== undefined) {
+                setTotalItems(response.data.total);
+            }
         } catch (error) {
             console.error('Error fetching tickets:', error);
         } finally {
@@ -32,6 +46,22 @@ const Tickets = () => {
         fetchTickets();
     }, []);
 
+    useEffect(() => {
+        if (id) {
+            const found = tickets.find(t => t.id === id);
+            if (found) {
+                setSelectedTicket(found);
+            } else if (!loading) {
+                // If not found and not loading, it might not exist or user lacks permission
+                setSelectedTicket(null);
+                // Optionally navigate away?
+            }
+            setIsCreating(false);
+        } else {
+            setSelectedTicket(null);
+        }
+    }, [id, tickets, loading]);
+
     const handleCreate = async (data: any) => {
         try {
             await client.post('/tickets', {
@@ -42,6 +72,7 @@ const Tickets = () => {
             setIsCreating(false);
             fetchTickets();
             alert('Ticket created successfully!');
+            navigate('/tickets');
         } catch (error) {
             console.error('Error creating ticket:', error);
             alert('Failed to create ticket.');
@@ -55,7 +86,7 @@ const Tickets = () => {
                 status: 'RESOLVED',
                 comment: 'Approved via Dashboard'
             });
-            setSelectedTicket(null);
+            navigate('/tickets');
             fetchTickets();
             alert('Ticket resolved and request approved!');
         } catch (error) {
@@ -69,7 +100,8 @@ const Tickets = () => {
         try {
             const { id, ...updateData } = data;
             await client.put(`/tickets/${selectedTicket.id}`, updateData);
-            setSelectedTicket(null);
+            // Re-fetch or update list?
+            // Since we rely on list to find selected item, we should refetch or update state.
             fetchTickets();
             alert('Ticket updated successfully!');
         } catch (error) {
@@ -82,8 +114,6 @@ const Tickets = () => {
         selectedTicket?.status !== 'RESOLVED' &&
         (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
 
-    (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
-
     if (selectedTicket || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
 
@@ -92,7 +122,10 @@ const Tickets = () => {
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                     <Button
                         startIcon={<ArrowBack />}
-                        onClick={() => { setSelectedTicket(null); setIsCreating(false); }}
+                        onClick={() => {
+                            if (isCreating) setIsCreating(false);
+                            navigate('/tickets');
+                        }}
                     >
                         Back to List
                     </Button>
@@ -114,7 +147,10 @@ const Tickets = () => {
                     readOnly={false}
                     canEdit={isCreating ? true : canEditTickets(user, selectedTicket)}
                     onSave={isCreating ? handleCreate : handleUpdate}
-                    onCancel={() => { setSelectedTicket(null); setIsCreating(false); }}
+                    onCancel={() => {
+                        if (isCreating) setIsCreating(false);
+                        navigate('/tickets');
+                    }}
                 />
             </Box>
         );
@@ -144,11 +180,13 @@ const Tickets = () => {
             items={tickets}
             columns={columns}
             loading={loading}
-            onSelect={(item) => setSelectedTicket(item)}
+            onSelect={(item) => navigate(`/tickets/${item.id}`)}
             onCreate={user ? () => setIsCreating(true) : undefined}
             searchKeys={['title', 'description', 'type']}
+            hasMore={!!nextPageToken}
+            onLoadMore={() => nextPageToken && fetchTickets(nextPageToken)}
+            totalItems={totalItems}
         />
     );
 };
-
 export default Tickets;

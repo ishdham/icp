@@ -31,25 +31,8 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const promises = [
-                    client.get('/solutions'),
-                    client.get('/partners')
-                ];
-
-                if (user) {
-                    promises.push(client.get('/tickets'));
-                }
-
-                const results = await Promise.all(promises);
-                const solRes = results[0];
-                const partnerRes = results[1];
-                const ticketRes = user ? results[2] : { data: [] };
-
-                setStats({
-                    solutions: solRes.data.items?.length || 0,
-                    partners: partnerRes.data?.length || 0,
-                    tickets: ticketRes.data?.length || 0
-                });
+                const response = await client.get('/stats');
+                setStats(response.data);
             } catch (error) {
                 console.error('Error fetching stats:', error);
             } finally {

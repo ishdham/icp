@@ -7,74 +7,134 @@ const router = Router();
 
 import { SolutionSchema } from '../schemas/solutions';
 import { isModerator, canApproveSolution, canEditSolution } from '../../../shared/permissions';
+import { paginate } from '../utils/pagination';
+
 
 // GET /solutions - Search and Filter
 router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { q, domain, status, limit = '20', pageToken } = req.query;
-        const limitNum = parseInt(limit as string);
+        const limitNum = parseInt(limit as string) || 20;
+        const token = pageToken as string | undefined;
 
-        // Helper to run a query
-        const runQuery = async (baseQuery: FirebaseFirestore.Query) => {
-            let query = baseQuery;
+        // Base Query Helper (returns Query, not results)
+        const buildQuery = (collection: FirebaseFirestore.CollectionReference) => {
+            let query: FirebaseFirestore.Query = collection;
             if (domain) query = query.where('domain', '==', domain);
-
-            // Apply status filter if provided
-            if (status) query = query.where('status', '==', status);
-
-            if (limit) query = query.limit(limitNum);
-
-            const snap = await query.get();
-            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return query;
         };
 
+        // Helper to run query with pagination
+        // We use our paginate helper.
+        // We need to handle "Combined View" manually if needed, 
+        // OR we can just use the helper if we have a single query.
+
         let results: any[] = [];
+        let nextPageToken: string | null = null;
+        let total: number = 0;
+
         const isMod = isModerator(req.user);
+
+        /* ... comments ... */
+
+        // Pagination wrapper
+        const runPaged = async (query: FirebaseFirestore.Query) => {
+            return paginate(query, limitNum, token, 'solutions');
+        };
 
         // CASE 1: Moderator -> See everything
         if (isMod) {
-            let query: FirebaseFirestore.Query = db.collection('solutions');
-            results = await runQuery(query);
+            let query = buildQuery(db.collection('solutions'));
+            if (status) query = query.where('status', '==', status);
+
+            const paged = await runPaged(query);
+            results = paged.items;
+            nextPageToken = paged.nextPageToken;
+            total = paged.total;
         }
-        // CASE 2: Regular User -> See MATURE OR Own (Proposed/Provided)
+        // CASE 2: Regular User -> See MATURE OR Own
         else if (req.user) {
-            const matureQuery = db.collection('solutions').where('status', '==', 'MATURE');
+            const solutionsRef = db.collection('solutions');
 
             if (status) {
                 if (status === 'MATURE') {
-                    results = await runQuery(matureQuery);
+                    let query = buildQuery(solutionsRef).where('status', '==', 'MATURE');
+                    const paged = await runPaged(query);
+                    results = paged.items;
+                    nextPageToken = paged.nextPageToken;
+                    total = paged.total;
                 } else {
-                    // Asking for non-mature, can only be own (created by user)
-                    // We check proposedByUserId (the creator)
-                    let ownQuery = db.collection('solutions')
+                    // Own solutions with specific status
+                    let query = buildQuery(solutionsRef)
                         .where('proposedByUserId', '==', req.user.uid)
                         .where('status', '==', status);
-                    results = await runQuery(ownQuery);
+                    const paged = await runPaged(query);
+                    results = paged.items;
+                    nextPageToken = paged.nextPageToken;
+                    total = paged.total;
                 }
             } else {
-                // No status specified: Combined View (Mature + Own)
-                const [matureDocs, ownDocs] = await Promise.all([
-                    runQuery(matureQuery),
-                    runQuery(db.collection('solutions').where('proposedByUserId', '==', req.user.uid))
+                // Combined View (Mature + Own)
+                const matureQuery = buildQuery(solutionsRef).where('status', '==', 'MATURE');
+                const ownQuery = buildQuery(solutionsRef).where('proposedByUserId', '==', req.user.uid);
+
+                const [maturePaged, ownPaged] = await Promise.all([
+                    runPaged(matureQuery),
+                    runPaged(ownQuery)
                 ]);
 
+                // Merge and Sort by ID
                 const map = new Map();
-                matureDocs.forEach((d: any) => map.set(d.id, d));
-                ownDocs.forEach((d: any) => map.set(d.id, d));
-                results = Array.from(map.values());
+                maturePaged.items.forEach((d: any) => map.set(d.id, d));
+                ownPaged.items.forEach((d: any) => map.set(d.id, d));
+
+                let combined = Array.from(map.values());
+                combined.sort((a, b) => a.id.localeCompare(b.id));
+
+                if (combined.length > limitNum) {
+                    combined = combined.slice(0, limitNum);
+                }
+
+                results = combined;
+
+                // Approximation of total: Sum of both totals. 
+                // Note: Double counts strict intersection (Own + Mature) but acceptable for list view metadata
+                // unless we run a third intersection query which is expensive.
+                total = maturePaged.total + ownPaged.total;
+
+                // Determine Next Token
+                if (results.length > 0) {
+                    nextPageToken = results[results.length - 1].id;
+                } else {
+                    nextPageToken = null;
+                }
+
+                if (!maturePaged.nextPageToken && !ownPaged.nextPageToken) {
+                    if (combined.length <= limitNum && map.size <= limitNum) nextPageToken = null;
+                }
             }
         }
         // CASE 3: Anonymous -> See MATURE only
         else {
             if (status && status !== 'MATURE') {
                 results = [];
+                nextPageToken = null;
+                total = 0;
             } else {
-                let matureQuery = db.collection('solutions').where('status', '==', 'MATURE');
-                results = await runQuery(matureQuery);
+                let query = buildQuery(db.collection('solutions')).where('status', '==', 'MATURE');
+                const paged = await runPaged(query);
+                results = paged.items;
+                nextPageToken = paged.nextPageToken;
+                total = paged.total;
             }
         }
 
+        // ... filtering ...
+
+
         // Simple in-memory filter for 'q'
+        // WARNING: This filters AFTER pagination logic. 
+        // This means a page of 20 might become 0. Client handles "load more".
         let filteredSolutions = results;
         if (q) {
             const search = (q as string).toLowerCase();
@@ -84,12 +144,7 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
             );
         }
 
-        // Limit
-        if (filteredSolutions.length > limitNum) {
-            filteredSolutions = filteredSolutions.slice(0, limitNum);
-        }
-
-        // Aggregate Names (Denormalized names should be in DB, but we fetch if missing/legacy)
+        // Aggregate Names
         const solutionWithNames = await Promise.all(filteredSolutions.map(async (s: any) => {
             let updates: any = {};
 
@@ -114,13 +169,10 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
                 } catch (e) { console.error(e); }
             }
 
-            // Fallback for legacy 'providerId' if migration hasn't run yet?
-            // (We assume migration will run, but this handles inflight read)
-
             return { ...s, ...updates };
         }));
 
-        res.json({ items: solutionWithNames });
+        res.json({ items: solutionWithNames, nextPageToken, total });
     } catch (error) {
         console.error('Error fetching solutions:', error);
         res.status(500).json({ error: 'Internal Server Error' });

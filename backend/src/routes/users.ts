@@ -7,6 +7,7 @@ import admin from 'firebase-admin';
 const router = Router();
 
 import { UserSchema } from '../schemas/users';
+import { paginate } from '../utils/pagination';
 
 // GET /users/me
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
@@ -98,9 +99,14 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /users/me/bookmarks
+console.log('Bookmarks route'); // Debug
 router.get('/me/bookmarks', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const uid = req.user?.uid;
+        const { limit = '20', offset = '0' } = req.query; // Offset based for array
+        const limitNum = parseInt(limit as string) || 20;
+        const offsetNum = parseInt(offset as string) || 0;
+
         if (!uid) {
             res.status(401).json({ error: 'Unauthorized' });
             return;
@@ -108,8 +114,14 @@ router.get('/me/bookmarks', authenticate, async (req: AuthRequest, res: Response
         const userDoc = await db.collection('users').doc(uid).get();
         const bookmarks = userDoc.data()?.bookmarks || [];
 
+        // Sort by bookmarkedAt desc
+        bookmarks.sort((a: any, b: any) => new Date(b.bookmarkedAt).getTime() - new Date(a.bookmarkedAt).getTime());
+
+        // Slice
+        const slicedBookmarks = bookmarks.slice(offsetNum, offsetNum + limitNum);
+
         // Enrich with Solution Names
-        const enrichedBookmarks = await Promise.all(bookmarks.map(async (b: any) => {
+        const enrichedBookmarks = await Promise.all(slicedBookmarks.map(async (b: any) => {
             if (b.solutionId) {
                 try {
                     const solDoc = await db.collection('solutions').doc(b.solutionId).get();
@@ -123,7 +135,12 @@ router.get('/me/bookmarks', authenticate, async (req: AuthRequest, res: Response
             return { ...b, solutionName: 'Unknown' };
         }));
 
-        res.json(enrichedBookmarks);
+        res.json({
+            items: enrichedBookmarks,
+            total: bookmarks.length,
+            limit: limitNum,
+            offset: offsetNum
+        });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -182,28 +199,31 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { role, q } = req.query;
+        const { role, q, limit = '20', pageToken } = req.query;
+        const limitNum = parseInt(limit as string) || 20;
+        const token = pageToken as string | undefined;
+
         let query: FirebaseFirestore.Query = db.collection('users');
 
         if (role) {
             query = query.where('role', '==', role);
         }
 
-        const snapshot = await query.get();
-        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Pagination
+        const paged = await paginate(query, limitNum, token, 'users');
+        let filtersItems = paged.items;
 
-        // In-memory search
-        let filteredUsers = users;
+        // In-memory search (Applied AFTER pagination)
         if (q) {
             const search = (q as string).toLowerCase();
-            filteredUsers = users.filter((u: any) =>
+            filtersItems = filtersItems.filter((u: any) =>
                 u.email?.toLowerCase().includes(search) ||
                 u.firstName?.toLowerCase().includes(search) ||
                 u.lastName?.toLowerCase().includes(search)
             );
         }
 
-        res.json(filteredUsers);
+        res.json({ items: filtersItems, nextPageToken: paged.nextPageToken, total: paged.total });
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ error: 'Internal Server Error' });

@@ -13,6 +13,7 @@ jest.mock('../services/ai.service', () => {
     return {
         aiService: {
             chatStream: jest.fn(),
+            extractSolution: jest.fn(),
             initialize: jest.fn(), // If needed
         }
     };
@@ -25,6 +26,7 @@ describe('ICP AI API', () => {
         // We need to access the mock we created
         const { aiService } = require('../services/ai.service');
         (aiService.chatStream as jest.Mock).mockReset();
+        (aiService.extractSolution as jest.Mock).mockReset();
     });
 
     const mockAuthUser = (uid: string) => {
@@ -76,6 +78,41 @@ describe('ICP AI API', () => {
                 .send({}); // Missing message
 
             expect(res.status).toBe(400);
+        });
+    });
+
+    describe('POST /v1/ai/extract', () => {
+        it('should return extracted JSON', async () => {
+            mockAuthUser('user123');
+            const { aiService } = require('../services/ai.service');
+
+            const mockData = {
+                name: "Test Solution",
+                summary: "A summary",
+                detail: "Details",
+                benefit: "Benefits",
+                costAndEffort: "High",
+                returnOnInvestment: "Good",
+                domain: "Water",
+                status: "PROPOSED"
+            };
+
+            (aiService.extractSolution as jest.Mock).mockResolvedValue(mockData);
+
+            const res = await request(app)
+                .post('/v1/ai/extract')
+                .set('Authorization', 'Bearer token')
+                .send({
+                    history: [{ role: 'user', content: 'Here is a link' }],
+                    prompt: 'Extract please'
+                });
+
+            expect(res.status).toBe(200);
+            expect(res.body).toEqual(mockData);
+            expect(aiService.extractSolution).toHaveBeenCalledWith(
+                [{ role: 'user', content: 'Here is a link' }],
+                'Extract please'
+            );
         });
     });
 });

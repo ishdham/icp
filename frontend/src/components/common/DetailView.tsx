@@ -34,6 +34,10 @@ const DetailView: React.FC<DetailViewProps> = ({
     const [isEditing, setIsEditing] = useState(!readOnly && !initialData.id);
     const [errors, setErrors] = useState<any[]>([]);
 
+    React.useEffect(() => {
+        setData(initialData);
+    }, [initialData]);
+
     const handleSave = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
 

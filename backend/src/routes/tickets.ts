@@ -8,6 +8,7 @@ const router = Router();
 
 import { TicketSchema } from '../schemas/tickets';
 import { canSeeTickets, canEditTickets } from '../../../shared/permissions';
+import { paginate } from '../utils/pagination';
 
 const StatusUpdateSchema = z.object({
     status: z.enum(['NEW', 'WIP', 'PENDING', 'RESOLVED', 'REJECTED_NO_RESOLUTION', 'CLOSED']),
@@ -17,7 +18,10 @@ const StatusUpdateSchema = z.object({
 // GET /tickets
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { status, assignedToMe } = req.query;
+        const { status, assignedToMe, limit = '20', pageToken } = req.query;
+        const limitNum = parseInt(limit as string) || 20;
+        const token = pageToken as string | undefined;
+
         let query: FirebaseFirestore.Query = db.collection('tickets');
 
         if (status) {
@@ -25,17 +29,17 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         }
 
         if (assignedToMe === 'true' && req.user) {
-            // Assuming tickets have an 'assignedTo' field or we filter by creator?
-            // The requirement says "assigned to the logged-in user".
-            // Let's assume there's an 'assignedToUserId' field.
             query = query.where('assignedToUserId', '==', req.user.uid);
         } else if (!canSeeTickets(req.user)) {
             // Regular users should only see their own tickets
             query = query.where('createdByUserId', '==', req.user?.uid);
         }
 
-        const snapshot = await query.get();
-        const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Pagination
+        const paged = await paginate(query, limitNum, token, 'tickets');
+        const tickets = paged.items;
+        const nextPageToken = paged.nextPageToken;
+        const total = paged.total;
 
         // Aggregate Creator Names
         const ticketsWithNames = await Promise.all(tickets.map(async (t: any) => {
@@ -53,7 +57,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return { ...t, createdByUserName: 'Unknown' };
         }));
 
-        res.json(ticketsWithNames);
+        res.json({ items: ticketsWithNames, nextPageToken, total });
     } catch (error) {
         console.error('Error fetching tickets:', error);
         res.status(500).json({ error: 'Internal Server Error' });

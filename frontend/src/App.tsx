@@ -8,6 +8,7 @@ import Tickets from './pages/Tickets';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Reports from './pages/Reports';
 
 // Placeholder pages
 // const Home = () => <div className="text-center mt-10"><h1 className="text-2xl font-bold">Welcome to ICP</h1><p>Impact Collaboration Platform</p></div>;
@@ -19,10 +20,15 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="solutions" element={<Solutions />} />
+            <Route path="solutions/:id" element={<Solutions />} />
             <Route path="partners" element={<Partners />} />
+            <Route path="partners/:id" element={<Partners />} />
             <Route path="tickets" element={<Tickets />} />
+            <Route path="tickets/:id" element={<Tickets />} />
             <Route path="users" element={<Users />} />
+            <Route path="users/:id" element={<Users />} />
             <Route path="profile" element={<Profile />} />
             <Route path="login" element={<Login />} />
           </Route>

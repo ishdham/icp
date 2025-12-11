@@ -8,6 +8,8 @@ export const mockWhere = jest.fn();
 export const mockLimit = jest.fn();
 export const mockVerifyIdToken = jest.fn();
 
+export const mockCount = jest.fn();
+
 const mockFirestore = {
     collection: mockCollection.mockReturnValue({
         add: mockAdd,
@@ -19,6 +21,9 @@ const mockFirestore = {
         where: mockWhere.mockReturnThis(),
         limit: mockLimit.mockReturnThis(),
         get: mockGet,
+        count: mockCount.mockReturnValue({ // Add count -> get
+            get: mockGet
+        }),
     }),
     runTransaction: jest.fn((callback) => callback({
         get: mockGet,
@@ -55,5 +60,6 @@ export const resetMocks = () => {
         where: mockWhere.mockReturnThis(),
         limit: mockLimit.mockReturnThis(),
         get: mockGet,
+        count: mockCount.mockReturnValue({ get: mockGet }),
     });
 };

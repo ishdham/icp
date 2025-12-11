@@ -104,13 +104,14 @@ describe('ICP User API', () => {
         it('should list users for admin', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
 
-            // First for authenticate, Second for query
+            // First for authenticate, Second for count, Third for query
             mockGet
                 .mockResolvedValueOnce({
                     exists: true,
                     id: 'admin123',
                     data: () => ({ role: 'ADMIN' })
                 })
+                .mockResolvedValueOnce({ data: () => ({ count: 2 }) })
                 .mockResolvedValueOnce({
                     docs: [
                         { id: 'u1', data: () => ({ email: 'u1@example.com' }) },
@@ -123,7 +124,7 @@ describe('ICP User API', () => {
                 .set('Authorization', 'Bearer token');
 
             expect(res.status).toBe(200);
-            expect(res.body).toHaveLength(2);
+            expect(res.body.items).toHaveLength(2);
         });
 
         it('should return 403 for non-admin', async () => {
