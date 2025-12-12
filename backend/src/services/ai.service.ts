@@ -11,7 +11,7 @@ import { vertexAI, gemini15Flash, gemini15Pro, textEmbedding004 } from '@genkit-
 dotenv.config();
 
 // Initialize Genkit
-const ai = genkit({
+export const ai = genkit({
     plugins: [
         vertexAI({ location: 'us-central1', projectId: 'icp-demo-480309' }),
     ],
@@ -24,6 +24,7 @@ interface VectorDocument {
     content: string;
     metadata: Record<string, any>;
     embedding: number[];
+    score?: number;
 }
 
 export class AIService {
@@ -48,12 +49,12 @@ export class AIService {
     }
 
     private async refreshIndex() {
-        // Fetch Solutions
-        const solutionsSnapshot = await db.collection('solutions').where('status', '==', 'MATURE').get();
+        // Fetch ALL Solutions
+        const solutionsSnapshot = await db.collection('solutions').get();
         const solutions = solutionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
-        // Fetch Partners
-        const partnersSnapshot = await db.collection('partners').where('status', 'in', ['APPROVED', 'MATURE']).get();
+        // Fetch ALL Partners
+        const partnersSnapshot = await db.collection('partners').get();
         const partners = partnersSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 
         const newVectorStore: VectorDocument[] = [];
@@ -62,6 +63,7 @@ export class AIService {
         // For MVP we will do them serially or in small batches.
 
         for (const sol of solutions) {
+            // Only embed meaningful content if needed, but for search we want all.
             const content = `Solution: ${sol.name} (ID: ${sol.id}). Domain: ${sol.domain}. Description: ${sol.description}. Value Proposition: ${sol.uniqueValueProposition}.`;
             // Simplified embedding generation
             try {
@@ -109,22 +111,54 @@ export class AIService {
     }
 
     // Cosine similarity search
-    async search(query: string, limit: number = 3): Promise<VectorDocument[]> {
+    async search(
+        query: string,
+        options: {
+            limit?: number;
+            filters?: { type?: 'solution' | 'partner'; domain?: string; status?: string; proposedByUserId?: string };
+            minScore?: number;
+        } = {}
+    ): Promise<VectorDocument[]> {
         if (!this.isInitialized) {
             await this.initialize();
         }
 
+        const { limit, filters, minScore = 0.4 } = options;
+
         const queryEmbedding = await this.generateEmbedding(query);
 
-        const scoredDocs = this.vectorStore.map(doc => {
+        // Filter first (by type/metadata)
+        let candidates = this.vectorStore;
+        if (filters) {
+            if (filters.type) {
+                candidates = candidates.filter(doc => doc.type === filters.type);
+            }
+            if (filters.type === 'solution' && filters.domain) {
+                candidates = candidates.filter(doc => doc.metadata.domain === filters.domain);
+            }
+            if (filters.status) {
+                candidates = candidates.filter(doc => doc.metadata.status === filters.status);
+            }
+            if (filters.proposedByUserId) {
+                candidates = candidates.filter(doc => doc.metadata.proposedByUserId === filters.proposedByUserId);
+            }
+        }
+
+        const scoredDocs = candidates.map(doc => {
             const score = this.cosineSimilarity(queryEmbedding, doc.embedding);
             return { ...doc, score };
         });
 
-        // Sort by score descending and take top N
-        return scoredDocs
-            .sort((a, b) => b.score - a.score)
-            .slice(0, limit);
+        // Filter by minScore, Sort by score descending
+        let results = scoredDocs
+            .filter(d => d.score >= minScore)
+            .sort((a, b) => b.score - a.score);
+
+        if (limit) {
+            results = results.slice(0, limit);
+        }
+
+        return results;
     }
 
     private cosineSimilarity(vecA: number[], vecB: number[]): number {
@@ -145,7 +179,7 @@ export class AIService {
         if (!this.isInitialized) await this.initialize();
 
         // 1. Search for context (Mocked for now)
-        const relevantDocs = await this.search(message, 20); // Returns top docs - Increased limit to 20 for better context
+        const relevantDocs = await this.search(message, { limit: 20 }); // Returns top docs - Increased limit to 20 for better context
         const contextText = relevantDocs.map(d => d.content).join('\n---\n');
 
         // 2. Construct System Prompt with Context
@@ -218,7 +252,7 @@ export class AIService {
             
             INSTRUCTIONS:
             1. Synthesize all information into a detailed, well-structured text summary.
-            2. IMPORTANT: When listing References, ONLY use direct, original source URLs.
+            2. IMPORTANT: When listing References, ONLY use public, accessible HTTP/HTTPS URLs (e.g. official websites, news articles, PDFs). Do NOT use internal search links or grounding IDs.
             `;
 
             console.log('Starting Pass 1: Research (Genkit)...');
@@ -243,13 +277,15 @@ export class AIService {
             console.log('Starting Pass 2: Formatting (Genkit)...');
 
             // Genkit can output structured data directly if schema is provided!
-            // We use the Zod schema directly.
+            // Relaxed Schema for AI Extraction (allow partial/optional fields)
+            // We use .partial() to dynamically make all fields optional, avoiding maintenance overhead.
+            const RelaxedSolutionSchema = SolutionSchema.partial();
 
             const finalResult = await ai.generate({
                 model: 'vertexai/gemini-2.5-flash',
                 prompt: formattingPrompt,
                 output: {
-                    schema: SolutionSchema
+                    schema: RelaxedSolutionSchema
                 }
             });
 

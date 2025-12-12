@@ -10,6 +10,7 @@ export const UserSchema = z.object({
     lastName: z.string().describe('Last Name'),
     email: z.string().email().describe('Email').readonly(),
     role: z.enum(['REGULAR', 'ADMIN', 'ICP_SUPPORT']).describe('Role'),
+    language: z.string().default('en').describe('Preferred Language'),
     phone: z.object({
         countryCode: z.string().optional().describe('Country Code'),
         number: z.string().optional().describe('Number')

@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import client from '../api/client';
-import { Box, Typography, CircularProgress, Grid, Paper, FormControl, InputLabel, Select, MenuItem, Chip, OutlinedInput, Stack, Card, CardContent, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, FormControl, InputLabel, Select, MenuItem, Chip, OutlinedInput, Stack, Card, CardContent, Button } from '@mui/material';
 import Plot from 'react-plotly.js';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Solution {
     id: string;
@@ -16,6 +17,7 @@ interface Solution {
 
 const Reports = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [solutions, setSolutions] = useState<Solution[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['MATURE']);
@@ -46,8 +48,6 @@ const Reports = () => {
 
     // Initial Selection Effect
     useEffect(() => {
-        // user variable was unused in previous code block logic, so we can ignore it unless we add logic.
-        // Actually the Requirement says "The list of states shown should be the list of states accessible for the user".
         // The backend filters accessible solutions. So `availableStatuses` covers this.
     }, [loading, solutions]);
 
@@ -77,16 +77,20 @@ const Reports = () => {
     const domainData = useMemo(() => {
         const counts: Record<string, number> = {};
         statusFilteredData.forEach(s => {
-            const domain = s.domain || 'Unknown';
+            // Translate the domain KEY for display
+            const rawDomain = s.domain;
+            const domain = rawDomain ? (t(`domain.${rawDomain}`) || rawDomain) : 'Unknown';
             counts[domain] = (counts[domain] || 0) + 1;
         });
         return {
             labels: Object.keys(counts),
             values: Object.values(counts)
         };
-    }, [statusFilteredData]);
+    }, [statusFilteredData, t]);
 
     const providerData = useMemo(() => {
+        // Partners names are dynamic, usually not translated via static dict.
+        // So we keep them as is.
         const counts: Record<string, number> = {};
         statusFilteredData.forEach(s => {
             const provider = s.providedByPartnerName || 'Unknown';
@@ -108,140 +112,170 @@ const Reports = () => {
         <Box p={3}>
             <Box display="flex" alignItems="center" mb={3}>
                 <Typography variant="h4" component="h1" flexGrow={1}>
-                    Solutions Report
+                    {t('reports.title')}
                 </Typography>
-                <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => navigate('/solutions')}>
-                    Back to Solutions
+                <Button
+                    startIcon={<ArrowBack />}
+                    variant="outlined"
+                    onClick={() => navigate('/solutions')}
+                >
+                    {t('reports.back_to_solutions')}
                 </Button>
             </Box>
 
             {/* Filter Section */}
             <Paper sx={{ p: 2, mb: 3 }}>
-                <FormControl sx={{ m: 1, width: 300 }}>
-                    <InputLabel id="status-multiple-chip-label">Solution Status</InputLabel>
-                    <Select
-                        labelId="status-multiple-chip-label"
-                        id="status-multiple-chip"
-                        multiple
-                        value={selectedStatuses}
-                        onChange={handleStatusChange}
-                        input={<OutlinedInput id="select-multiple-chip" label="Solution Status" />}
-                        renderValue={(selected) => (
-                            <Box sx={{ display: { xs: 'block', sm: 'flex' }, flexWrap: 'wrap', gap: 0.5 }}>
-                                {selected.map((value) => (
-                                    <Chip key={value} label={value} />
-                                ))}
-                            </Box>
-                        )}
-                    >
-                        {availableStatuses.map((status) => (
-                            <MenuItem key={status} value={status}>
-                                {status}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                {drillDownFilter && (
-                    <Chip
-                        label={`Filtered by ${drillDownFilter.type}: ${drillDownFilter.value}`}
-                        onDelete={() => setDrillDownFilter(null)}
-                        color="primary"
-                        sx={{ ml: 2 }}
-                    />
-                )}
-            </Paper>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                    <FormControl sx={{ m: 1, minWidth: 200, flex: 1 }}>
+                        <InputLabel id="status-filter-label">{t('reports.status_filter')}</InputLabel>
+                        <Select
+                            labelId="status-filter-label"
+                            id="status-filter"
+                            multiple
+                            value={selectedStatuses}
+                            onChange={handleStatusChange}
+                            input={<OutlinedInput label={t('reports.status_filter')} />}
+                            renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map((value) => (
+                                        <Chip key={value} label={t(`status.${value}`) || value} size="small" />
+                                    ))}
+                                </Box>
+                            )}
+                        >
+                            {availableStatuses.map((status) => (
+                                <MenuItem key={status} value={status}>
+                                    {t(`status.${status}`) || status}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
 
-            <Grid container spacing={3} mb={4}>
-                {/* Pie Chart: Domain */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: 450 }}>
-                        <Typography variant="h6" gutterBottom>Solutions by Domain</Typography>
-                        <Plot
-                            data={[{
-                                values: domainData.values,
-                                labels: domainData.labels,
-                                type: 'pie',
-                                textinfo: 'label+percent',
-                                hoverinfo: 'label+value'
-                            }]}
-                            layout={{
-                                width: 400,
-                                height: 400,
-                                margin: { t: 0, b: 0, l: 0, r: 0 },
-                                showlegend: true
-                            }}
-                            onClick={(data: any) => {
-                                if (data.points && data.points[0]) {
-                                    setDrillDownFilter({ type: 'domain', value: data.points[0].label });
-                                }
-                            }}
+                    {drillDownFilter && (
+                        <Chip
+                            label={`Filtered by ${drillDownFilter.type}: ${drillDownFilter.value}`}
+                            onDelete={() => setDrillDownFilter(null)}
+                            color="primary"
                         />
-                    </Paper>
-                </Grid>
-
-                {/* Bar Chart: Provider */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: 450 }}>
-                        <Typography variant="h6" gutterBottom>Solutions by Provider</Typography>
-                        <Plot
-                            data={[{
-                                x: providerData.x,
-                                y: providerData.y,
-                                type: 'bar',
-                                marker: { color: '#1976d2' }
-                            }]}
-                            layout={{
-                                width: 400,
-                                height: 400,
-                                margin: { t: 20, b: 60, l: 40, r: 20 },
-                                xaxis: { tickangle: -45, automargin: true }
-                            }}
-                            onClick={(data: any) => {
-                                if (data.points && data.points[0]) {
-                                    setDrillDownFilter({ type: 'provider', value: data.points[0].x as string });
-                                }
-                            }}
-                        />
-                    </Paper>
-                </Grid>
-            </Grid>
-
-            {/* List Section */}
-            <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                    {finalFilteredData.length} Solutions Found
-                </Typography>
-                <Grid container spacing={2}>
-                    {finalFilteredData.map((s) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.id}>
-                            <Card variant="outlined" onClick={() => navigate(`/solutions/${s.id}`)} sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}>
-                                <CardContent>
-                                    <Typography variant="subtitle1" component="div" noWrap title={s.name}>
-                                        {s.name}
-                                    </Typography>
-                                    <Typography color="text.secondary" variant="body2" gutterBottom>
-                                        {s.domain}
-                                    </Typography>
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                        <Chip label={s.status} size="small" color={s.status === 'MATURE' ? 'success' : 'default'} />
-                                        {s.providedByPartnerName && (
-                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: '60%' }}>
-                                                by {s.providedByPartnerName}
-                                            </Typography>
-                                        )}
-                                    </Stack>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-                    {finalFilteredData.length === 0 && (
-                        <Grid size={{ xs: 12 }}>
-                            <Typography color="text.secondary" align="center">No solutions match the selected criteria.</Typography>
-                        </Grid>
                     )}
-                </Grid>
+                </Stack>
             </Paper>
 
+            <Stack spacing={3}>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                    {/* Domain Chart */}
+                    <Box flex={1}>
+                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+                            <Typography variant="h6" gutterBottom>{t('reports.by_domain')}</Typography>
+                            {domainData.values.length > 0 ? (
+                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                    <Plot
+                                        data={[{
+                                            values: domainData.values,
+                                            labels: domainData.labels,
+                                            type: 'pie',
+                                            textinfo: 'label+percent',
+                                            insidetextorientation: 'radial'
+                                        }]}
+                                        layout={{
+                                            width: 350,
+                                            height: 350,
+                                            margin: { t: 0, b: 0, l: 0, r: 0 },
+                                            showlegend: true,
+                                            legend: { orientation: 'h', y: -0.1 }
+                                        }}
+                                        config={{ responsive: true, displayModeBar: false }}
+                                        onClick={(data: any) => {
+                                            const point = data.points[0];
+                                            if (point && point.label) {
+                                                setDrillDownFilter({ type: 'domain', value: point.label as string });
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            ) : (
+                                <Box p={4}><Typography color="textSecondary">No data</Typography></Box>
+                            )}
+                        </Paper>
+                    </Box>
+
+                    {/* Provider Chart */}
+                    <Box flex={1}>
+                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+                            <Typography variant="h6" gutterBottom>{t('reports.by_provider')}</Typography>
+                            {providerData.x.length > 0 ? (
+                                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                    <Plot
+                                        data={[{
+                                            x: providerData.x,
+                                            y: providerData.y,
+                                            type: 'bar',
+                                            marker: { color: 'orange' }
+                                        }]}
+                                        layout={{
+                                            width: 350,
+                                            height: 350,
+                                            margin: { t: 0, b: 50, l: 50, r: 0 },
+                                            xaxis: { automargin: true }
+                                        }}
+                                        config={{ responsive: true, displayModeBar: false }}
+                                        onClick={(data: any) => {
+                                            const point = data.points[0];
+                                            if (point && point.x) {
+                                                setDrillDownFilter({ type: 'provider', value: point.x as string });
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            ) : (
+                                <Box p={4}><Typography color="textSecondary">No data</Typography></Box>
+                            )}
+                        </Paper>
+                    </Box>
+                </Stack>
+
+                {/* List of Solutions */}
+                <Card>
+                    <CardContent>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Typography variant="h6">
+                                {finalFilteredData.length} {t('reports.found')}
+                            </Typography>
+                        </Stack>
+
+                        {finalFilteredData.length === 0 && (
+                            <Typography color="textSecondary">
+                                {t('reports.no_match')}
+                            </Typography>
+                        )}
+                        <Stack spacing={1}>
+                            {finalFilteredData.map(s => (
+                                <Paper key={s.id} variant="outlined" sx={{ p: 2 }}>
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                                        <Box flex={2} minWidth={0}>
+                                            <Typography variant="subtitle1" fontWeight="bold" noWrap>{s.name}</Typography>
+                                            <Typography variant="caption" color="textSecondary">{s.id}</Typography>
+                                        </Box>
+                                        <Box flex={1}>
+                                            <Chip label={t(`domain.${s.domain}`) || s.domain} size="small" variant="outlined" />
+                                        </Box>
+                                        <Box flex={1}>
+                                            <Typography variant="body2" noWrap>{s.providedByPartnerName}</Typography>
+                                        </Box>
+                                        <Box flex={1} sx={{ textAlign: 'right' }}>
+                                            <Chip
+                                                label={t(`status.${s.status}`) || s.status}
+                                                color={s.status === 'MATURE' ? 'success' : 'default'}
+                                                size="small"
+                                            />
+                                        </Box>
+                                    </Stack>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    </CardContent>
+                </Card>
+            </Stack>
         </Box>
     );
 };

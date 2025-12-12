@@ -199,9 +199,10 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { role, q, limit = '20', pageToken } = req.query;
+        const { role, q, limit = '20', page = '1' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
-        const token = pageToken as string | undefined;
+        const pageNum = parseInt(page as string) || 1;
+        const offset = (pageNum - 1) * limitNum;
 
         let query: FirebaseFirestore.Query = db.collection('users');
 
@@ -209,21 +210,23 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             query = query.where('role', '==', role);
         }
 
-        // Pagination
-        const paged = await paginate(query, limitNum, token, 'users');
-        let filtersItems = paged.items;
+        // Use new pagination
+        const paged = await paginate(query, limitNum, offset);
+        let items = paged.items;
+        let total = paged.total;
+        let totalPages = paged.totalPages;
 
-        // In-memory search (Applied AFTER pagination)
+        // In-memory search (Applied AFTER pagination for now, AI search later)
         if (q) {
             const search = (q as string).toLowerCase();
-            filtersItems = filtersItems.filter((u: any) =>
+            items = items.filter((u: any) =>
                 u.email?.toLowerCase().includes(search) ||
                 u.firstName?.toLowerCase().includes(search) ||
                 u.lastName?.toLowerCase().includes(search)
             );
         }
 
-        res.json({ items: filtersItems, nextPageToken: paged.nextPageToken, total: paged.total });
+        res.json({ items, total, page: pageNum, totalPages });
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ error: 'Internal Server Error' });

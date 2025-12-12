@@ -1,0 +1,589 @@
+﻿Actions,Domain,Solution ID,Solution,Status,Details,Launch Year,Key Problems Addressed,Partner,Key Solution Elements,Unique Value Proposition,Expected Social Impact,Solution Traction,Partner Type,Address,City,State,Country,PIN/ZIP Code,Email,Contact Number,Website,Target Beneficiaries,Resources,Key Costs,Other Partners,Awards & Recognition,Created By,Created Email ID,Other Locations
+,,201,Spoken Tutorials (IT Skills Enablement),Mature,"Spoken Tutorials, a mass-market communications & learning innovation developed at IIT-Bombay, has developed a self-learning model. It takes learning from movie-industry and follows a rigorous engineering in the development process so that a learner will never have to ask any questions from an expert or coach. This approach has produced a solution that has limitless scale, almost zero cost, affords rapid deployment speed over a highly distributed and resource-constrained learner populations (in terms of language, funds, facilities, accessibility etc). Available in both online and offline mode, it has already covered 90+ IT topics (introduction to advanced programming), and in 23+ local languages to overcome barrier of English proficiency.",2018,"Like rest of the world, as India's economy shifts to 'digital economy' model, IT skills will be needed in almost every good-paying job. Lack of IT skills reduces employability of young people in small towns and villages, impacting nearly 300 million job-ready youth. However, there is no cost-effective way of providing such training at scale in the multiple languages prevalent in India while ensuring the required quality. ",IIT-Bombay Spoken Tutorials team,"Series of about 10-min long self-learning tutorials, which may be anywhere from 3 to 50+, depending on the solution complexity; Access to computers (preferably desktops) for practicing the learnt materials, all configured with open-source software so as to minimize cost to learn; connectivity for test administration and scoring.",IIT-Bombay Spoken Tutorials team,Impact in hundreds of millions of dollars in economic benefit when the cost per student per year per IT topic of less than a penny is compared to alternatives that costs several hundred dollars per course.,8m learners across 5000+ colleges and universities and High-Schools. Prisons in Nasik. CSC (Community Service Centers) in Delhi area -- these are entreprenurial driven coaching centers.,NGO,IIT Bombay Powai Mumbai Maharashtra India 400076,Mumbai,Maharashtra,India,400076,priyankashroff23@gmail.com,+91 9869326979,https://spoken-tutorial.org," More than 300m learners across India, and nearly billions globally. Large school networks (like PM Shri Schools, Ekal, Eklavya), Education Secretaries in States.",Existing computer lab with few (just one) to 20 computers (depending upon the target class size); configured Open Source software packages for practice,"Needs only Rs 25,000 per year per college/school/site. In that annual licensing fee, all students in that institution gets access to ALL spoken tutorials topic in all languages, testing and scoring, certificates, and support. Almost less than a penny per topic per student per year!!",,"Hundreds of articles in media, Government departments, colleges and universities; Testimonials by students getting good-paying IT jobs in Global 1000 companies like Amazon, Microsoft, Accenture.",1,info@ypointanalytics.com,-
+,,206,Tata ClassEdge,Draft,"Tata ClassEdge solution: Structured lessons per annual lesson plans for K-12, to augment class teachers; Requires H/W, content licensing, and initial training. instructional e-learning curriculum and technology solutions specifically created for Indian schools, teachers and students",2022,Tata ClassEdge was conceptualized in 2011 with the aim of improving the effectiveness of education systems in India. Addresses the lack of quality teachers in K-12 space.,Tata ClassEdge,Large monitor display; annual license; server ,Tata ClassEdge,Several thousand high-schools,"Reaching 15 lac+ students, 1.25 lac teachers, 1900+ schools, 30,000+ classrooms",NGO,TBD  Chennai Tamil Nadu India 102333,Chennai,Tamil Nadu,India,102333,tataclassedge@gmail.com,+91 9000090001,,Solution can be taken to every Middle and high schools,"Server, software license",Need 1 lac per scool per year license,,State Govt of Tamilnadu,1,info@ypointanalytics.com,-
+,,207,Pravartak STEM Classes,Pending,Pravartak STEM Classes and Virtual Labs: Online classes on STEM topics by teachers from IIT for 8th-12th grade; ,2022,"Provides an eco-system that enables fundamental research to translate to products, thus integrating academics, industry, government and international organizations.",IIT-M's Pravartak center,Display unit,IIT-M's Pravartak center,Hundreds of High Schools,"Preparing young India for the next generation of world-class technologies. 10 International collaborations, 137 publications, 17000+ skill development sessions. ",NGO,TBD  Chennai Tamil Nadu India 422001,Chennai,Tamil Nadu,India,422001,Email TBD, Mobile TBD,,All STEM colleges,License,Annual cost 30-40k rupees,,IIT-M,1,info@ypointanalytics.com,-
+,,208,STEM Education for aspiring Rural Students,Pending,"Space-i-fic: Bringing advanced STEM topics (Space & aviation, Robotics, AI) to middle and high-schools in rural & underserved areas so talented kids can be inspired to take on those subjects in colleges",2020,Lack of STEM education opportunities for students in rural India.,Moinee Foundation,server,Space-i-fic,500 schools,"The curriculum and approach are built on the four pillars of Access, Equity, Quality, and Accountability aligned with the National Education Policy 2020.",NGO,Main St  Jaipur Rajasthan India 302001,Jaipur,Rajasthan,India,302001,Email TBD, Mobile TBD,,All STEM Schools,computer lab,30-40k per school. Available in WB currently,,state govt award,1,info@ypointanalytics.com,-
+,,210,Mobile App based learning,Pending,ScholarPlanet: Mobile app based learning through gaming/fun and competitions; Crowd-sourcing of learning content. Digital content is continously updated. Competitions on variety of topics with reward points approach.,2022,"Educational inequality in Govt. and Rural 
+Schools, lack of quality resources, modern technology and innovative learning approach",Scholar Planet,"Interactive quizzes and gamified contests 
+• Multilingual content t.
+• Leaderboards and reward systems 
+• Continuous teacher training programs",Scholar Planet,"Scholar Planet envisions a future where every child, regardless of their socioeconomic background, has
+access to quality education and the opportunity to realize their full potential.","105 schools in UP, 50 KV, 15 schools in Ladhak",NGO,TBD  Patna Bihar India 123456,Patna,Bihar,India,123456,scholarplanet@gmail.com,+91 9000010010,,"Platform for K-12, current comprehensive material for High School Students",TBD,"Development of interactive content pedalogical and gamification. Computers, Tablets, network infrastructure for schools etc.
+",,TBD,1,info@ypointanalytics.com,-
+,,211,InquiLab,Pilot,InquiLab solution: Enable entreprenurial and innovatin skills in grade 7-12 through guided and structured program (in both vrtual and on-premise models),,Lack of entreprenirial skills in students,InquiLab,,InquiLab,,,NGO,-,-,-,-,-,Email TBD, Mobile TBD,,Every middle and high school,,TBD,,,1,info@ypointanalytics.com,-
+,,213,"Mulyavardhan is innovative solution to bring-back values, culture and resiliency in young minds for ",Mature,"Mulyavardhan is a dynamic academic initiative focused on cultivating values and life skills among school-aged children. Drawing on the latest research in social, emotional, and ethical development (SEED), Mulyavardhan aligns with the values enshrined in the Preamble to the Constitution of India.
+
+Mulyavardhan features meticulously designed and engaging activities for students in grades 1 through 8. These activities cover a broad spectrum of themes, including self-awareness, responsible behaviour, positive relationships, and social responsibilities.
+
+Mulyavardhan supports students in achieving competencies outlined in the National Curriculum Framework (NCF) 2023.",2009,"Lack of understading of the basic human values, local traditions and culture in students, which often impacts mental resilience and citizenship. ",Bharitiya Jain Sangathan (BJS),Value-based curriculum for integration into main subjects; Pedagogy training; Books,"Completely integrated approach (training, books and aids, ongoing support and augmentation) to help teachers successfully integrate values into academics.",Tens of millions of students in nearly 14 lakh schools,"Implemented in 70000 schools in Maharashtra, Goa, Union Territories of Dadra Nagar Haveli and Daman and Diu.",NGO,"Level 8, Muttha Chambers II Senapati Bapat Road Pune Maharashtra India 411016",Pune,Maharashtra,India,411016,Email TBD, Mobile TBD,,K-8 School kids,"Content (books, exercises, simulations), Training, Support","Commitment by the Principal towards 1-2 period for integrated curriculum teaching; Teacher training at launch and quarterly checkpoints; Since the program needs to be integrated, it needs State Government buy-in to roll out at-scale in public schools. For private schools, they can implement without that handicap.",,Recognized by both State Governments of Maharashtra and Goa for its massive impacts on student performance and class participation. ,1,info@ypointanalytics.com,-
+,,218,Affordable BioGas plants for rural households,Draft,"BioGas solution for rural / farmer households to achieve energy independence and precious savings. Fully packaged solution (with ~50% subsidy form MNRE, pre-identified supplier for digesters, step-by-step guide) to enable small farmers or rural households with just 2+ cattle to eliminate dependence on firewood or LPG, and earn income after 6-month breakeven point, by selling high-value organic fertilizer of slurry. The solution further transforms value of aging cows and animals which otherwise have diminished value in terms of milk or farming tasks.",2022,"Due to the high prices of LPG cylinders, farmers resort to local forests for firewood as an energy source, eventually leading to deforestation and the destruction of the environment. Additionally, naturally available cowdung is either wasted to simply contributes to landfills or problematic waste (with flies etc). ",Gram Samriddhi Foundation,"1)	Training in organic farming & the BioGas plant
+2)	Fruit Tree Plantation
+3)	Rainwater harvesting farm ponds
+4)	Biogas plant - digester, pipes, connections, monitoring","Unique aspect is the complete package that includes already obtained approvals for ~50% subsidies from MNRE for nationwide deployments, sourcing agreements with validated supplier, and step-by-step simple guide. It is a very cost-effective approach for multiple goals like:
+a.	Uplifting farmers from poverty by multiplying their income 5X
+b.	Ecologically protecting and rejuvenating the rural environment
+c.	Protecting our health from side effects of pesticides and fertilizers ","To expand and serve rural populations across India. There are about 160 million farmers in India, including 80 million small farmers holding less than 1 acre land. Most of them are stuck in a vicious poverty cycle, in need of interventions that are mentioned above to improve their living conditions and alleviate poverty. Goal is to hep increase in income 5-fold compared to paddy cultivation in 2 years; Forward integration from Farm to plate; organic fruits/vegetables for cities increasing the market.","165 biogas plants have already been set up in the villages of West Bengal. Additionally, the solution has helped farmers save over Rs. 20,000 to Rs. 25,000 yearly. Expansion plans in collaboration with WHEELS to scale to other States.",NGO,"VIP Enclave, Anand Vihar, 3 Raghunathpur, Baguiati Kolkata West Bengal India 700059",Kolkata,West Bengal,India,700059,info@gramsamriddhi.org,+91 8584866868,https://gramsamriddhi.org/,"Highly repeatable program. The scope of expansion is to reach millions of farmer families. In West Bengal alone,  solution is being taken to 40,000 villages, in which 90% are small and marginal farmers.","Local Farmers, NGOs, Govt Schemes, Line Departments in the Govt","With 50% subsidy, it costs ~18k. With just 2+ cattle to eliminate dependence on firewood or LPG, and earn income after 6-month breakeven point, by selling organic fertilizer of slurry.",,State Govt and MNRE recognitions,1,info@ypointanalytics.com,-
+,,219,RuKart - Subjee Cooler - Zero-energy Cold Storage,Mature,"Zero-energy Cold Storage solution for small fruit/vegetable retailers farmers who can't afford expensive freezers, and also face very uneven / limited supply electricity. Very affordable box with less than a year of payback. It prevents wastage of unsold daily inventory of fresh fruits/vegetables/flowers that typically robes the small farmer-retailer of 30% of his daily revenue/income. 
+A very compelling innovation from young graduates of IIT Bombay leveraging their knowledge of material science, and acute awareness of small rural farmers' challenging while growing up in those households.",2019,"Lack of cold storage facility for marginal farmers in rural areas. For farmers, storage technologies are too costly, out of reach, and futile.",RuKart,"Cold storage box in various sizes (50 Kg storage, 100 kg storage, personal storage for household, mobile cooler)","Ingenious leverage of material science expertise to create a simple rectangle box (with several compartments for different fruits/vegetables/flowers) that just needs periodical water to fill in the sandwiched metal layers. It keeps the ambience temperature of 5-15 degrees, requiring no electricity or energy, thus savings on costs as well as environment (greenhouse emissions).",Savings of thousands of tonnes of wasted fruits and vegetables from 10m farmers; Increase in income by 30% or more for small farmers; Miilions of tons in greenhouse gas emissions,"Nearly 2000 Sabjee Coolers already installed across 11 states. In a life span of 7 years, one Subjee Cooler saves about CO2  equivalent of 3,211 full grown trees. Several States offering subsidies. Also banks providing EMI option to make it further affordable.",NGO," 301, B-wing, Mangeshi Elite, Rambaug Lane No 4 Chikanghar, Kalyan (West) Thane Maharashtra India 421301",Thane,Maharashtra,India,421301,namaste@rukart.org,+91 8956341910,https://rukart.org,"51 million farmers are cultivating Flower, Fruit, and Vegetables. Along with these 51 million small and marginal cultivators there are about 2.5 million Flower, Fruit, and Vegetables retailers in India who need solutions like Subjee Cooler.","Just one-time purchase of the Subjee Cooler of about Rs 40,000. ","At about Rs 40,000 for 50-Kg box and Rs 55,000 for 100-kg box",,Earth Care Award in 2024,1,info@ypointanalytics.com,-
+,,222,Newborn & Maternal Nutritional Health,Mature,"Newborn & Maternal Nutritional Health via Health Spoken Tutorials solution addresses very pervasive (across ALL 29 States and 9 UTs in India) early childhood malnutrition (age 0-5) with malnutrition rates of 50%+ in rural and tribal populations, using three technologies (Dr Rupal Dalal's pioneering research on proper breastfeeding techniques, IIT-Bombay's Health Spoken Tutorials platform, Cuedwell's orchestration software platform) to tackle this urgent need. Solution consists of 110+ 10-min health spoken tutorials (HST) to cover nearly 45 technical points for proper breastfeeding techniques, balanced nutritional intake for mothers as well as for supplementary and complementary feeding of infants. HSTs are used to train entire health infrastructure (CMHOs, pediatricians, nurses, ANMs, ASHA & Anganwadi workers) given the pervasive lack of awareness of proper breastfeeding techniques (which is the primary root cause of pervasive malnutrition in newborns) and balanced nutrition, using a rigorous 5-step training and capacity building methodology that ensures every health worker has mastered all the skills and is able to successfully teach the mothers for next 15-20 years. ",2021,"Childhood malnutrition remains a major issue in virtually all parts of India in spite of the progress made in recent years. Mothers lack knowledge of proper breastfeeding, complementary feeding and looking after their own nutrition needs. ASHA & Aanganwadi workers need the right training themselves to be able to support these mothers effectively. But it has been challenging to deliver the training in an engaging and accessible way while ensuring high quality & monitoring post-training.",IIT-Bombay Spoken Tutorials team,"HSTs (110 in nearly dozen local languages), rigorous 5-step training methodology, Cuedwell application for end-to-end learning management and impact tracking and results and real-time decision-making; learning kits","Learning of proper breastfeeding techniques has consistently resulted in nearly five-times weight gain in critical first 6-12 months of life, eliminating stunting / severe malnourished babies, which otherwise would remain mentally and physically underdeveloped for life.",More than 200 million babies and mothers,"The rollout in Nandurbar, Maharashtra achieved phenomenal success in improving the daily weight gain of newborns from around 10 gms/day to nearly 35 gms/day, well exceeding targeted national standard. From there, the program has expanded to five other districts in Maharashtra, Gujarat, and Chattisgarh. WHEELS and IIT-B/HST team is actively deploying the initiative to the entire State of M.P. and Meghalaya. Four more large States in active negotiations. ",NGO,IIT Bombay Powai Spoken Tutorials Divisionb Mumbai Maharashtra India 400076,Mumbai,Maharashtra,India,400076,priyankashroff23@gmail.com,+91 9869326979,https://spoken-tutorial.org,200 million babies and mothers across all 28 States and 8 UTs.,"IEC kits, HST, training facilities, Cuedwell application","Low cost and zero recurring costs, Very strong analytics digitized platform used with a train-the-trainer approach to cascade across nearly hundred thousand health workers in each large State, which then imparts proper breastfeeding techniques and nutritional intake knowledge to new mothers. Ample  Govt funds to be leveraged for training activities in a creative public-private partnership as shown in M.P. and Meghalaya. ",,Numerous State and health association awards and testimonials.,1,info@ypointanalytics.com,-
+,,223,Sangini - Women's Hygiene Solution,Mature,"Sangini initiative has overcome two biggest challenges in solving the unmet need of nearly 46m girls and women -- (a) affordable pads with consistent quality; (b) accessibility to overcome social taboos and stigma for young girls / women. Its innovative sourcing to bring the unit cost down to almost Rs 2, along with making them accessible 7x24 through simple self-service dispensers, has created very scalable and self-sustainable solution with potential to cover entire target geography..It is leveraging local social impact entrepreneurs (e.g., NOBA network alumni) and partner NGOs giving them opportunity to generate enough income to be motivated to grow the effort and maintain the dispensers.",2022,"Adolescent girls and women from low income household, especially in rural areas, lack access to affordable and easily available sanitary pads to ensure good menstrual hygiene. This causes unnecessary infections & suffering. ",NOBA GSR,"The solution involves an innovative model of a sanitary pad dispenser machine. This machine ensures the sourcing of quality pads at affordable rates and ease of delivery & replenishment. Secondly, long-term volume-based sourcing of manufactured pads at strict specs, ensures target affordability of Rs 2 per pad.","Affordability to enable purchase by the poorest sections; Making them accessible 7x24 without facing catcalls; After initial cost of putting the dispensers (generally supported by NGOs, Foundations, CSRs, Govt Schemes), model is completely self-sustainable for life since low-price offsets all the costs, and even providing some income for the entrepreneur maintaining the dispenser and restocking. ","The goal is to reach at least 25% of 46m with unmet need across 8 States with most acute situation (i.e., >50% rural girls/women without affordable and accessible quality pads).in next 5-6 years.","Since the launch of the program in January 2022, 350 villages have gone live with dispensers and incinerators as of March 2023, enabling access to nearly half-a-million girls & women, and already used by >11,000 rural women. This equates to approximately 6.6 lakh days of relief per year through the provision of 13.2 lakh pads annually.",NGO,Mainpura Rajapur Pul Patna Bihar India 800001,Patna,Bihar,India,800001,info@nobagsr.org,+91 6202064224,https://nobagsr.org/,"In a short period of time, the solution has reached more than 1000 communities in Bihar, Jharkhand, West Bengal, Karnataka and several other States. WHEELS is partnering to help scale solution to all States through its NGO and alumni network.",Self-service dispenser; Commitment by local responsible person/entity to maintain and restock. ,"With an affordable cost of ~30k per dispenser machine (inclusive of configuration, shipping and installation & training), it is a low cost and replicable model.",,Numerous State and Social Sector Awards; Support from recent Miss Universe as key spokesperson.,1,info@ypointanalytics.com,-
+,,224,"Saukhyam Pads - Environmental friendly, affordable, and quality Sanitary Pads",Draft,"'Saukhyam' has introduced several key innovations. In addition to affordability and quality, it addresses three other key needs: environmental friendliness (eliminating plastics so as to avoid landfill contributions), reduce import bill of billions (substiuting imported wooden pulp by banana fibers available everywhere in India), 90% cost savings (due to 3-year re-usability), and health benefits (reduction in cramps and PCOS). Further, its unique distribution model creates jobs for local women / SHGs that do the final assembly and distribution. ",2020,Traditional pads present multiple challenges: massive addition to landfills; costly; import bill to the country.,Saukhyam,Banana fiber processing center to create key element of the pad; final stitching of pad into usable product; education on this new innovation and benefits.,"3-year re-usability and use of local material (Banana fiber) that replaces imported wooden pulp brings the cost down by 90%; By eliminating plastics present in traditional pads, it eliminates billions of pads going into landfills; health benefits (reduction in PCOS, cramps and rashes); local jobs (assembly and distribution). ",46 million girls and women; Billions saved in import costs,"Reached over 500,000 beneficiaries & built India’s largest reusable pad factory in Kerala",NGO,"Saukhyam House, Mata Amritanandamayi Math P.O. Amritapuri Kollam Kerala India 690546",Kollam,Kerala,India,690546,info@saukhyampads.org,+91 6282103073,https://saukhyampads.org,"Firstly, 46 million girls and women that does not have access to quality and affordable pads. Further, given its strong environmental friendliness, lower cost and health benefits, it impacts every single girl and women - whether in rural or urban area, poor or rich.",Manufacturing setup (for banana fiber processing and conversion into pads); assembly for final stiching; distribution.,Manufacturing facility for banana fiber processing (15-20 lakhs); Training for final assembly; Distribution to end-users.,,Best innovation award by WHEELS Global Foundation Innovation Contest 2023,1,info@ypointanalytics.com,-
+,,227,SEL Social Emotion Learning/Resilience for School for moral value education,Mature,"Mental Health for school segment is becoming a pervasive issue, further amplified in rural and under-resourced communities. SEVL (Social-Emotional-Value Based Learning) solution has developed a complete program and methodology to help kids learn using various common scenarios and exercises that kids do throughout the year to buiild mental resilience and capacity to cope from early forming years.",2016,"Children need support to become resilient to cope with the challenges of growing up, those caused by social media, difficult family circumstances etc. But schools lack the skills and materials required to provide the right kind of training & education in a seamless way alongside regular curriculum. ",Feeling Minds ,"Feeling Minds® has done an immense contribution to the field of Education with the Experiential Emotional Educational (EEE) program. 
+
+The EEE program aims to provide a framework for training and equipping students with the necessary skills so that they can apply scientific ways to deal with both ordinary and extraordinary challenges which life presents","Seamless integration of real-life role-play based exercises and projects into regular curriculum, school year calendar, and pedagogy. Covers all key categories of cognitive skills by age. Enables student to build as he/she progresses through next grades so as to build sustaining behaviors and resilience for life-long success.","Improved mental resilience and capacity to cope with pervasive negative environmental and societal influences. *  Enhanced focus and school performance. *  Positive participation and interactions with peers. *  Lower drop-out rates and higher long-term educational achievements. To further accelerate scaling of these impacts, WHEELS and Feeling Minds are collaborating to take SEVL to large school networks like Navodaya and Eklavya schools. ","Feeling Minds has conducted programs for 30+ schools in the country imparting Emotional Education to 15000+ children, 2500+ teachers and 4000+ parents. SEVL model is now being taken to vast nationwide network of PM Shri schools. ",NGO,"102, Shivam Elegant Near Mangalam Vihar, Sikandra, Bodla Road Agra Uttar Pradesh India 282002",Agra,Uttar Pradesh,India,282002,feelingmindsindia@gmail.com,+91 9837007165,https://www.feelingminds.com/,"GoI's new NEP is mandating inclusion of mental health as part of the curriculum, and hence it gives an excellent opportunity to scale the solution to all the schools in India ","Fully developed exercises, tools, aids that integrate into the regular curriculum; Teacher training and support. Online portal for access to rapidly growing material. ",Minimal cost - initial training and as-needed subsequent augmentation. Commitment from school principal and teachers.,,Numerous national and international awards and recognitions for science and research-based SEVL methodology.,1,info@ypointanalytics.com,-
+,,228,PEAKMind Solution - Mental Health for Adolescents,Draft,Mental Health for college and high-school youth: Using digital platforms (Mobile-app and website) that uses technology-based self-assessment and then matching with right solution (from self-exercises to 1:1 sessions with a medical psychologists). Being adopted by largest Coaching Centers in Kota (Raj),2020,"Pressure to perform well - in entrance exams, in job interviews, in competitive exams etc. - is a major source of stress amongst high school & college age children. This age group faces several other challenges as they discover themselves and try to carve out the path to their future. But it is critical to identify what sort of support is needed, otherwise effectiveness is low. Challenge is how to do the initial diagnosis quickly & cheaply; and then recommend the right solution. ",PeakMind,Mobile app,PeakMind,TBD,22 students among top 100 JEE & NEET'22 used the solution. More 70% improved persormance and confidence. Reached 50000+ students.,NGO,TBD  TBD Karnataka India 123456,TBD,Karnataka,India,123456,neeraj@peakmind.in,+91 9845065733,https://www.peakmindapp.com,The goal is to empower the students to unlock their full potential and effectively navigate the psychological aspects of their growth journey. Tap the premier Instts.,TBD,Minimal cost. Commitment from college/university. Subscription based model 20-40 rupees per month,,TBD,1,info@ypointanalytics.com,-
+,,236,RuralShores/PeopleShores - IT skills training and employment in rural areas,Mature,"RuralShores/PeopleShores’ borrows well-established model of IT Services Outsourcing to social impact space by creating IT Delivery Centers in impoverished tier 3/4 towns/communities that lack good-paying jobs for youth and thus forcing them to migrate to urban centers. Using a win-win partnership with Government bodies (towns, cities, States) and Corporations, these centers provide 200-300 jobs for trained high-school graduates to deliver ISO quality services. Corp clients benefit from lower services cost, avoiding cost of hiring and retention of competitive IT talent, and CSR/Impact branding. Already scaled to 12 Centers in India under RuralShores brand, and 7 in USA under PeopelShores brand. WHEELS is supporting to help scale to hundreds more leveraging its vast network of alumni in senior leadership roles in large Corporations as well as partnerships such as CII & NASSCOM.",2008,"BPO revolution successfully created lots of jobs in and around big cities. But high cost of wages & real estate in these cities means there is an opportunity to shift BPO work to smaller towns. Improved power and data network availability means this is increasingly possible. Without this type of model, high-school youth are forced to migrate to bigger cities, and thus hollowing out smaller towns and cities, and putting enormous pressure on bulging big cities. A massive challenge on all fronts - smaller towns, big cities, straining tax base, youth migration, income disparity etc.",RuralShores ,"IT Delivery Services Center facility with appropriate ISO quality setup (for security, access, privacy, collaboration spaces etc), purpose-built training on IT basics to applications, and business communications; technology infrastructure; Corporate agreements and commitments for services.","RuralShores / PeopleShores' ImpactSourcing innovation brings very unique self-sustainable model that benefits all stakeholders -- Youth getting good-paying jobs where they grew up; host towns seeing economic transformation from these high-tech hubs with 200-300 new jobs; Corporations benefitting from cost-savings in multiple ways (services cost, hiring & retention costs) as well as powerful Social Impact / CSR branding. Revenues generated from ISO quality services duly supports costs of these centers, making the model highly scalable and repeatable.","Tens of millions of rural youth, and associated rural communities which sees economic transformation","12 centers in 8 Indian States, employing over 3000
+rural youth delivering IT and BPO services to major companies.
+impacted the livelihoods of
+over 40,000 rural youth. As well as 7 Centers (under PeopleShores brand) in USA (e.g., Clarksdale, Mississippi; Decatur, Georgia; Pine Bluffs, Arkansas; Brooklyn and Bronx in New York; Washington D.C.). It has already benefitted 3.7 million people. Participation of 30+ marquee Corporate brands. ",NGO,"#135/2, Maruthi Industrial Estate,  ITPL Road, Hoodi, Whitefield Bengaluru Karnataka India 560048",Bengaluru,Karnataka,India,560048,info@ruralshores.com,+91 8040906737,https://www.ruralshores.com,"Solution benefits two main groups: (1) Youth in tier 3/4 impoverish towns & cities, a target market of tens of millions; (2) host towns/cities for which the Outsourcing Centers become magnets of economic transformation creating several fold economic gains.",Motivated civic leaders in towns & cities; Corporate customers with genuine impact goals; Youth looking to transform their lives. ,"Facilities (building, furniture, utilities) for new center; upfront costs of hiring and training of youth prior to securing Corporate service contracts",,"Bronze award in Lifestyle & Social
+Impact category by Edison Awards (USA); Top 3 Best Innovations in Asia Pacific by Wall Street Journal, HK; Runner-up for Most Innovative Start-up by NAASCOM; Best Social Catalyst BPO Organization by Economic Times.",1,info@ypointanalytics.com,-
+,,238,Samarath Initiative: Skill & vocational training with assured employment for rural youth ,Mature,"The Raah Foundation, a partner of WHEELS, has led the effort to support these disadvantaged applicants through the program “Samarth”. Samarth is based on Raah’s existing strength and expertise in identifying gaps in the development process, offering sustainable solutions to transform the employment situation for this youth population. The program aims to provide vocational, social, and technical training for economically disadvantaged youth between the ages of 18 and 25. In addition, hard and soft skills are taught in this process, curating them towards retail, ITES, manufacturing, and customer support in banking and insurance. English and email communication, sales and marketing, typing, Tally (a popular accounting software), GST, and Microsoft Office are more skills taught through Samarth. ",2022,"India’s average age is around 28.4 years old, making it one of the youngest countries in the world.
+The youthful demographic presents great potential for economic growth and innovation. However, about 68% of India’s youth are from rural areas with limited employment opportunities. The education system at a vast majority of these schools and colleges is not fully aligned with the corporate or job market standards, placing these young applicants at a significant disadvantage compared to their urban counterparts. As a result, India is experiencing a large pool of unemployed youth. While some live directionless lives in rural areas, those who migrate to urban areas have trouble finding employment, hence resorting to unorganized labor markets with minimal pay.",Raah Foundation,"Skills training center, disciplined selection methodology to select motivated youth, right tutors, alignment with local area employers, and partnership with CSRs for initial launch period prior to self-sustainability. ","The Raah Foundation has employed numerous innovative aspects to create a cost-effective and scalable model. Firstly, Samarth delivers intensive 5-week training in skills like Intuit QuickBooks, Microsoft Office, and resume-building. Additionally, they emphasize business ethics such as meeting commitments, punctuality, and maintaining professional relationships with managers and colleagues.
+
+Another innovative aspect of Samarth is its “job assurance” initiative, which guarantees a participant's job upon program completion. By leveraging relationships with local businesses, Samarth has secured agreements to hire their trained youth, eliminating the need for interviews, and saving the companies time and money, hence the cost-effectiveness. These businesses often include banks, retailers, credit cooperatives, and microfinancing groups close to the participants’ homes, making employment accessible, known as the “placement cell”.
+
+Lastly, the Raah Foundation has collaborated with a corporate",Thousands of youth benefitting from long-term skills and employment; local businesses benefitting from low turnover from motivated employees that needs very little job training.,"With 15+ locations thriving in Nagpur, Mumbai, Pune, and more, the groundbreaking initiative of Samarth has already empowered 1,480 students by March 2024. 79% of these students have completed their training, with 77% obtaining placements and 8% advancing to higher studies. Plans in progress to expand to other States like Rajasthan in partnership with with WHEELS.",NGO,"K4501, Kohinoor Square N.C. Kelkar Marg Dadar West Mumbai Maharashtra India 400028",Mumbai,Maharashtra,India,400028,vidya@raahfoundation.org,+91 9821615426,,"With each training center's capacity to benefit nearly 500 youth, this self-sustainable model can be taken to several thousand tier-2/3 cities, benefitting several million youths.","Skills training facility, trained tutors, content, funds for initial launch period prior to self-sustainability. ",Initial per student cost of Rs 10000-15000 can be supported by CSRs. Later on the program becomes self-sustainable through fees paid by the employed youth in installments from their salaries.,,Recognition by several CSR partners and State Govt,1,info@ypointanalytics.com,-
+,,241,Integrated Smart Village Development,Mature,"Integrated Smart Village Development: Bringing technology and knowledge transfer to help convert local raw food assets (ginger, turmeric, honey etc) into higher-value ventures. Multi-year initiative in Arvalli district of Gujarat. ",2022,"Large parts of rural India face a lack of locally relevant vibrant enterprises rooted in local geographyâ€™s unique economic assets, and hence migration of people from rural villages to urban centers in search of basic livelihood opportunities continues at an increasing pace",IEEE ISV,"Digital literacy and Livelihood enhancement using interactive kiosks, spoken tutorials, training programs, and skills enhancement activities","Combined capabilities of partners IEEE ISV, Srjan Foundation, Mission Samriddhi, and MSS ",Nearly 2000 villagers and students in and around Samlaji Community College,Establishment of Digital Literacy Lab; E-Service Kiosks in 4 GPs; Exploring the Livelihood opportunities with local SHGs ,NGO,Samalaji Arts College  Samalaji Gujarat India 383251,Samalaji,Gujarat,India,383251,satish.chetwani@erda.org,+91 9978940913,https://smartvillage.ieee.org/,The program intertwines entrepreneurial and educational interventions to improve the inclusivity of most marginalized communities,"Local Educational Institutes, SHGs, Line Departments in the government, Local NGOs",Current funding by IEEE ISV,,TBD,1,info@ypointanalytics.com,-
+,,243,Prisoner rehabilitation through IT Skills (Spoken Tutorials),Mature,"Samta Foundation has taken Spoken Tutorials to help prisoners acquire IT skills so they can develop self-esteem and capabilities that society would value on their release, and help them earn dignified wages, and not just subsistence level menial transitory jobs that often are insufficient to survive, and thus results in very high recidivism rates. Along with IT training, Samta also provides health services (basic checkups, cataract treatment, vaccinations, meals etc) to help prisoners stand on their two feet. ",2021,"Prisoners live in deplorable conditions, leading to health problems, in-fighting and depressive conditions. In collaboration with prison authorities and the state judiciary system, Samta has been able to introduce initiatives to bring remarkable behavioural change in prisoners and enable them dignified livelihood after their release.",Samta Foundation,Dedicated room with 10-20 computers & headsets; Open source software; Spoken tutorials license; use accounts,Samta Foundation,Several hundred thousand prisoners who need better opportunities to rehabilitate their lives,1000+ prisoners trained in IT skills,NGO,"7th Floor, Gala Impecca Andheri Kurla Road Mumbai Maharashtra India 400059",Mumbai,Maharashtra,India,400059,samta@samtafoundation.org,+91 2269693200,,Good replicable model content and methodology wise,Spoken Tutorials license,Scalable to several thousand prisons in all States,,Govt of Maharashtra and Nasik Region Prison Commissioner,1,info@ypointanalytics.com,-
+,,245,EcoSchools,Pending,"EcoSchools solution for enabling middle-school kids with integrated learnings through hands-on work in eco-gardens adjacent to their schools so as to learn about climate, environment, flora & fauna, health, and hygiene.",2022,Global warming driven challenges require a multi-disciplinary approach with experiential learning for young minds.,Rotary,TBD,"Rotary, Aurovile Foundation",TBD,"â€˜Ecoshoolâ€™ clusters around a central â€˜EcoCenterâ€™. The model is leveraging already completed a city-level transformation (from massive trash-dump to vibrant forest) and 50+ years of innovation. The State Government of Tamil Nadu, local Rotary Clubs and IT Center Corporations have already committed their support.",NGO,TBD  Chennai Tamil Nadu India 123456,Chennai,Tamil Nadu,India,123456,Email TBD, Mobile TBD,,Programs present a compelling scaling opportunity to be taken to more than 2 million middle schools and high schools in India touching nearly more than 200 million future youth leaders.,TBD,Minimal cost. Commitment from schools and local governments,,TBD,1,info@ypointanalytics.com,-
+,,246,Smart Tree Plantation by Gram Samriddhi Abhiyan,Draft,"Gram Samriddhi Abhiyan (GSA) has developed integrated Smart Tree Plantation initiative for tripling farmer income in collaboration with regional technology institution IIT-Kharagpur whose research recommended 15-20 best trees to plant (based on soil properties, climate, rainfall patterns). This creates triple benefits: re-forestation, bio-diversity, and cash income. GSA invests in nurseries, leveraging grants and subsidies from central and State Govt programs, to distribute healthy saplings for farmers to use. Along with, farmers are given training to create a small nearby pond for water harvesting, long-term caring of the saplings and trees to ensure full 10+ years life-time value, and market linkages for proper off take and pricing. The model results in farmer often able to increase their annual income three-fold to four-fold, besides long-term environmental & ecological benefits. ",2021,"The rural farmer generally depends on a single crop during the season and ends up working odd jobs in the other months. Crop diversification can help farmers to sustain themselves financially all through the year and reduce the risk of crop failure, increasing their income.",Gram Samriddhi Foundation," After several years of research, trials & testing Gram Samriddhi has discovered that the combination of:
+1)	Training in Organic farming
+2)	Fruit Tree Plantation
+3)	Rainwater Harvesting farm ponds
+4)	Biogas plants 
+is a very cost-effective approach for multiple goals like:
+a.	Uplifting farmers from poverty by multiplying their income 5X
+b.	Ecologically protecting and rejuvenating the rural environment
+c.	Protecting our health from side effects of pesticides and fertilizers ","GSA promotes organic fruit tree plantation for financial security of farmers. Farmers are convinced to partially shift from paddy cultivation to organic fruit tree plantation, for which they receive technical know-how, financial support, and good quality fruit saplings. This not only brings about financial prosperity to the farmers but also ecological prosperity through biodiversity, protection of flora and fauna, enhancement of agro-forestry and conservation of natural resources- maintaining quality of soil, air and water.","* For tens of millions of small farmers, opportunity to increase in income 5-fold compared to paddy cultivation in 2 years for farmers * Forward integration from Farm to plate * Organic fruits/vegetables for cities.","In the last 4 years GSA have reached 8 blocks of several districts in south West Bengal, 900 villages, 11,000 farmers planting 4,25,000 trees.  Approx 75% of the trees survived and giving fruits. 3287 farmers were also trained creating 95 biogas plants and 600 rainwater harvesting ponds. ",NGO,"VIP Enclave, Anand Vihar, 3 Raghunathpur, Baguiati Kolkota West Bengal India 700059",Kolkota,West Bengal,India,700059,info@gramsamriddhi.org,+91 8584866868,https://gramsamriddhi.org/,"There are about 160 million farmers in India, including 80 million small farmers holding less than 1 acre land. Most of them are stuck in a vicious poverty cycle, in need of simple and affordable interventions like Smart Tree plantation to help alleviate their poverty. ","Right selection of high-cash value fruit / vegetable tree saplings, pond for water harvesting, training for care & feed, market linkages to ensure full monetization.","As little as Rs 10,000 in Saplings & Rainwater Pit.",,Numerous awards and recognitions including those from State Govt and West Bengal.,1,info@ypointanalytics.com,-
+,,247,Regenerative farming,Pending,"Regenerative Farming: Teaching farmers soil conservation, water conservation, crop-rotations, right selection of crops, and market linkages to transform communities and environment",2019,There is a need to build regenerative and circular agricultural supply chains that optimise value for small and marginal farmers.,Grameen Vikas Kendram,TBD,Grameen Vikas Kendram,TBD,Reached 25000 farmers across 1420 villages through 11 projects,NGO,TBD  Kurnool Andhra Pradesh India 123456,Kurnool,Andhra Pradesh,India,123456,Email TBD, Mobile TBD,,"GVK deploys frugal innovations for sustainable community development. Potential to reach more states (currently in AP, Odisha and Tel)",TBD,TBD. Needs 4-5 farmers become early adopters. 5-10 villages can be supported by 2 farmers ,,TBD,1,info@ypointanalytics.com,-
+,,248,Rejuvenation of Water Bodies by BJS,Mature,"BJS has developed a comprehensive well-documented end-to-end water-body restoration process, supported by an online portal to disseminate all the learning aids and tools and best-practices for peer NGOs to replicate the model in their districts. Matured over last ten years of extensive work in Maharashtra, this thoroughly documented and replicable approach for self-sustainable scaling - leveraging MNREGA scheme support, community contributions (for transportation of silt that comes out of dredging of the ponds / lakes / tanks -- high-value organic fertilizer), Govt or CSR funding for excavators and fuel. Creating replicable examples in 100 districts in the country. ",2018,"Farmers and rural communities in more than half of the country endure droughts almost every year resulting in loss of crops and livestock, falling incomes and mounting debts.
+
+Community water bodies deteriorate in the absence of ongoing maintenance. MNREGA has resources that can potentially be used for such work but there is no mechanism to do this in an organised and ongoing way. 
+
+Further, lack of fully scripted model and training results in restorations that are short-lived (due to improper methodology) or fail to sustain lacking community backing, commitments and structures to maintain for long-haul. 
+
+Upfront cost of excavators is another major inhibitor, requiring creative public-private partnerships (NGO, CSRs, Govt) to overcome this huge barrier. BJS has been able to secure major support from all three stakeholders to overcome these: Tata Trusts for 100+ excavators; State Govt for fuel; local communities for labor and transportation of silt. ",Bhartiya Jain Sanghatana (BJS),"Community mobilization towards unified goal of water body restoration, exact location selection, excavators to desist the waterbody, transportation of silt (high-value organic fertilizer) taken out to farms, community commitments to maintain the desalted water-body.",Bhartiya Jain Sanghatana (BJS),"100,000 villages and 20 million residents","Restored more than 10,000 water bodies in Maharashtra; Now on mission to store more than a dozen water bodies in 100 districts across the country, so as to create replicable local proof-points and enabled partners to then cascade the model and accelerate the mission.",NGO,"Bharatiya Jain Sanghatana, Level 8, Muttha Chambers II Senapati Bapat Road Pune Maharashtra India 411016",Pune,Maharashtra,India,411016,connect@bjsindia.org,+91 2066050000,https://mutthafoundation.org/mulyavardhan/,"All 770,000 villages and residents in India benefits from the restoration model.","Community members contributing labor for transportation of silt, Excavator machine rent and fuel costs, training, access to Govt schemes (MNREGA etc).","(1) Excavator rental - typically funded by CSR or Govt; (2) Fuel costs - typically funded by Govt scheme or special program or community; (3) Labor - which is typically 65% of the overall cost -- contributed by community by way of carting the excavated silt for application on their farmlands, benefiting from improved crop yield; also MNREGA scheme provides for reimbursement for labor contributions.",,"Recognized by State Govt of Maharashtra, major CSRs like Tata Trust, Niti Aayog. ",1,info@ypointanalytics.com,
+,,249,Restoration of community water bodies,Pending,"Restoration of Community Water-bodies: Similar to BJS, except the focus is on water-sheds in the vicinity of river-basins. Also focusing on complementary demand-management solution to reduce water demand for water-hungry corps (such as cotton, sugarcase).",2019,The current state of the rivers reflects the environmental challenges faced by many urban rivers. Efforts toward sustainable management and restoration are crucial for its revival.,IIT-IIT.org,TBD,IIT-IIT.org,TBD,"Rejuvenation of water-bodies undertaken across 9 States in India.
+
+Efforts have already resulted in 60 billion litres of storage capacity recapture",NGO,TBD  Manglore Karnataka India 123456,Manglore,Karnataka,India,123456,Email TBD, Mobile TBD,,The model can be easily scaled to other states,TBD,TBD,,TBD,1,info@ypointanalytics.com,-
+,,250,Restoration of Community Water-bodies ,Pending,"Restoration of Community Water-bodies & structures and pollution treatment: Similar to IIT-IIT.org, but also expanded set of tools (e.g., water shafts) and models to cover full-spectrum of water structures (dykes, rivers, lakes, streams, tanks), and also treating polluted waters using five different approaches.",2019,"To address the impending water crisis, utilising existing
+rainwater recharge mechanisms in nature is crucial. These
+mechanisms hold the key to tackling pressing challenges
+and ensuring sustainable availability of water resources.",AOL Social Impact Projects,TBD,AOL Social Impact Projects,TBD,"70+ rivers/streams rejuvenated across eight States including Karnataka, Tamilnadu, Maharashtra, Rajasthan and Punjab. Its water work has impacted 20,000+ villages, 59,000+ Square Kms influenced, 1,05,000 groundwater recharge structures built, and 3.45 crore people benefitted.",NGO,TBD  Pune Maharashtra India 123456,Pune,Maharashtra,India,123456,Email TBD, Mobile TBD,,The model can be easily scaled to other states,TBD,TBD,,TBD,1,info@ypointanalytics.com,-
+,,252,Bore Charger,Draft,"Recharge of individual borewells, using nature's inherent storage capacity to store water after a rainfall. Using satellite and terrain mapping, coupled with angiography of inside of borewell, strategic openings are made in upper section of the inside of bore wells to draw water from surrounding sub-surface area into the bottom of the borewell. ",2018,"Water scarcity has been a persistent issue in many parts of India, including the districts of Kurnool and Nandyal in Andhra Pradesh. The depletion of groundwater levels, primarily due to over-extraction and inadequate recharge, has necessitated innovative solutions to enhance groundwater sustainability",Urdhvam Environmental Technologies Pvt. Ltd.,"BoreCharger machine, Survey of the area near the borewell","Very affordable; nearly one-third of the cost, and takes one-third the time relative to common alternative of pond-based harvesting. Avoids having to allocate precious land to a pond.",Scaling plans for 10 million farmers in 15 States with most urgent need,"3000+ farmers across 8 States; WHEELS supported pilot for 25 farmers in Kurnool (A.P.) producing very successful water gains (average 37% gain, 2-3 hours daily pumping) supporting 2-3 crops for farmers.",NGO,"Row House No-7 Shroff Soleno Opposite Orchid Hotel Banner, Mahalunge Road Pune Maharashtra India 411045",Pune,Maharashtra,India,411045,info@borecharger.com,+91 9117174040,http://www.borecharger.com,"Near 50m farmers that depend on individual bore wells for their agriculture needs and livelihoods, especially in 15 States where water tables have gone down dramatically to as much as 1500 feet, leaving many struggling to have even one crop a year.",BoreCharger machine; Preferable implementation for a cluster of borewells to achieve cost economies.,"With average cost about Rs 20000-25000, a highly scalable and self-sustainable intervention.",,Govt of India recognized innovation,1,info@ypointanalytics.com,-
+,,254,Underground Spring rejuvenation in HP by WHEELS Global Foundation,Mature,"Restoration of Underground Springs using innovative Collaborative Governance model: Bringing technologies from partners (PSI, ACWADAM, IIT-Roorkee) and then using people & financial resources of 6 Himachal Pradesh ministeries for implementation of the solution. Developed a unique Collaboration Governance Framework and Portal to create effective and efficient public-private partnership and joint execution. Success in H.P. has created a replicable model to take to other severn Himalayan States.",2021,"Rural populations in Himachal Pradesh suffer from acute scarcity and depletion of available water sources due to multi-decade neglect of drainage systems and catchment areas. Nearly 55% of the underground springs have severe depletion. This scarcity impacts their lives, economy, health, and livelihoods. Without accurate identification of the catchment area for a particular spring, and then right methodology (slope, extend of removal of the top soil etc), resources are wasted and intervention has poor longevity.",PSI,Satellite data along with terrain data to pinpoint exact catchment areas responsible for rejuvenation of each underground spring; catchment area rehabilitation model; field resources to carry out the work,"PSI, ACWADAM, H.P. State",6 million lives in H.P.; similar or larger scale from replication in other northern States,"Initially covering 30 springs across 22 villages in 4 districts of Himachal Pradesh, the project now spans 55 springs across 32 villages
+in 6 blocks of 4 districts. The State Government has initiated Spring Shed 2.0 to rejuvenate 500 springs across the entire state. In phase-3, program is expected to scale to cover entire State.",NGO,"440/7, Ghokhale Cross Road Shivajinagar Pune Maharashtra India 411016",Pune,Maharashtra,India,411016,Email TBD, Mobile TBD,,Nearly 6 million people in H.P. alone at end of phase-3 completion,Coordinates of catchment area and underground springs; field workers; clear steps for addressing drainage issues.,"The cost of rejuvenating springs has come down from Rs 10 lakhs to less than Rs 1
+Lakh ( ~$1,330) per spring at the State government schedule rates.",,Recognized at various Conferences ,1,info@ypointanalytics.com,-
+,,255,Drinking Water from Borewells,Pending,"The Taraltec:Majiâ„¢ Reactor device from Taraltec Solutions applies a breakthrough technology to disinfect water by destroying the microbes in it. The Taraltec:Majiâ„¢ Reactor harnesses the principles of physics, specifically fluid dynamics, to destroy microbes in the water, thereby eliminating water-borne diseases and rendering the water safe for drinking, food preparation, etc. The Taraltec:Majiâ„¢ Reactor can be easily retrofitted onto a hand pump â€“ such as the India Mark 2 model, within an hour by a fitter with no special training or tools.",2018,"By 2025, nearly half of the worldâ€™s population will be living in water-stressed areas. Contaminated water can transmit diseases such as diarrhea, cholera, dysentery, and typhoid, among others. Safe and readily available water is important for public health, whether it is used for drinking or personal use.",Taraltech,TBD,Taraltech,TBD,Working across 7 states and 29 locations Taraltec technology is well tested and implemented for impact,NGO,TBD  New Delhi Delhi India 110001,New Delhi,Delhi,India,110001,Email TBD, Mobile TBD,,"Opportunity to scale the solution to multiple locations where people rely on borewells, esp for drinking water",TBD,"With easy installation and deployment at a cost less than 7500 rupees, it is the suitable solution to scale.",,TBD,1,info@ypointanalytics.com,-
+,,256,WHEELS' YEIDA Initiative (Restoration and Revival of Water bodies and Holistic Community Development,Mature,"Restoration of water-bodies and safe-drinking water, along with rehabilitation of 27 displaced villages (from rural to urban environment) to help displaced communities with all necessary amenities in affordable and sustainable way.",2023,"Of the total 227 ponds in YEIDA region 35 are encroached upon. It is important to restore these these waterbodoes and for safe drinking water and other needs. The new airport near Jevar displaced people from villages falling in the corridor. Rehabilitation of these villages is crucial in the area so that residents have access to affordable water, health, energy, education and other needs. ",Yamuna Expressway Industrial Development Authority (YEIDA),Tech-Enabled Collaborative Governance Model enabling effective and efficient public-private partnership and integration of multiple partners for sustained results at-scale.,"Collaborative Governance model orchestrated by associated portal Collaborative Governance Portal (CGP) that brought together in seamless way capabilities of Govt as well as best-in-class social impact entities (Amrita Preetham. ATE Foundation, Development Alternatives, Spoken Tutorials, Taraltec). This was replicated from H.P. Underground Spring Rejuvenation initiative where it was developed and refined. CGP offers replication opportunities in all projects involving Govt and multiple impact groups -- a common scenario for large scale interventions.",Rejuvenation of dead ponds and water restoration with Tech-Enabled collaborative Governance in 46 ponds across 27 villages Greater Noida area in YEIDA territory. ,Already deployed in 2 of the prioritized 27 communities (by YEIDA). Govt is now in process of replicating the complete blue-print across all remaining ones over next year.,NGO,"First Floor, Commercial Complex P-2, Sector- Omega I, Gautam Budh Nagar Greater Noida,  Uttar Pradesh India 201308","Greater Noida, ",Uttar Pradesh,India,201308,customercareyeida@gmail.com,+91 9311407487,https://www.yamunaexpresswayauthority.com/,"Rural communities living in under-resourced geographies, and in need for multi-domain expertise and best-in-class impact innovations. ","Capabilities of multiple best-in-class impact experts in relevant domains (Amrita Preetham. ATE Foundation, Development Alternatives, Spoken Tutorials, Taraltec)","Collaborative Governance Portal had already been developed in prior project. Hence, re-purposing for YEIDA was very minimal cost, proving the cost-efficiency of the approach.",,Recognized in several forums on Water and Sustainability.,1,info@ypointanalytics.com,-
+,,400,Gender Equality & Youth Development through sports for girls (10-17 years) and young women (18-25 ye,Draft,"Maitrayana’s solutions focus on empowering adolescent girls and young women through sport-based, interactive interventions:
+
+* Skill Development Through Play: Using a sport(Net Ball)-for-development approach, Maitrayana builds knowledge, attitude,skills, and confidence to help girls in schools and communities (10 - 17) find their voice and use their agency to influence diecisions in their lives. The program is implemented twice per week during the academic year.
+
+* Be Ambitious Programme: A 9-session career guidance module for girls (aged 16–17) that helps them identify strengths, explore interests, and build support systems for their future.
+
+* Pathways to Economic Independence: Program graduates (18-25 year) access internship and job placement opportunities (e.g., sports coaches, sales roles), supported by tailored portfolios that develop English, computer, and life skills to make decisions in their lives and take up employment opportunities. ",2021,"ndia's patriarchal society ranks among the most gender-unequal globally (129/146, WEF 2024). Girls from marginalized communities face limited access to quality education due to gender bias and under-resourced schools, missing opportunities to learn English, acquire computer skills, and play sports. Deep-rooted discrimination and restrictive norms deny girls their rights to education, careers, and informed choices about sexual and reproductive health. This is a human rights violation, a social injustice, and an economic loss, as nearly half the population (48.42%) is held back. Intersectional factors like caste, religion, poverty, and rural location further exacerbate these barriers. ",Maitrayana charity foundation,"Empowering Futures Through Sport and Skills
+
+Maitrayana transforms the lives of adolescent girls and young women through innovative, sport-based programs that nurture confidence, skills, and independence:
+
+Play with Purpose: A netball-centered, twice-weekly program that builds life skills, voice, and agency in girls aged 10–17.
+Be Ambitious: A focused 9-session career guidance journey for 16–17-year-olds, helping them discover their potential and create pathways for success.
+Pathways to Independence: Tailored support for graduates (18–25), linking them to internships, jobs, and skills training in English, tech, and decision-making, unlocking opportunities for economic empowerment.","Sport as a Catalyst for Empowerment: Leveraging netball to combine play with life skills, fostering confidence and agency in adolescent girls.
+Age-Specific, Holistic Development: Tailored interventions addressing the unique needs of three critical life stages: skill-building (10–17), career guidance (16–17), and economic independence (18–25).
+Practical Pathways to Independence: Offering hands-on career support through internships, job placements, and essential skills training for sustained empowerment.
+Community Impact Through Leadership: Equipping girls to influence decisions in their lives and inspire change within their communities.
+Integrated Support System: Combining sports, education, and mentorship to create a nurturing ecosystem that supports long-term growth and success. ","Expected Social Impact  Maitrayana equips adolescent girls and young women with the confidence, skills, and independence to lead their own lives. Through sport-based interventions combined with targeted skill development, the programs seek to produce:  Empowered Changemakers: Girls build confidence, agency, and resilience to challenge societal norms, advocate for themselves, and inspire others. Economic Upliftment: Graduates transition into meaningful careers, breaking cycles of dependency and contributing to their families and communities. Community Transformation: Empowered individuals create inclusive and equitable environments, driving change in society over the long term. A Gender-Equal Future: Maitrayana bridges gaps to solidify pathways in education, employment, and leadership to ensure sustainable gender equality. Maitrayana initiates a ripple effect of empowerment that allows each individual, family, and community to grow.","Maitrayana has positively impacted 16,540 adolescent girls from economically marginalized communities across Delhi, Mumbai, and Bangalore, empowering them through targeted interventions to overcome systemic barriers and unlock their full potential.",NGO,"E-257, G/F, Amar Colony, Lajpat Nagar-IV,  Delhi Delhi India 110024",Delhi,Delhi,India,110024,kalyani@maitrayana.in,+91 9740077899,https://maitrayana.in/,Adolescent girls (10-17 years) and young women (18-25 years) from marginalized communities,"People: Trained coaches, career counselors, and skill trainers.
+Spaces & Tools: Netball courts, learning spaces, computers, and internet access.
+Funding: Program implementation, materials, and participant support.
+Curriculum: Sport-based life skills, career guidance, and professional readiness modules.
+Partnerships: Schools, employers, and NGOs for implementation and opportunities.
+Monitoring: Tools to track impact and improve programs. ","Key Costs for Maitrayana’s Programs 1. Program Implementation: Salaries for coaches, facilitators, and materials (sports equipment, curriculum). 2.	Infrastructure: Venue rentals, utilities, and transportation. 3.	Training: Staff development and skill-building workshops. 4.	Technology: Computers, projectors, and learning materials. 5.	Monitoring: Data collection and impact evaluation tools. 6.	Outreach: Partnerships, community engagement, and marketing. 7.	Participant Support: stipends,  8.	Administrative Costs: Office operations and compliance.",,"In Aug 2024, Maitrayana achieved certification as a Great Place to Work by the Great Place to Work® Institute, India for the 2nd time in a row.
+
+On 27th Feb 2024, Maitrayana was awarded the “Women Empowerment Program - Social Justice and Empowerment”​ at the Women Who Lead National Consortium, supported by the Government of India and Government of Maharashtra.
+
+In Feb 2024, Maitrayana was featured on “Her Circle portal”. Her Circle is founded by Nita M Ambani, is an inclusive, collaborative, diverse, interactive, socially-conscious digital movement for the women of India. We are her safe space for growth
+
+On December 5, 2023, Kalyani Subramanyam will receive the Red Bangle Award from the “Women Education Project” for embodying the resilient spirit of humanity through her life and achievements.
+
+In October 2023, Maitrayana was shortlisted for the Martha Farell award for Excellence in Women's Empowerment and Gender Equality.
+
+In June 2023, Maitrayana was featured on “The Better India” pl",2003,kalyani@maitrayana.in,-
+,,401,Gender Equality & Youth Development through sports for girls (10-17 years) and young women (18-25 ye,Draft,"Maitrayana’s solutions focus on empowering adolescent girls and young women through sport-based, interactive interventions:
+
+* Skill Development Through Play: Using a sport(Net Ball)-for-development approach, Maitrayana builds knowledge, attitude,skills, and confidence to help girls in schools and communities (10 - 17) find their voice and use their agency to influence diecisions in their lives. The program is implemented twice per week during the academic year.
+
+* Be Ambitious Programme: A 9-session career guidance module for girls (aged 16–17) that helps them identify strengths, explore interests, and build support systems for their future.
+
+* Pathways to Economic Independence: Program graduates (18-25 year) access internship and job placement opportunities (e.g., sports coaches, sales roles), supported by tailored portfolios that develop English, computer, and life skills to make decisions in their lives and take up employment opportunities.",2021,"India's patriarchal society ranks among the most gender-unequal globally (129/146, WEF 2024). Girls from marginalized communities face limited access to quality education due to gender bias and under-resourced schools, missing opportunities to learn English, acquire computer skills, and play sports. Deep-rooted discrimination and restrictive norms deny girls their rights to education, careers, and informed choices about sexual and reproductive health. This is a human rights violation, a social injustice, and an economic loss, as nearly half the population (48.42%) is held back. Intersectional factors like caste, religion, poverty, and rural location further exacerbate these barriers.",Maitrayana charity foundation,"olution Elements for Maitrayana’s Programs
+
+Sport-based Skill Development: Empowering girls aged 10–17 through a Netball-for-development approach, building confidence, decision-making, and leadership skills via twice-weekly sessions.
+Career Guidance - Be Ambitious: A 9-session program for 16–17-year-olds, helping them discover strengths, explore career pathways, and build essential support systems for future success.
+Economic Empowerment Pathways: Connecting graduates (18–25) to internships and job placements in sectors like sports and sales, supported by skill-building in English, technology, and life skills for sustained career growth.","Unique Value Propositions for Maitrayana's Programs
+
+Sports as a Trigger for Empowerment: Harnessed with netball in playing and practicing life skills and developing confidence in the agency among adolescent girls.
+Age-specific, holistic development: The designed interventions target three critical life stages associated with unique needs: skill-building (10–17), career guidance (16–17), and economic independence (18–25).
+Practical Pathways to Independence: Providing hands-on career support through internships, job placements, and essential skills training for sustained empowerment.
+Community Impact Through Leadership: Empowering girls to make decisions for themselves and spark change in their communities.
+Integrated Support System: Combining sports, education, and mentoring into a supportive environment to encourage long-term growth for development and success.","Expected Social Impact Maitrayana equips adolescent girls and young women with the confidence, skills, and independence to lead their own lives. Through sport-based interventions combined with targeted skill development, the programs seek to produce:  Empowered Changemakers: Girls build confidence, agency, and resilience to challenge societal norms, advocate for themselves, and inspire others. Economic Upliftment: Graduates transition into meaningful careers, breaking cycles of dependency and contributing to their families and communities. Community Transformation: Empowered individuals create inclusive and equitable environments, driving change in society over the long term. A Gender-Equal Future: Maitrayana bridges gaps to solidify pathways in education, employment, and leadership to ensure sustainable gender equality. Maitrayana initiates a ripple effect of empowerment that allows each individual, family, and community to grow.","Maitrayana has positively impacted 16,540 adolescent girls from economically marginalized communities across Delhi, Mumbai, and Bangalore, empowering them through targeted interventions to overcome systemic barriers and unlock their full potential.",NGO,"E-257, G/F, Amar Colony, Lajpat Nagar-IV  Delhi Delhi India 110024",Delhi,Delhi,India,110024,kalyani@maitrayana.in,+91 9740077899,https://maitrayana.in/, girls (10-17 years) and young women (18-25 years) from marginalised communities,"Resources Needed for Maitrayana’s Programs
+
+People: Trained coaches, career counselors, and skill trainers.
+Spaces & Tools: Netball courts, learning spaces, computers, and internet access.
+Funding: Program implementation, materials, and participant support.
+Curriculum: Sport-based life skills, career guidance, and professional readiness modules.
+Partnerships: Schools, employers, and NGOs for implementation and opportunities.
+Monitoring: Tools to track impact and improve programs.","Key Costs for Maitrayana’s Programs 1.	Program Implementation: Salaries for coaches, facilitators, and materials (sports equipment, curriculum). 2.	Infrastructure: Venue rentals, utilities, and transportation. 3.	Training: Staff development and skill-building workshops. 4.	Technology: Computers, projectors, and learning materials. 5.	Monitoring: Data collection and impact evaluation tools. 6.	Outreach: Partnerships, community engagement, and marketing. 7.	Participant Support: stipends,  8.	Administrative Costs: Office operations and compliance.",,"In Aug 2024, Maitrayana achieved certification as a Great Place to Work by the Great Place to Work® Institute, India for the 2nd time in a row.
+
+On 27th Feb 2024, Maitrayana was awarded the “Women Empowerment Program - Social Justice and Empowerment”​ at the Women Who Lead National Consortium, supported by the Government of India and Government of Maharashtra.
+
+In Feb 2024, Maitrayana was featured on “Her Circle portal”. Her Circle is founded by Nita M Ambani, is an inclusive, collaborative, diverse, interactive, socially-conscious digital movement for the women of India. We are her safe space for growth
+
+On December 5, 2023, Kalyani Subramanyam will receive the Red Bangle Award from the “Women Education Project” for embodying the resilient spirit of humanity through her life and achievements.
+
+In October 2023, Maitrayana was shortlisted for the Martha Farell award for Excellence in Women's Empowerment and Gender Equality.
+
+In June 2023, Maitrayana was featured on “The Better India” pl",2011,ratan@wheelsglobal.org,-
+,,413,School-in-a-box,Mature,Quality & comprehensive education in severely resource-constrained schools,2019,"Lack of teachers (both quantity and quality) in schools, especially those in remote / rural / tribal / poor areas; Poor speaking skills; Lack of wholistic development. ",Moinee Foundation,"Digitized academic curriculum for main subjects, Quiz library ('QuizAcademy'), 18+ modules for extra-curricular / holistic development","Solution enables students to self-learn through its innovative model of Quizzes which covers each topic of each chapter of each key subjects. Students not taught by a teacher, generally fails to answer the quiz correctly first time, and are taken to review the relevant material plus augmented information from open-sources (like Khan Academy). This process orchestrates powerful self-learning and thus overcoming teacher handicap that afflicts nearly 70% of schools in India. Further, the solution has 18 modules for holistic development (e.g., TedEd, Wikipedia, Coding introduction, science experiments, robotics). Finally, onboarding process sets the class to debate among the students why one answer is right and other four were wrong, and thus orchestrates critical speaking skills. Further, the solution has extensive built-in analytics to track and monitor usage, and detect need for further support or training augmentation.","For mere one-time investment of about Rs 1 lakh can help entire school (say typically 300 students) for next 10-15 years to achieve outstanding education, holistic development, and strong speaking skills for life.","As of Dec 2024, already in use in 2208 Schools and 519 libraries in 15 States / UTs, benefitting nearly 11 lakh students. Available in 8 local languages (English, Hindi, Marathi, Kannada, Tamil, Gujarati, Oriya, Bengali). ",NGO,"G-36/37, Cinestar, Central Spine Vidyadhar Nagar Jaipur Rajasthan India 302039",Jaipur,Rajasthan,India,302039,srm@moinee.org,+91 9376506173,https://www.moinee.org/index.php,K-12 Schools,"Key resources needed are: (1) A computer room with 10-20 computers where kids will typically come for an hour to learn; (2) A server to host the entire solution accessible in offline mode, besides online mode; (3) A router with WiFi access for local access in different rooms; (4) A large screen display monitor. A typical school that has already taken advantage of the Govt funding to setup their ICT lab, may start the solution within Rs 1 lakh. It needs only one-day to installation and training.","Schools with existing ICT lab, typically it will cost about Rs 1 lakh in one-time cost. No ongoing costs since Schools are given free license. ",,"28th State Level Bhamashah Award-2024 from the Honourable Education Minister of Rajasthan, Impact Innovation Challenge Winner (2nd Place) by WHEELS Global Foundation in 2024; CSR Implementation Agency of the Year 2020-21; Outstanding Performance in Transmitting Mass Education Trophy 2021",1,info@ypointanalytics.com,-
+,,414,Solar Powered Silk Spinning Machines,Draft,"Energy efficiency, ergonomically designed and renewable energy power spinning machines for Erk Silk weaver ",2022,TB Update,,"Renewable Energy Enabled, Energy Efficient, user Friendly, End user financed supported with market linakges ",increased in yarn production by 3x,120000,Integrated Village Cooperatives Societies ,,"A-501 , Ganga Osian Sqaure  Wakad  Pune Maharashtra India 411057",Pune,Maharashtra,India,411057,, -,,1500,"Support from UNDP, CES Global, WHEELS and State Govt of Meghalaya ",INR 60000 per solution with 5 years of support ,,TB Update ,2017,nakhade@ces-ltd.com,-
+,,415,"RWH for Ground recharge,Water table improvemment, Flood mitigation ",Submitted,Cost effective practical RWH ,2011,"Involvement of community,Society taking along",RWH - Eco Terrain based Solutions ,"Shallow Aquifer Recharge - Provision of micro graded Graded gravel RWH pits within Storm water drains, Graded Gravel pits in open areas","Nature based ,cost effective ","Ground Water recharge .Flooding mitigation, Results achieved ,a Water positive Model",Effective RWH -Mitigation of flooding within Plot,Individual,"B1, SAI SMARAN , PLOT NO. 312 3RD MAIN ROAD, KAMAKOTI NAGAR , PALLIKARANAI Chennai Tamil Nadu India 600100",Chennai,Tamil Nadu,India,600100,ramkumarioc@gmail.com,+91 9769547632,www.linkedin.com/in/g-ramkumar,"Society, Complex, organisation ",Provision of micro graded Graded gravel RWH pits within Storm water drains," INR 130,000/-  : Quick pay back with Flood mitigation - Ground Recharge  - Received IndianOil Award  ,with  Trophy on IndianOil Day on 01st  Sep 2012",,"Award of Trophy by IndianOil ,on IndianOil day on  01 Sep 2012",2035,ramkumarioc@gmail.com,-
+,,416,"RWH for Ground water improvement , borewell recharge",Draft,RWH - Recharging the Soil - recharging the Borewell ,2014,"Convincing the User, stakeholders ",RWH - Eco Terrain based Solutions ,The Graded gravel pits with blue metal - recharging the Soil .RWH - Recharging the Soil - recharging the Borewell too,"Water comfort - terrain based , very safe designs ,  at low cost ","Water comfort for the needy Students of Zilla Parishad School  at Kupari,Wada Maharastra,India","The water table improves - The scholl water needs are met successfully, around the year.",Individual,"B1, SAI SMARAN , PLOT NO. 312 3RD MAIN ROAD, KAMAKOTI NAGAR , PALLIKARANAI Chennai Tamil Nadu India 600100",Chennai,Tamil Nadu,India,600100,ramkumarioc@gmail.com,+91 9769547632,www.linkedin.com/in/g-ramkumar,"School children - Zilla Parishad School,Kupari,Wada dist ,Maharashtra ,India
+ ( in a Tribal area)",The Graded gravel pits with blue metal - recharging the Soil,"Rs. 20,000",,"Appreciations:
+1.The Inner Wheels Club of Thane Garden city .Maharastra,India
+2. School Management ,Zilla Parishad School,Kupari,Wada dist ,Maharashtra ,India
+3.The School student presents the Methodology in the Dist Science Exhibition  - Wins award for the School
+",2035,ramkumarioc@gmail.com,-
+,,417,Water Security for Rural India,Submitted,"We have worked in nearly 175 villages in Kachchh District, Gujarat in the field of Water Security. The approach was to do a thorough evaluation both on the Demand & Supply sides, do a gap analysis, identify potential interventions (Surface Water or Ground Water based), & thereafter prepare detailed Technical Specifications & Drawings, along with detailed cost estimates for the identified interventions. The next step was to raise funds for implementation of the identified interventions through individuals, corporates & also leveraging government schemes such as Sujalam Sufalam. Based on the availability of funds, we implemented a number of initiatives in multiple villages. The types of work done included : removal of invasive species, deepening & desilting of ponds, repair & raising of checkdams, recharging of defunct borewells, farm bunds & farm ponds, gauchar land development, tree plantation, & riverbed recharge tubewells. The specific solution implemented in each village depended on the soil & other geology characteristics.",2021,"1. Raising funds was enormously challenging. 2. Execution of works in remote locations. 3. In certain villages, local caste/religion & political issues came in the way of moving forward. ",,"Geology characteristics of the local area, engineering design of structures where needed, detailed costing for each intervention, support of local community & gram panchayats, availability of funds. ","Community centered approach, thereby facilitating long-term sustainability of the projects completed. ",Savings of over 1000 Crore Liters of water was estimated in the event of all identified interventions being implemented. ,"One of the solutions identified, namely, Riverbed Recharge Tubewells, was subsequently taken up for replication, both by the Kachchh Zilla Parishad & Atal Bhujal Yojana. If successful, there is potential to replicate the solution across the country. ",,"B501 Pooja Enclave St. Braz Road, Vile Parle-West Mumbai Maharashtra India 400056",Mumbai,Maharashtra,India,400056,, -,,Villagers in 175 villages in Kachchh District,"Funds raised from individuals, corporates & through leveraging government schemes. Community involvement, either through monetary or non-monetary mechanisms. ",Costs varied by type of intervention.,,"The Kachch Zilla Parishad & Atal Bhujal Yojana replicated the concept of having Riverbed Recharge Tubewells in series across dry riverbeds. We had done a pilot with 4 of them. As of March, 2024; nearly 100 of them were constructed by either the Kachchh Zilla Parishad or Atal Bhujal Yojana. ",2008,biren_vora@yahoo.co.in,-
+,,418,Liquid Fertiliser production,Draft,Production of liquid fertiliser using cow dung ,2023,"Proper reaction
+Removal of solid residue
+Increased interval between cleaning
+Ease of operation by village farmers ",,Use of special culture,"Higher quality without solid residue or slurry 
+4kg liquid Fertiliser per kg of cow dung
+Ready in 30 days instead of 45 days",,Implemented in mutiple goshalas,,     ,-,-,-,-,, -,,Goshalas,Cow dung  200kg-1300kg per day,,,Arvind Agro Farm,2006,tjr183@gmail.com,-
+,,419,SUSTAINABLE RURAL LIVELIHOOD FOR WOMEN THROUGH VALUE ADDED PRODUCTS USING COW DUNG,Submitted,"India is the world’s largest producer of cattle and the second-largest producer of milk after the United States. Tamil Nadu, being one of the leading states in livestock population and dairy farming, plays a significant role in this sector. The state’s rapid economic development policies have increasingly aimed to integrate rural populations, especially women, into sustainable livelihood opportunities.
+In Sindalakarai Village Panchayat, located in Thoothukudi District with a geographical area of 1,044.82 hectares, a survey conducted by the participating institute recorded a population of 1,194, of which 635 are females. The female literacy rate is 58.43%.
+Agriculture is the primary occupation for women, but it does not provide a steady, year-round income. Most men in the village migrate abroad for employment, leaving women to take responsibility for the household and small-scale farming.
+The main livestock of the village includes hens, goats, and cows, with around 150 native cows. Each cow produces about 10 kg of dung daily, resulting in 1,500 kg of dung every day. At present, part of this dung is used as manure, while the rest is discarded along the roadsides as waste, causing sanitation and environmental issues.
+This project is designed to empower rural women in Tamil Nadu by training them to convert cow dung into value-added products such as: Eco-friendly products (cow dung doop sticks, incense sticks,  and decorative items)
+By developing entrepreneurial skills, women will be able to generate sustainable income throughout the year, reduce waste, improve village sanitation, and contribute to Tamil Nadu’s larger goals of women empowerment, rural development, and circular economy practices.",2024,"Seasonal Income Instability: Agriculture is the main occupation for women, but it does not provide year-round income.
+Male Migration: Most men migrate abroad for work, leaving women with limited livelihood opportunities.
+Underutilized Cow Dung 1,500 kg of cow dung produced daily, but much of it is discarded on roadsides, creating waste and sanitation issues.
+Lack of Awareness & Skills: Women lack training in value addition and entrepreneurship skills.
+Financial Constraints: Limited access to seed capital, loans, or subsidies to start and sustain micro-enterprises.
+Social & Cultural Barriers: Women face challenges in taking leadership roles due to traditional gender roles and limited decision-making power.
+",,"Resource Utilization – Convert daily 1,500 kg of cow dung from native cows into value-added products instead of letting it go to waste.
+
+Women Entrepreneurship – Build capacity of women SHGs through training in biogas production, organic manure preparation, and eco-product making.
+
+Sustainable Livelihoods – Provide women with year-round income opportunities beyond seasonal agriculture.
+
+Eco-Friendly Products – Produce biogas, organic fertilizers, vermicompost, cow dung logs, incense sticks, and decorative items.
+
+Health & Sanitation – Reduce roadside waste dumping, improving hygiene and village cleanliness.
+
+Market Linkages – Connect SHGs with local markets, cooperatives, and e-commerce platforms for sustainable sales.
+
+Scalability & Replicability – Create a model that can be replicated across rural Tamil Nadu villages with minor adjustments.","This project transforms an abundant and underutilized local resource—cow dung—into sustainable income opportunities for rural women in Tamil Nadu. Unlike conventional agriculture, which is seasonal and uncertain, this model provides women with year-round entrepreneurial activity, enabling financial independence, improved sanitation, and environmental sustainability.
+
+By combining traditional livestock practices with modern eco-entrepreneurship, the project:
+
+Empowers women to become self-reliant through skill development and income generation.
+
+Turns waste into wealth by converting 1,500 kg of daily cow dung into marketable biogas, organic manure, and eco-products.
+
+Improves rural sanitation by preventing the dumping of cow dung on roadsides.
+
+Supports Tamil Nadu’s vision of green economy by promoting renewable energy and organic farming.
+
+Creates scalable, replicable models that other villages in Tamil Nadu can adopt.
+
+This integration of women empowerment, rural development, and circ","Women’s Economic Empowerment: 40 women trained in value-added cow dung products gain practical skills for self-employment. At least 3 women have already transitioned into micro-entrepreneurs, with others showing readiness to follow.
+Increased Household Income: Women earn up to ₹5,000 per month from sales, directly improving the financial stability of their families. Provides steady income beyond seasonal agriculture or MGNREGA jobs.
+Leadership & Confidence: Women take up leadership roles in production units, decision-making, and training others, enhancing their social recognition. Personal testimonies show greater confidence, dignity, and independence in family and community life.
+Community Development: Local branding (“Thulir Sambrani”) and cooperative efforts create a sense of ownership. The initiative fosters collaboration between Panchayat, SHGs, academic institutions, and livestock owners.
+Environmental Benefits: Prevents roadside dumping of 1,500 kg cow dung per day, improving vi"," Readily Available Raw Material
+•	Sindalakarai generates 1,500 kg of cow dung daily, ensuring a consistent, year-round resource supply for product development.
+Proven Models in Tamil Nadu
+•	Value added initiatives supported by Tamil Nadu Rural Livelihood Mission (TNRLM) and NABARD have shown success in nearby districts, proving the feasibility of scaling.
+•	Women Self-Help Groups (SHGs) in Tamil Nadu already excel in value-added agro-products (e.g., masala powders, snacks, and organic fertilizers), creating a foundation for quick adoption.
+Women SHG Participation
+•	Tamil Nadu has one of the strongest SHG networks in India, with over 60 lakh women members under TNRLM. This ensures strong community participation and ownership.
+Market Demand & Policy Push
+•	Rising demand for eco-friendly products in both domestic and export markets.
+",,"1K/33,Pushpanagar 4th Street East Millerpuram Thoothukudi Tamil Nadu India 628008",Thoothukudi,Tamil Nadu,India,628008,, -,,Rural Women,"1. Human Resources
+•	Women Self-Help Group (SHG) members.
+•	Local Panchayat support.
+2. Natural Resources
+•	Cow dung – 1,500 kg generated daily from 150 native cows.
+3. Infrastructure & Equipment
+•	Machinary for making products
+•	10X10 Ft room for production unit
+•	Packaging materials (bags, eco-friendly covers, labeling).
+4. Financial Resources
+•	Initial funding support from Government schemes (e.g., Tamil Nadu Rural Livelihood Mission, National Rural Livelihood Mission, NABARD, Ministry of MSME).
+•	Bank linkages for SHGs to access microcredit.
+•	CSR/NGO partnerships for seed capital and capacity-building.
+5. Knowledge & Technical Resources
+•	Training modules on eco-product manufacturing.
+•	Market linkage support for selling products.
+•	Guidance on branding, packaging, and marketing through local cooperatives or e-commerce platforms.
+",100000,,"Opportunity to be recognized as a model SHG entrepreneurship initiative under women empowerment
+Tamil Nadu Government’s Women Entrepreneur Awards
+NABARD Rural Innovation Awards
+District Collectorate level and Panchayat-level honors for improving sanitation, livelihood, and women’s empowerment.",2054,veni2608@gmail.com,-
+,,420,Mushroom Cultivation,Submitted,"Under the supervision of Prof. Vivek Kumar (CRDT, IIT Delhi), the Unnat Bharat Abhiyan (UBA) team conducted a participatory rural exercise in 2017 in the Gaindikhata cluster of villages, Haridwar, Uttarakhand. Recognizing limited income opportunities for farmers between November and February, mushroom cultivation was introduced as a sustainable livelihood option.
+With support from the local youth, district administration, and the Uttarakhand Food Processing Department, six farmers were trained in Dehradun. Using cleaned rooms in their homes, they began cultivation with compost, spawn, and poly bags provided through ONGC Foundation support. The initiative grew rapidly, engaging 12 more families, with mushrooms fetching up to ?250/kg in local markets.
+During the COVID-19 pandemic, two local farmers established mushroom units in Laldhang and Pilli Padav villages, generating employment for 100 people and producing 1,500 kg of mushrooms daily by 2020. The success led the district administration to promote mushroom farming widely, and in 2021, mushroom was recognized as Haridwar’s """"One District One Product"""" (ODOP) by the Uttarakhand government.
+This transformation was made possible through the collective efforts of UBA, ONGC Foundation, Surabhi Foundation, district officials, and the local community, making mushroom farming a source of income, employment, and nutrition in the region.
+",2017,"Lack of post-harvest income opportunities Initial skill gap in mushroom farming Limited infrastructure for cultivation and marketing
+",,"Farmer training via Food Processing Dept., Uttarakhand Supply of compost, spawn, and poly bags (UBA & ONGC Foundation support)
+Community participation and use of local spaces for cultivation Support from district administration and local NGOs
+","Seasonal advantage with ideal climatic conditions Low-cost, high-return model for small farmers Community-led, scalable initiative with multi-stakeholder support","Income generation for farmers and labor Employment for ~100 individuals (skilled/unskilled) Year-round access to nutritious food in local community
+",18+ families adopted mushroom farming 2 commercial mushroom plants set up Daily production of 1500 kg by 2020 High local demand with prices up to ?250/kg,,-,-,-,-,-,, -,,"""Create sustainable livelihood for farmers during off-season (Nov–Feb) Promote mushroom cultivation across Haridwar district Provide local employment and improve nutrition
+","Unnat Bharat Abhiyan (UBA), IIT Delhi ONGC Foundation (financial support) Surabhi Foundation, local NGOs Uttarakhand Food Processing Department Local youth and community members","Training and capacity building Initial setup materials (compost, spawn, bags) Infrastructure for mushroom units (room modifications, racks, humidity control)
+",,Selected as ODOP (One District One Product) for Haridwar in 2021 Acknowledged and promoted by district administration,2060,vivekk@rdat.iitd.ac.in,-
+,,421,Mobile Hydraulic Lift,Pending,"""Mobile Hydraulic Lift is a low cost self propelled hydraulic lift solution to  carry out installation, repair & maintenance work in villages which  includes installation, repair & maintenance of street lights, solar panels,  sheds, construction & painting jobs, trimming trees or to undertake any  other repair & maintenance work up to height of 20feet. It is capable for  loading & unloading of materials upto 200Kg. 
+Mobile Hydraulic Lift can carry out all operations required in our daily  life & is very much able to serve need of villagers. Mobile Hydraulic lift is  movable and capable to lift 2 persons will load capacity of 200 kg. Owing  to self driven mechanism, it can be taken anywhere very conveniently at  30 Km/h 
+""
+",2010,"""	- High cost and unavailability of professional lifting equipment in rural areas.
+- Inefficiency and safety issues with conventional ladders.
+- Limited accessibility in congested village areas""
+",,"""Dual mechanism: movement & vertical lift.
+ Scissor lift design with 20-feet reach.
+150cc petrol engine powering both operations (only one at a time).
+Load capacity of 200 kg.
+Self-driven at 30 km/h. ""
+","""Compact, movable, and self-propelled.
+
+Cost-effective vs. professional lifts.
+
+Multipurpose use in rural contexts.
+
+Simple operation, minimal setup, and low maintenance.""
+","""Reduce labor cost and time in rural infrastructure work.
+
+Enable access to skilled maintenance by local communities.
+
+Promote safety, efficiency, and local technical innovation.""
+","""Developed and implemented by a student team.
+
+Successfully demonstrated for solar lighting maintenance, tree trimming, painting, and material transport in rural settings""
+",,Indo Global College of Management and Technology   Vill Abhi  S.A.S Nagar Mohalli Punjab India 140109,S.A.S Nagar Mohalli,Punjab,India,140109,, -,,"""	- Provide a low-cost, self-propelled solution for installation, repair, and maintenance in rural areas (up to 20 feet height).
+- Improve rural infrastructure maintenance capacity and solar lighting system upkeep.""
+","""Student design and engineering.
+
+Local fabrication resources.
+
+Inspiration from Maruti 800-based chassis dimensions.
+
+Hydraulic, mechanical, and structural analysis support.""
+","""Petrol engine (150cc).
+
+Hydraulic system and chassis fabrication.
+
+Suspension, scissor mechanism, and structural components.""
+",,"""Recognized for enabling rural innovation and skill enhancement.
+Showcased as a practical student-led solution for village needs.""
+",2061,principaligcmt@rediffmail.com,-
+,,422,"Utilization of kitchen waste to produce biogas to power the vehicles.
+",Pending,"Biogas, produced from organic waste, can be upgraded to Bio-CNG—a clean, high-methane fuel alternative to CNG. India, with its vast organic waste resources, has immense potential to harness Bio-CNG for energy and transportation needs. Bio-CNG offers multiple benefits in terms of reducing dependency on imported fuels, cuts greenhouse gas emissions, creates rural livelihoods and entrepreneurship opportunities and produces organic fertilizer as a by-product. India ranks 2nd globally in household biogas plants and is advancing rapidly in Bio-CNG technologies. With strong policy support and innovations like IIT Delhi’s purification systems, Bio-CNG is emerging as a key solution for clean, sustainable, and decentralized energy in India.
+",2000,"""•	Limited awareness and implementation of decentralized biogas systems.
+•	Lack of standardization for bio-CNG use in rural vehicles.
+•	Cultural disconnect from traditional eco-conscious practices.
+•	Dependence on fossil fuels and unsustainable urban models in rural settings.""
+",,"""
+•	Biogas purification and bottling technology developed at IIT Delhi.
+•	Demonstration of biogas-powered vehicles (India’s first biogas car covering 80,000 km).
+•	Awareness generation via webinars and UBA outreach in 17,355+ villages.
+•	Integration of ancient Indian environmental ethics with technology.""
+","""•	Indigenous, patented biogas-to-Bio-CNG tech for vehicular use. 
+•	Technology already licensed to industries, gaushalas, and youth entrepreneurs.
+•	Synergy of modern science with traditional values.
+•	Direct alignment with Atmanirbhar Bharat and G-20 LiFE goals.""
+","""•	Rural income generation through waste-to-energy entrepreneurship.
+•	Reduction in fossil fuel dependence and carbon emissions.
+•	Revival of sustainable living and ancient conservation practices.
+•	Youth-driven environmental awareness and behavior change.""
+","""
+•	Over 3471 Higher Educational Institutes engaged under UBA. 
+•	17,000+ villages covered through participatory rural development
+•	Indian Biogas Vehicle milestone achieved with real-time performance data.
+•	Technology adopted by Gaushalas, MSMEs, and startups.""
+",,Prof.  Virendra  K Vijay Centre for Rural Development and Te  Delhi Delhi India 110016,Delhi,Delhi,India,110016,, -,,"""•	Promote sustainable rural development through biogas technology.
+•	Utilize kitchen and organic waste to generate Bio-CNG for vehicular use.
+•	Revive traditional, environment-friendly Indian lifestyles aligned with Lifestyle for Environment (LiFE) mission.""
+","""•	IIT Delhi’s Centre for Rural Development and Technology (CRDT).
+•	Support from UBA, IREDA Chair, SUTRA program, and Ministry of New and Renewable Energy.
+•	Collaborations with industries, NGOs, and youth entrepreneurs for biogas deployment.""
+","""
+•	Installation and scaling of small-scale biogas purification units.
+•	Licensing and technical transfer of purification and bottling tech. 
+•	Outreach programs, training, and awareness generation at village level. 
+•	Vehicle retrofitting and performance evaluation.""
+",,"""•	Bio-CNG recognized under National Biofuels Policy, 2018.
+•	Professor V.K. Vijay holds Indian patent for biogas purification.
+•	Founder of Biogas Forum India and Convener of SUTRA Program.
+•	Delivered 21+ award-winning contributions at national level.""
+",2062,vkvijay@rdat.iitd.ac.in,-
+,,423,"Solar Powered Nano Milking Machine for Small Scale Farmers
+",Submitted,"Development of a Solar Powered Nano Milking Machine to assist small-scale farmers with energy-efficient, hygienic, and labor-reducing automated milking, powered entirely by solar energy. Designed for rural settings lacking stable electricity, this innovation enhances productivity, milk quality, and sustainability.
+",2024,"""•	Manual milking is labor-intensive and inconsistent
+•	Hygiene concerns with traditional methods 
+•	Lack of access to electricity in remote areas""
+",,"""•	0.75 HP milking machine with 500W Solar PV system 
+•	MPPT-based 1kW solar inverter 
+•	110Ah rechargeable battery 
+•	Hygienic pulsator-based milking setup 
+•	Portable and farmer-friendly design""
+","""	- Entirely solar-powered and portable
+- Reduces labor and operational costs
+- Improves milk yield and quality
+- Eco-friendly and hygienic solution for small farmers ""
+","""•	Increased rural incomes 
+•	Improved dairy hygiene and productivity 
+•	Promotion of renewable energy 
+•	Skill development and tech adoption among farmers and students""
+","""•	Implemented in Kothavadi village, Coimbatore
+•	Two machines handed to local farmers
+•	Inaugurated with community and panchayat participation
+•	Involved 10 students and 7 faculty members""
+",,-,-,-,-,-,, -,,"""Improve rural dairy productivity.
+Reduce physical strain on farmers.
+Promote sustainable farming.
+Introduce clean energy solutions.""
+","""•	Faculty & students from Sri Eshwar College of Engineering 
+•	Shreem Dairy Equipments (hardware supplier) 
+•	MSM Energy Enterprises (solar setup) 
+•	UBA 2.0 funding & technical support""
+","""•	Milking machine (2 units): ?65,000  
+•	Solar inverter with battery: ?27,500 ""
+",,"""•	Covered by regional newspapers (Dinakaran, Dinamalar, Daily Thanthi)
+•	Appreciated by UBA SEG & Panchayat leaders ""
+",2063,anbarasu.p@sece.ac.in,-
+,,424,Implementing Sustainable Vertical Farming to Revolutionize Agriculture,Pending,"Implementation of a sustainable vertical farming system in Hirikyathanahalli to reduce dependency on tobacco farming and external vegetable markets. The project used hydroponics in a controlled vertical setup to ensure year-round production of fresh vegetables like lettuce and spinach.
+",2024,"""
+•	Limited land availability
+•	Low awareness of modern, efficient agriculture methods
+""
+",,"""•	Vertical farming frame with multi-layer plant beds
+•	Hydroponic system with submersible pump
+•	LED lighting for 24/7 growth
+•	Cocopeat trays for seed germination
+•	TDS and pH monitoring tools
+•	Training for 200+ villagers, including students and farmers""
+","""•	Space-saving, water-efficient farming in vertical format
+•	Year-round production
+•	Eco-friendly and pesticide-free
+•	Highly replicable and scalable
+•	Reduced labor and operational costs""
+","""•	Improved food security and nutrition
+•	Steady income for farmers
+•	Local availability of fresh vegetables
+•	Environmental conservation through less land and water usage""
+","""•	~200 villagers impacted (15 farmers + 190 students)
+•	Handover to Govt High School, Hirikyathanahalli
+•	Current crop success rate: 91.6%
+•	Next batch of seedlings ready for transplant
+•	Community-led post-implementation sustenance""
+",,"Prof. Karthik R, VIDYAVARDHAKA COLLEGE OF ENGINEERING , Bela  Belagavi Karnataka India 570002",Belagavi,Karnataka,India,570002,, -,,"""•	Promote sustainable farming in limited spaces
+•	Reduce reliance on traditional crops and external markets
+•	Enhance food security and nutrition
+•	Empower farmers and students through training in modern farming techniques""
+","""Technical  support from VVCE Mysuru
+•	 Infrastructure provided by Hirikyathanahalli Panchayat
+•	 Community feedback and involvement. UBA 2.0 funding & technical support""
+","""	- Equipment/Machinery: ?70,000
+- Site Prep: ?15,104
+- Manpower: ?5,000
+- Running + Electricity + Miscellaneous: ?10,209
+- Additional: ?20,034 (funded by institute NSS)
+Total: ?1,20,347 (?1 lakh UBA + ?20K institute funds)""
+",,"""•	Strong support from Panchayat Development Office
+•	Featured in multiple village/community meetings and demonstrations
+•	Documented testimonials from school and Panchayat""
+",2071,karthikr@vvce.ac.in,-
+,,425,Millet-Based Food Product Development for Women Empowerment,Pending,"Empowering rural women in Tamil Nadu through millet-based entrepreneurship: value addition of millets to produce culturally relevant, nutritious food products while promoting local income generation.
+",2024,"Financial support delay for SHG startups; need for market access
+",,"Millet product development (brownie, cake, chakli, cookies, bread, pizza base, crackers, health bars); hands-on training; incubation setup
+","Combines nutrition, local resources, women empowerment & sustainability
+","Improved livelihoods, nutritional awareness, women-led businesses in rural areas
+","1 SHG (15 women) starting business; trained 53 women; 8 products developed; setup incubation lab
+",,"""Dr. A. Thahira Banu,  Associate Professor, Gandhigram Rural  Dindigul Tamil Nadu India 624302",Dindigul,Tamil Nadu,India,624302,, -,,"12 SHGs (53 women) from Chettiyapatti, Kalikampatti, and Kottaipatti villages
+","Facility with pulveriser, extruder, kneader, oven, packaging machines at UBA-GRI; hands-on training sessions
+","Equipment setup (oven, kneader, packaging machines); training materials; product development costs
+",,"International Millet Year 2023 initiative; support from UBA-GRI; Participation of academics and experts
+",2065,thaaze@gmail.com,-
+,,426,Groundnut Plucking Machine,Pending,"A machine designed and fabricated to pluck groundnuts from harvested plants, reducing labor and time, and maintaining groundnut quality.
+",2021,"""	High labor cost, time-consuming plucking, reduced groundnut freshness, low profit margins""
+",,"Electric motor-driven rotor, filter plate for soil removal, user training
+","Reduces labor cost and time, maintains groundnut quality, suitable for small-scale farmers
+","""	Better profitability for small farmers, reduced manual labor, increased adoption of simple agri-tech""
+","5 small landholder farmers directly benefited
+",,"Dr. P. Karuppusamy, Professor and Head, Department of Mechan  Coimbatore Tamil Nadu India 641022",Coimbatore,Tamil Nadu,India,641022,, -,,"Small landholder farmers in Thuvaipathy and Anaikatti (South) villages
+","Faculty and students from Sri Ramakrishna Engineering College, local farmers’ inputs, support from Tamil Nadu Agricultural University
+","Equipment and maintenance
+",,"
+",2067,HOD-IT@SREC.AC.IN,-
+,,427,"Self-propelled multipurpose onion harvester.
+",Pending,"An innovative, multipurpose agricultural machine designed to automate and ease the onion harvesting process. It integrates digging, conveying, and windrowing systems to minimize damage to onion bulbs while reducing labor costs. The harvester also includes attachments such as a cultivator, sprayer, belt conveyor, and bed maker, making it suitable for year-round use in various farming activities.
+",2022,"""Labor shortage during the ideal harvest period
+
+High cost and effort in manual onion harvesting
+
+Onion damage due to improper handling
+
+Ensuring compatibility with different farm sizes and field conditions""
+",,"""Chassis System: Supports and integrates subsystems
+
+Digging & Conveyor System: Loosens and collects onions with minimal damage
+
+Windrowing System: Aligns onions to prevent sun damage
+
+Hydraulic System: Enables precise depth and motion control
+
+Attachments: Cultivator, sprayer, belt conveyor, bed maker for multipurpose use
+
+Steering and Drive System: Ensures maneuverability and ease of control""
+","""Multi-functionality: Suitable for sowing, cultivating, mulching, and harvesting
+
+Self-Propelled: Independent mobility with precise hydraulic controls
+
+Labor & Cost Efficient: Reduces harvesting costs by up to 50%
+
+Year-Round Usability: Not restricted to onion harvesting season
+
+Farmer-Centric Design: Customizable with detachable transmission and modular chassis""
+","""Reduces labor dependency by up to 80%
+
+Improves harvesting efficiency and income by minimizing post-harvest losses (up to 30–35%)
+
+Promotes mechanization among small and medium farmers
+
+Encourages entrepreneurship via rental use of the machine""
+","""Successfully field-tested
+
+Demonstrated to farmers in onion-producing regions
+
+Attachments tested and deployed for multiple farming applications
+""
+",,"""Amrutvahini College of Engineering, Sangamner Addr: PO Sang  Sangamaner Gujarat India 422608",Sangamaner,Gujarat,India,422608,, -,,"""Onion farmers using raised-bed and drip irrigation methods
+
+Farmers with large onion acreage
+
+Farmers facing labor shortages during peak harvest season
+
+Service providers offering harvester rentals""
+","""Developed by: Amrutvahini College of Engineering, Sangamner
+
+PI/Coordinator: Dr. Vishnu D. Wakchaure
+
+Support Provided By: Unnat Bharat Abhiyan (UBA)
+
+Technical Inputs: CAD design, hydraulic analysis, gearbox & actuator design, ANSYS simulations""
+","""Total Project Cost: ?2,17,942
+
+Major expenses include:
+
+Engine & Transmission: ?85,284
+
+Harvesting System: ?12,522
+
+Attachments: ?37,000
+
+Chassis & Drive: ?58,080
+
+Miscellaneous (safety, electricals, fasteners, etc.): ?25,056""
+",,"Institutional and government backing via UBA project funding
+",2068,HOD.MECH@AVCOE.ORG,-
+,,428,"Agro Room
+",Pending,"The Agro Room is a sustainable sanitation system that converts human excreta into organic manure. Designed with a three-chamber toilet setup, it separates urine, faeces, and wash water. After each use, a mix of ash, lime, and sawdust is added to eliminate odour and pathogens. Within 30–50 days, the waste decomposes into nutrient-rich night soil, offering a low-cost, eco-friendly alternative to chemical fertilizers.
+",2023,"""Cultural hesitation around use of human waste in agriculture
+
+Risk of pathogen contamination without proper decomposition
+
+Awareness and behaviour change needed for adoption
+
+Inadequate infrastructure for traditional waste collection/disposal""
+",,"""Three-part Toilet Pan: Front (urine), middle (faeces), and rear (cleaning water)
+
+Separate Storage: For urine, faeces, and wash water
+
+Odour & Pathogen Control: Use of ash, lime, sawdust; closed chamber design
+
+Decomposition Chamber: Excreta turns into nutrient-rich manure in 30–50 days
+
+Sustainable Reuse: Treated output used as fertilizer in agriculture
+""
+","""Transforms sanitation waste into valuable fertilizer
+
+No need for sewer lines or septic tanks
+
+Fully sustainable, odorless, and pathogen-free process
+
+Closed-loop solution benefiting sanitation, agriculture, and environment
+
+Low-cost, replicable, and easy to construct in rural areas""
+","""Each family can generate ~180–220 kg excreta/year, producing nutrients equivalent to 15 kg ammonium sulfate or 20 kg urea
+
+1 tonne of urine per family contributes ~10 kg nitrogen
+
+Fertilizer equivalent for up to 2000 m² rice field cultivation per family
+
+Reduces dependence on chemical fertilizers and mitigates soil degradation
+
+Promotes preventive health through improved waste management""
+","""
+Full construction completed and demonstration conducted
+
+Adopted by families for personal use
+
+Collaborative participation from faculty and student teams""
+",,"""K.L.N.College of Engineering, Pottapalayam Sivaganga - 6306  Shivganga Tamil Nadu India 630612",Shivganga,Tamil Nadu,India,630612,, -,,"""Rural households lacking safe and sustainable sanitation
+
+Farmers seeking low-cost, nutrient-rich organic manure
+
+Communities with poor sewage infrastructure
+""
+","""Principal Investigator: Dr. S. Suresh Raja
+
+Institute: K.L.N. College of Engineering, Sivagangai, Tamil Nadu
+
+Student Team: 5 members
+
+Collaborators: Internal college teams; no external NGO or government agency reported""
+","Costs are significantly lower than septic tank waste management or chemical fertilizer production. Manual scavenging, transport, and sewage treatment costs are avoided. The structure uses simple materials like bricks, PVC pipes, tanks, and composting substrates (lime, sawdust, etc.), making it affordable and scalable.
+",,"
+",2069,sujaisuresh@gmail.com,-
+,,429,"Pipe-Bot
+",Pending,"Cleaning of sewers and gutters often involves significant health risks. Gutters clogged with plastic and waste cause blockages and overflows. Pipe-Bot was designed to clean such clogged areas without fully opening the canal. It is a robotic system that can navigate through narrow ducts, suck out obstacles, and provide live video feedback. This solution offers a safe, efficient, and cost-effective approach to sewer cleaning, reducing the need for manual intervention and improving sanitation.
+",2020,"""Handling waste collection in confined, hard-to-access sewer canals
+
+Operating cleaning equipment remotely with precision
+
+Ensuring efficient inspection and cleaning within narrow spaces""
+",,"""Two-part system: station unit and robot
+
+Robot lowered by motorized winch and controlled externally
+
+Pneumatic gripper for waste collection Compact design suitable for single-operator use
+
+Mechanisms including suction, rotating blades, and IR camera for inspection and cleaning""
+","""•	Successfully cleaned inaccessible gutter areas.
+•	Reduced time and effort required for manual sewer cleaning.
+•	Prevented canal overflow through efficient waste removal.
+•	Benefited 50 families directly through improved sanitation.""
+","""Maintains clean canals and drains in the panchayat area
+
+Reduces the need for difficult and hazardous manual labor in drainage cleaning
+
+Ensures efficient removal of dirt and waste to facilitate smooth water flow
+
+Prevents clogging and overflow of canals and drains
+
+Promotes a healthier environment for local residents
+
+Enhances overall quality of life in the community""
+",NA,,"""Toc H Institute of Science & Technology, Arakkunnam, Ernaku  Ernakulam Kerala India 682313",Ernakulam,Kerala,India,682313,, -,,"""To efficiently collect and remove waste materials from sewers and canals
+
+To reduce manpower requirements and operational costs in cleaning operations
+
+To enable safe and remote-controlled cleaning of clogged canals""
+",NA,NA,,NA,2070,dhanyabhi@tistcochin.edu.in,-

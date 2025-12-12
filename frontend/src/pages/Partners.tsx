@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
@@ -13,28 +14,31 @@ const Partners = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { language } = useLanguage();
     const { schema, uischema, loading: schemaLoading } = useSchema('partner');
     const [partners, setPartners] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
-    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
-    const fetchPartners = async (pageToken?: string) => {
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [currentSearch, setCurrentSearch] = useState('');
+
+    const fetchPartners = async (pageNum: number = 1, searchQuery: string = '') => {
         setLoading(true);
         try {
-            const params: any = { limit: 20 };
-            if (pageToken) params.pageToken = pageToken;
+            const params: any = { limit: 20, page: pageNum };
+            if (searchQuery) params.q = searchQuery;
 
             const response = await client.get('/partners', { params });
-            const newItems = response.data.items || [];
+            const { items, total, totalPages: pages } = response.data;
 
-            setPartners(prev => pageToken ? [...prev, ...newItems] : newItems);
-            setNextPageToken(response.data.nextPageToken || null);
-            if (response.data.total !== undefined) {
-                setTotalItems(response.data.total);
-            }
+            setPartners(items || []);
+            setTotalItems(total || 0);
+            setTotalPages(pages || 1);
         } catch (error) {
             console.error('Error fetching partners:', error);
         } finally {
@@ -63,36 +67,33 @@ const Partners = () => {
     };
 
     useEffect(() => {
-        fetchPartners();
-    }, []);
+        fetchPartners(page, currentSearch);
+    }, [page, currentSearch, language]);
 
     useEffect(() => {
         if (id) {
-            const found = partners.find(p => p.id === id);
-            if (found) {
-                setSelectedPartner(found);
+            if (language === 'en') {
+                const found = partners.find(p => p.id === id);
+                if (found) {
+                    setSelectedPartner(found);
+                } else {
+                    if (!loading) fetchPartner(id);
+                }
             } else {
-                if (!loading && partners.length > 0) {
-                    fetchPartner(id); // If not found in loaded list
-                } else if (!loading && partners.length === 0) {
-                    fetchPartner(id);
-                }
-
-                if (!selectedPartner || selectedPartner.id !== id) {
-                    fetchPartner(id);
-                }
+                // Non-English: Always fetch to ensure translation trigger
+                fetchPartner(id);
             }
             setIsCreating(false);
         } else {
             setSelectedPartner(null);
         }
-    }, [id, partners.length]);
+    }, [id, partners.length, language]);
 
     const handleCreate = async (data: any) => {
         try {
             await client.post('/partners', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
-            fetchPartners();
+            fetchPartners(1, currentSearch); // Refresh first page
             alert('Partner proposed successfully!');
             navigate('/partners');
         } catch (error) {
@@ -108,42 +109,44 @@ const Partners = () => {
             await client.put(`/partners/${selectedPartner.id}`, updateData);
             fetchPartner(selectedPartner.id);
             alert('Partner updated successfully!');
+            fetchPartners(page, currentSearch);
         } catch (error) {
             console.error('Error updating partner:', error);
             alert('Failed to update partner.');
         }
     };
 
+    const handleSearch = (query: string) => {
+        setCurrentSearch(query);
+        setPage(1);
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    // ... Schema Injection Customization ...
+    let finalUiSchema = uischema;
+    if (finalUiSchema && !isModerator(user)) {
+        finalUiSchema = JSON.parse(JSON.stringify(finalUiSchema));
+        // Helper to find and patch status control
+        const patchStatus = (elements: any[]) => {
+            elements.forEach((element: any) => {
+                if (element.scope === '#/properties/status') {
+                    element.options = { ...element.options, readonly: true };
+                }
+                if (element.elements) {
+                    patchStatus(element.elements);
+                }
+            });
+        };
+        if (finalUiSchema.elements) {
+            patchStatus(finalUiSchema.elements);
+        }
+    }
+
     if (selectedPartner || isCreating) {
         if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
-
-        let finalUiSchema = uischema;
-        if (isCreating && finalUiSchema && finalUiSchema.elements) {
-            finalUiSchema = {
-                ...finalUiSchema,
-                elements: finalUiSchema.elements.filter((e: any) => e.label !== 'System Info')
-            };
-        }
-
-        // Status Restriction: Only Moderators can edit status
-        if (finalUiSchema && !isModerator(user)) {
-            finalUiSchema = JSON.parse(JSON.stringify(finalUiSchema));
-
-            const patchStatus = (elements: any[]) => {
-                elements.forEach((element: any) => {
-                    if (element.scope === '#/properties/status') {
-                        element.options = { ...element.options, readonly: true };
-                    }
-                    if (element.elements) {
-                        patchStatus(element.elements);
-                    }
-                });
-            };
-
-            if (finalUiSchema.elements) {
-                patchStatus(finalUiSchema.elements);
-            }
-        }
 
         return (
             <Box>
@@ -155,11 +158,11 @@ const Partners = () => {
                     }}
                     sx={{ mb: 2 }}
                 >
-                    Back to List
+                    {useLanguage().t('common.back_to_list')}
                 </Button>
                 <DetailView
-                    title={isCreating ? 'Propose New Partner' : 'Partner Details'}
-                    data={selectedPartner || (isCreating ? { status: 'PROPOSED' } : {})}
+                    title={isCreating ? useLanguage().t('partners.propose_new') : useLanguage().t('partners.details')}
+                    data={selectedPartner || { status: 'PROPOSED' }}
                     schema={schema}
                     uischema={finalUiSchema}
                     canEdit={isCreating ? false : canEditPartner(user, selectedPartner)}
@@ -169,99 +172,59 @@ const Partners = () => {
                         navigate('/partners');
                     }}
                 />
-
-                {!isCreating && selectedPartner?.id && (
+                {selectedPartner && !isCreating && (
                     <Box mt={4}>
-                        <PartnerSolutions partnerId={selectedPartner.id} />
+                        {/* We could add Solutions by Partner list here later */}
                     </Box>
                 )}
             </Box>
         );
     }
 
+    const { t } = useLanguage();
+
     const columns = [
-        { key: 'organizationName', label: 'Organization' },
-        { key: 'entityType', label: 'Type' },
+        { key: 'organizationName', label: t('list.column_org') },
+        {
+            key: 'entityType',
+            label: t('list.column_type'),
+            render: (value: string) => t(`entity_type.${value}`) || value
+        },
+        { key: 'mainDomain', label: t('list.column_domain') },
         {
             key: 'status',
-            label: 'Status',
+            label: t('list.column_status'),
             render: (value: string) => {
                 let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
                 if (value === 'APPROVED' || value === 'MATURE') color = "success";
                 else if (value === 'REJECTED') color = "error";
                 else if (value === 'PROPOSED') color = "warning";
 
-                return <Chip label={value} color={color} size="small" />;
+                return <Chip label={t(`status.${value}`) || value} color={color} size="small" />;
             }
+        },
+        {
+            key: 'proposedByUserName',
+            label: t('list.column_proposed_by')
         }
     ];
 
     return (
         <ListView
-            title="Partners"
+            title={useLanguage().t('partners.title')}
             items={partners}
             columns={columns}
-            onSelect={(item) => navigate(`/partners/${item.id}`)}
-            onCreate={user ? () => navigate('/partners/new') : undefined}
-            searchKeys={['organizationName', 'entityType']}
             loading={loading}
-            hasMore={!!nextPageToken}
-            onLoadMore={() => nextPageToken && fetchPartners(nextPageToken)}
+            onSelect={(item) => navigate(`/partners/${item.id}`)}
+            onCreate={user ? () => setIsCreating(true) : undefined}
+            // Pagination & Search
+            onSearch={handleSearch}
+            page={page}
+            totalPages={totalPages}
             totalItems={totalItems}
+            onPageChange={handlePageChange}
         />
     );
 };
 
-const PartnerSolutions = ({ partnerId }: { partnerId: string }) => {
-    const [solutions, setSolutions] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSolutions = async () => {
-            setLoading(true);
-            try {
-                const response = await client.get(`/partners/${partnerId}/solutions`);
-                setSolutions(response.data || []);
-            } catch (error) {
-                console.error('Error fetching partner solutions:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSolutions();
-    }, [partnerId]);
-
-    if (loading) return <CircularProgress size={24} />;
-    if (solutions.length === 0) return <Box mt={2}><Chip label="No associated solutions found" /></Box>;
-
-    // Reuse ListView? Or just a simple list.
-    // Let's use a simple list for now since ListView takes full page typically. 
-    // Or we can construct a small table.
-
-    return (
-        <Box>
-            <h3>Associated Solutions</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                        <th style={{ padding: '8px' }}>Name</th>
-                        <th style={{ padding: '8px' }}>Domain</th>
-                        <th style={{ padding: '8px' }}>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {solutions.map((s) => (
-                        <tr key={s.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '8px' }}>{s.name}</td>
-                            <td style={{ padding: '8px' }}>{s.domain}</td>
-                            <td style={{ padding: '8px' }}>
-                                <Chip label={s.status} size="small" />
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </Box>
-    );
-};
 export default Partners;

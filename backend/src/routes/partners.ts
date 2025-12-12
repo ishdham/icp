@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import { db } from '../config/firebase';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
+import { aiService } from '../services/ai.service';
+import { translationService } from '../services/translation.service';
 
 const router = Router();
 
@@ -9,136 +11,205 @@ import { PartnerSchema } from '../schemas/partners';
 import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
 import { paginate } from '../utils/pagination';
 
-// GET /partners - List and Search Partners
+// GET /partners - List and Search
 router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { status, q, limit = '20', pageToken } = req.query;
+        const { q, entityType, mainDomain, status, limit = '20', page = '1' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
-        const token = pageToken as string | undefined;
-
-        // Base Query Helper
-        const buildQuery = (collection: FirebaseFirestore.Query) => {
-            return collection;
-        };
+        const pageNum = parseInt(page as string) || 1;
+        const offset = (pageNum - 1) * limitNum;
 
         let results: any[] = [];
-        let nextPageToken: string | null = null;
         let total: number = 0;
+        let totalPages: number = 0;
 
-        const isMod = req.user && (req.user.role === 'ADMIN' || req.user.role === 'ICP_SUPPORT');
+        const isMod = isModerator(req.user);
 
-        // Pagination wrapper
-        const runPaged = async (query: FirebaseFirestore.Query) => {
-            return paginate(query, limitNum, token, 'partners');
+        // helper to enrich data (names)
+        const enrichResults = async (items: any[]) => {
+            return Promise.all(items.map(async (p: any) => {
+                let updates: any = {};
+                if (p.proposedByUserId && !p.proposedByUserName) {
+                    try {
+                        const uDoc = await db.collection('users').doc(p.proposedByUserId).get();
+                        if (uDoc.exists) {
+                            const u = uDoc.data();
+                            updates.proposedByUserName = `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
+                        }
+                    } catch (e) { }
+                }
+                return { ...p, ...updates };
+            }));
         };
 
-        // CASE 1: Mod
+        // SEARCH MODE (Vector)
+        if (q) {
+            const searchResults = await aiService.search(q as string, {
+                limit: 200,
+                filters: {
+                    type: 'partner'
+                    // Partner doesn't strictly have 'domain' field in same way, but schema has 'mainDomain'
+                    // aiService filters currently support 'domain' only for solutions in my implementation (Step 129).
+                    // I will filter mainDomain in memory here.
+                }
+            });
+
+            // Map to objects
+            let candidates = searchResults.map((r: any) => ({ ...r.metadata, _score: r.score }));
+
+            // Apply Filters (in-memory)
+            if (entityType) candidates = candidates.filter((p: any) => p.entityType === entityType);
+            if (mainDomain) candidates = candidates.filter((p: any) => p.mainDomain === mainDomain);
+
+            // Apply Permissions
+            if (isMod) {
+                if (status) candidates = candidates.filter((p: any) => p.status === status);
+                results = candidates;
+            } else if (req.user) {
+                if (status) {
+                    if (status === 'APPROVED' || status === 'MATURE') {
+                        results = candidates.filter((p: any) => p.status === 'APPROVED' || p.status === 'MATURE');
+                    } else {
+                        results = candidates.filter((p: any) => p.proposedByUserId === req.user!.uid && p.status === status);
+                    }
+                } else {
+                    // Combined: (APPROVED OR MATURE) OR OWN
+                    results = candidates.filter((p: any) =>
+                        p.status === 'APPROVED' || p.status === 'MATURE' || p.proposedByUserId === req.user!.uid
+                    );
+                }
+            } else {
+                // Anonymous
+                results = candidates.filter((p: any) => p.status === 'APPROVED' || p.status === 'MATURE');
+                if (status && status !== 'APPROVED' && status !== 'MATURE') results = [];
+            }
+
+            total = results.length;
+            totalPages = Math.ceil(total / limitNum);
+            results = results.slice(offset, offset + limitNum);
+
+            const enriched = await enrichResults(results);
+            return res.json({ items: enriched, total, page: pageNum, totalPages });
+        }
+
+
+        // STANDARD LIST MODE
+        const partnersRef = db.collection('partners');
+
+        const buildQuery = (collection: FirebaseFirestore.CollectionReference | FirebaseFirestore.Query) => {
+            let query: FirebaseFirestore.Query = collection;
+            if (entityType) query = query.where('entityType', '==', entityType);
+            if (mainDomain) query = query.where('mainDomain', '==', mainDomain);
+            return query;
+        };
+
+        const runPaged = async (query: FirebaseFirestore.Query) => {
+            return paginate(query, limitNum, offset);
+        };
+
+        // CASE 1: Moderator
         if (isMod) {
-            let query = buildQuery(db.collection('partners'));
+            let query = buildQuery(partnersRef);
             if (status) query = query.where('status', '==', status);
 
             const paged = await runPaged(query);
             results = paged.items;
-            nextPageToken = paged.nextPageToken;
             total = paged.total;
+            totalPages = paged.totalPages;
         }
-        // CASE 2: Regular
+        // CASE 2: Regular User
         else if (req.user) {
-            const partnersRef = db.collection('partners');
             if (status) {
-                if (status === 'MATURE') {
-                    let query = buildQuery(partnersRef).where('status', '==', 'MATURE');
+                // Specific status requested
+                const isPublicStatus = status === 'APPROVED' || status === 'MATURE';
+                if (isPublicStatus) {
+                    // Publicly visible status
+                    let query = buildQuery(partnersRef).where('status', 'in', ['APPROVED', 'MATURE']); // Simplifying to IN check if possible, or exact match if user asked for specific
+                    // User asked for specific 'status', so use that.
+                    query = buildQuery(partnersRef).where('status', '==', status);
+
                     const paged = await runPaged(query);
                     results = paged.items;
-                    nextPageToken = paged.nextPageToken;
                     total = paged.total;
+                    totalPages = paged.totalPages;
                 } else {
-                    // Specific non-mature status, only own
+                    // Private status -> Must be Own
                     let query = buildQuery(partnersRef)
                         .where('proposedByUserId', '==', req.user.uid)
                         .where('status', '==', status);
                     const paged = await runPaged(query);
                     results = paged.items;
-                    nextPageToken = paged.nextPageToken;
                     total = paged.total;
+                    totalPages = paged.totalPages;
                 }
             } else {
-                // Combined
-                const matureQuery = buildQuery(partnersRef).where('status', '==', 'MATURE');
+                // Combined View: "Fetch All & Slice"
+                // Public Query
+                const publicQuery = buildQuery(partnersRef).where('status', 'in', ['APPROVED', 'MATURE']);
+                // Own Query
                 const ownQuery = buildQuery(partnersRef).where('proposedByUserId', '==', req.user.uid);
 
-                const [maturePaged, ownPaged] = await Promise.all([
-                    runPaged(matureQuery),
-                    runPaged(ownQuery)
+                const [publicDocs, ownDocs] = await Promise.all([
+                    publicQuery.get(),
+                    ownQuery.get()
                 ]);
 
-                // Merge and Sort
                 const map = new Map();
-                maturePaged.items.forEach((d: any) => map.set(d.id, d));
-                ownPaged.items.forEach((d: any) => map.set(d.id, d));
+                publicDocs.docs.forEach((d: any) => map.set(d.id, { id: d.id, ...d.data() }));
+                ownDocs.docs.forEach((d: any) => map.set(d.id, { id: d.id, ...d.data() }));
 
                 let combined = Array.from(map.values());
+
+                // Sort by ID
                 combined.sort((a, b) => a.id.localeCompare(b.id));
 
-                if (combined.length > limitNum) {
-                    combined = combined.slice(0, limitNum);
-                }
-                results = combined;
-                total = maturePaged.total + ownPaged.total; // Approx total
-
-                if (results.length > 0) {
-                    nextPageToken = results[results.length - 1].id;
-                } else {
-                    nextPageToken = null;
-                }
-
-                if (!maturePaged.nextPageToken && !ownPaged.nextPageToken) {
-                    if (combined.length <= limitNum && map.size <= limitNum) nextPageToken = null;
-                }
+                total = combined.length;
+                totalPages = Math.ceil(total / limitNum);
+                results = combined.slice(offset, offset + limitNum);
             }
         }
         // CASE 3: Anonymous
         else {
-            if (status && status !== 'MATURE') {
+            if (status && status !== 'APPROVED' && status !== 'MATURE') {
                 results = [];
-                nextPageToken = null;
                 total = 0;
+                totalPages = 0;
             } else {
-                let query = buildQuery(db.collection('partners')).where('status', '==', 'MATURE');
+                let query = buildQuery(partnersRef).where('status', 'in', ['APPROVED', 'MATURE']);
+                if (status) query = buildQuery(partnersRef).where('status', '==', status); // Refine if specific public status asked
+
                 const paged = await runPaged(query);
                 results = paged.items;
-                nextPageToken = paged.nextPageToken;
                 total = paged.total;
+                totalPages = paged.totalPages;
             }
         }
 
-        // In-memory search (Applied AFTER pagination)
-        let filteredPartners = results;
-        if (q) {
-            const search = (q as string).toLowerCase();
-            filteredPartners = results.filter((p: any) =>
-                p.organizationName?.toLowerCase().includes(search) ||
-                p.entityType?.toLowerCase().includes(search)
-            );
+        // OR do the Fetch All. Plan said "Fetch All & Filter".
+
+        // Let's rely on the upcoming AI Search for true solution.
+        // For now, simple in-memory filter on the page is what the PREVIOUS code did.
+        // But User complained about it! "After the pagination... does not seem very useful".
+        // So we MUST implement Fetch All.
+
+        // However, since I already implemented it for the "Combined" view (most complex), 
+        // I should ideally do it for others.
+        // For MVP + Stability during this refactor:
+        // "Combined" view implementation basically covers the "Own + Mature" Use case.
+        // For "Moderator" (Admin), they might be searching all.
+        // Aggregate Names & Translations (Post-Fetch for Standard Mode)
+        const enriched = await enrichResults(results);
+
+        // Apply Translations (Lazy Translation for Lists)
+        const { lang } = req.query;
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            const translatedResults = await Promise.all(enriched.map(async (item) => {
+                return await translationService.ensureTranslation(item, 'partners', lang);
+            }));
+            return res.json({ items: translatedResults, total, page: pageNum, totalPages });
         }
 
-        // Aggregate Proposer Names
-        const partnersWithNames = await Promise.all(filteredPartners.map(async (p: any) => {
-            if (p.proposedByUserId) {
-                try {
-                    const userDoc = await db.collection('users').doc(p.proposedByUserId).get();
-                    if (userDoc.exists) {
-                        const u = userDoc.data();
-                        return { ...p, proposedByUserName: `${u?.firstName || ''} ${u?.lastName || ''}`.trim() };
-                    }
-                } catch (e) {
-                    console.error(`Failed to fetch proposer for partner ${p.id}`, e);
-                }
-            }
-            return { ...p, proposedByUserName: 'Unknown' };
-        }));
-
-        res.json({ items: partnersWithNames, nextPageToken, total });
+        res.json({ items: enriched, total, page: pageNum, totalPages });
     } catch (error) {
         console.error('Error fetching partners:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -148,13 +219,37 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
 // GET /partners/:id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
-        const doc = await db.collection('partners').doc(req.params.id).get();
-        if (!doc.exists) {
-            res.status(404).json({ error: 'Partner not found' });
-            return;
+        let data: any;
+        let id = req.params.id;
+        const { lang } = req.query;
+
+        // Try Translation Service first
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            try {
+                data = await translationService.getTranslatedEntity(id, 'partners', lang);
+                // translationService returns merged data with original
+            } catch (e: any) {
+                if (e.message && e.message.includes('not found')) {
+                    return res.status(404).json({ error: 'Partner not found' });
+                }
+                console.error('Translation error:', e);
+            }
         }
 
-        const data = doc.data() as any;
+        // Fallback or Normal Fetch
+        if (!data) {
+            const doc = await db.collection('partners').doc(id).get();
+            if (!doc.exists) {
+                res.status(404).json({ error: 'Partner not found' });
+                return;
+            }
+            data = { id: doc.id, ...doc.data() as any };
+        } else {
+            // Ensure ID is set (translation service might return id in data or not, safest to force it)
+            data.id = id;
+        }
+
+        // Enrichment
         let proposedByUserName = 'Unknown';
         if (data.proposedByUserId) {
             const userDoc = await db.collection('users').doc(data.proposedByUserId).get();
@@ -164,7 +259,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             }
         }
 
-        res.json({ id: doc.id, ...data, proposedByUserName });
+        res.json({ ...data, proposedByUserName });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
@@ -245,7 +340,15 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 
         data.updatedAt = new Date().toISOString();
 
-        await docRef.update(data);
+        const { lang } = req.query;
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            await docRef.update({
+                [`translations.${lang}`]: data,
+                updatedAt: new Date().toISOString()
+            });
+        } else {
+            await docRef.update(data);
+        }
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });

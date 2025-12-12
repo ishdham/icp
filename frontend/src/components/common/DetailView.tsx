@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import JsonForm from './JsonForm';
+import { translateSchema, translateUiSchema } from '../../utils/schemaTranslator';
 import {
     Button,
     Paper,
@@ -30,6 +32,7 @@ const DetailView: React.FC<DetailViewProps> = ({
     onCancel,
     canEdit = false
 }) => {
+    const { t } = useLanguage();
     const [data, setData] = useState(initialData);
     const [isEditing, setIsEditing] = useState(!readOnly && !initialData.id);
     const [errors, setErrors] = useState<any[]>([]);
@@ -37,6 +40,16 @@ const DetailView: React.FC<DetailViewProps> = ({
     React.useEffect(() => {
         setData(initialData);
     }, [initialData]);
+
+    const translatedSchema = useMemo(() => {
+        // Deep clone to avoid mutating the original schema which might be cached by useSchema
+        const schemaHooks = JSON.parse(JSON.stringify(schema));
+        return translateSchema(schemaHooks, t);
+    }, [schema, t]);
+
+    const translatedUiSchema = useMemo(() => {
+        return translateUiSchema(uischema, t);
+    }, [uischema, t]);
 
     const handleSave = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -107,8 +120,17 @@ const DetailView: React.FC<DetailViewProps> = ({
         <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: 2 }}>
             <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}>
                 <Toolbar>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
                         {title}
+                        {/* Visual indicator for current language */}
+                        <Typography variant="caption" sx={{
+                            backgroundColor: 'rgba(0,0,0,0.05)',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(0,0,0,0.1)'
+                        }}>
+                            Language: {useLanguage().language.toUpperCase()}
+                        </Typography>
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         {canEdit && !isEditing && (
@@ -151,8 +173,8 @@ const DetailView: React.FC<DetailViewProps> = ({
             <Box sx={{ p: 3 }}>
                 <form onSubmit={(e) => e.preventDefault()} noValidate>
                     <JsonForm
-                        schema={schema}
-                        uischema={uischema}
+                        schema={translatedSchema}
+                        uischema={translatedUiSchema}
                         data={data}
                         onChange={({ data, errors }) => {
                             setData(data);

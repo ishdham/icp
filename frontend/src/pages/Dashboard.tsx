@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
     Grid,
     Card,
@@ -21,6 +22,7 @@ import {
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [stats, setStats] = useState({
         solutions: 0,
         partners: 0,
@@ -46,7 +48,7 @@ const Dashboard = () => {
     return (
         <Box>
             <Typography variant="h4" gutterBottom component="div" sx={{ mb: 4 }}>
-                Dashboard
+                {t('nav.dashboard')}
             </Typography>
             {/* Dashboard Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -57,7 +59,7 @@ const Dashboard = () => {
                             <Box display="flex" alignItems="center" mb={1}>
                                 <Description color="primary" sx={{ mr: 1 }} />
                                 <Typography color="textSecondary" gutterBottom>
-                                    Total Solutions
+                                    {t('dashboard.total_solutions')}
                                 </Typography>
                             </Box>
                             <Typography variant="h4">
@@ -65,7 +67,7 @@ const Dashboard = () => {
                             </Typography>
                         </CardContent>
                         <CardActions>
-                            <Button size="small" component={Link} to="/solutions">View All</Button>
+                            <Button size="small" component={Link} to="/solutions">{t('common.view_all')}</Button>
                         </CardActions>
                     </Card>
                 </Grid>
@@ -76,7 +78,7 @@ const Dashboard = () => {
                             <Box display="flex" alignItems="center" mb={1}>
                                 <Group color="primary" sx={{ mr: 1 }} />
                                 <Typography color="textSecondary" gutterBottom>
-                                    Active Partners
+                                    {t('dashboard.active_partners')}
                                 </Typography>
                             </Box>
                             <Typography variant="h4">
@@ -84,7 +86,7 @@ const Dashboard = () => {
                             </Typography>
                         </CardContent>
                         <CardActions>
-                            <Button size="small" component={Link} to="/partners">View All</Button>
+                            <Button size="small" component={Link} to="/partners">{t('common.view_all')}</Button>
                         </CardActions>
                     </Card>
                 </Grid>
@@ -96,7 +98,7 @@ const Dashboard = () => {
                                 <Box display="flex" alignItems="center" mb={1}>
                                     <ConfirmationNumber color="primary" sx={{ mr: 1 }} />
                                     <Typography color="textSecondary" gutterBottom>
-                                        My Tickets
+                                        {t('dashboard.my_tickets')}
                                     </Typography>
                                 </Box>
                                 <Typography variant="h4">
@@ -104,7 +106,7 @@ const Dashboard = () => {
                                 </Typography>
                             </CardContent>
                             <CardActions>
-                                <Button size="small" component={Link} to="/tickets">View All</Button>
+                                <Button size="small" component={Link} to="/tickets">{t('common.view_all')}</Button>
                             </CardActions>
                         </Card>
                     </Grid>
@@ -115,7 +117,7 @@ const Dashboard = () => {
             {user && (
                 <Box mt={6}>
                     <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                        Quick Actions
+                        {t('dashboard.quick_actions')}
                     </Typography>
                     <Grid container spacing={3}>
                         <Grid size={{ xs: 12, sm: 6 }}>
@@ -135,9 +137,9 @@ const Dashboard = () => {
                             >
                                 <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
                                 <Box>
-                                    <Typography variant="h6">Submit a Solution</Typography>
+                                    <Typography variant="h6">{t('dashboard.submit_solution')}</Typography>
                                     <Typography variant="body2" color="textSecondary">
-                                        Share your innovative solution with the platform.
+                                        {t('dashboard.submit_desc')}
                                     </Typography>
                                 </Box>
                             </Paper>
@@ -160,9 +162,9 @@ const Dashboard = () => {
                             >
                                 <AddCircleOutline color="primary" sx={{ fontSize: 40, mr: 2 }} />
                                 <Box>
-                                    <Typography variant="h6">Propose a Partner</Typography>
+                                    <Typography variant="h6">{t('dashboard.propose_partner')}</Typography>
                                     <Typography variant="body2" color="textSecondary">
-                                        Recommend a new partner organization.
+                                        {t('dashboard.propose_desc')}
                                     </Typography>
                                 </Box>
                             </Paper>

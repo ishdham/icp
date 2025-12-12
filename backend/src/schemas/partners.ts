@@ -18,7 +18,8 @@ export const PartnerSchema = z.object({
         city: z.string().optional().describe('City'),
         country: z.string().optional().describe('Country')
     }).optional().describe('Address'),
-    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED', 'MATURE']).describe('Status')
+    status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED', 'MATURE']).describe('Status'),
+    translations: z.record(z.string(), z.any()).optional().describe('Translations')
 });
 
 const generatedSchema = zodToJsonSchema(PartnerSchema as any, 'partnerSchema');

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
@@ -15,6 +16,7 @@ const Solutions = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { language } = useLanguage();
     const { schema, uischema, loading: schemaLoading } = useSchema('solution');
     const [solutions, setSolutions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,23 +28,24 @@ const Solutions = () => {
 
     const [partners, setPartners] = useState<any[]>([]);
 
-    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
+    // New Pagination State
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [currentSearch, setCurrentSearch] = useState('');
 
-    const fetchSolutions = async (pageToken?: string) => {
+    const fetchSolutions = async (pageNum: number = 1, searchQuery: string = '') => {
         setLoading(true);
         try {
-            const params: any = { limit: 20 };
-            if (pageToken) params.pageToken = pageToken;
+            const params: any = { limit: 20, page: pageNum };
+            if (searchQuery) params.q = searchQuery;
 
             const response = await client.get('/solutions', { params });
-            const newItems = response.data.items || [];
+            const { items, total, totalPages: pages } = response.data;
 
-            setSolutions(prev => pageToken ? [...prev, ...newItems] : newItems);
-            setNextPageToken(response.data.nextPageToken || null);
-            if (response.data.total !== undefined) {
-                setTotalItems(response.data.total);
-            }
+            setSolutions(items || []);
+            setTotalItems(total || 0);
+            setTotalPages(pages || 1);
         } catch (error) {
             console.error('Error fetching solutions:', error);
         } finally {
@@ -74,49 +77,48 @@ const Solutions = () => {
     };
 
     useEffect(() => {
-        fetchSolutions();
+        // Initial fetch
+        fetchSolutions(page, currentSearch);
         fetchPartners();
     }, []);
+    // Note: We don't depend on 'page' or 'currentSearch' here to avoid double fetch loop 
+    // if handled via handler functions, but for simplicity let's rely on explicit calls.
+    // Actually, proper pattern is useEffect on [page, currentSearch].
+
+    // Let's refactor to standard pattern:
+    useEffect(() => {
+        fetchSolutions(page, currentSearch);
+    }, [page, currentSearch, language]);
+
 
     useEffect(() => {
         if (id) {
-            // Check if we already have it in the list to save a call, otherwise fetch
-            const found = solutions.find(s => s.id === id);
-            if (found) {
-                setSelectedSolution(found);
+            // If language is English, we can try to use the cached list item.
+            // If language is NOT English, we MUST fetch individually to trigger the backend "Lazy Translation" logic
+            // (unless we are sure the list item is already translated, but safer to fetch).
+            if (language === 'en') {
+                const found = solutions.find(s => s.id === id);
+                if (found) {
+                    setSelectedSolution(found);
+                } else {
+                    if (!loading) fetchSolution(id);
+                }
             } else {
-                // If list is empty or not found, we might need to fetch individual.
-                // However, fetchSolutions is called on mount.
-                // If solutions are loading, wait.
-                if (!loading && solutions.length > 0) {
-                    // Loaded but not found in list -> maybe filtered or pagination?
-                    // Fetch individually.
-                    fetchSolution(id);
-                } else if (!loading && solutions.length === 0) {
-                    // Loaded and empty -> fetch individual
-                    fetchSolution(id);
-                }
-                // If loading, do nothing, the fetchSolutions might find it, or we rely on this fallback?
-                // Actually, fetchSolutions sets loading=false.
-                // It's safer to just fetch individual if we have an ID and it's not currently selected.
-                if (!selectedSolution || selectedSolution.id !== id) {
-                    fetchSolution(id);
-                }
+                // Non-English: Always fetch to ensure translation trigger
+                fetchSolution(id);
             }
             setIsCreating(false);
         } else {
             setSelectedSolution(null);
         }
-    }, [id, solutions.length]);
-    // solutions.length dependency is a bit tricky. Better to rely on id change.
-    // If we land on /solutions/123, fetchSolutions runs, fetchPartners runs. 
-    // useEffect[id] runs. 
+    }, [id, solutions.length, language]);
+
 
     const handleCreate = async (data: any) => {
         try {
             await client.post('/solutions', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
-            fetchSolutions();
+            fetchSolutions(1, currentSearch); // Refresh first page
             alert('Solution submitted successfully!');
             navigate('/solutions');
         } catch (error) {
@@ -130,11 +132,11 @@ const Solutions = () => {
         try {
             const { id, ...updateData } = data;
             await client.put(`/solutions/${selectedSolution.id}`, updateData);
-            // Update local state or refetch?
-            // If we refetch, we might lose selection if we don't handle it.
-            // But we have ID in URL, so refetching list works well.
             fetchSolution(selectedSolution.id);
             alert('Solution updated successfully!');
+            // Refresh list too to update row if needed, but might lose page. 
+            // Better to refresh current page:
+            fetchSolutions(page, currentSearch);
         } catch (error) {
             console.error('Error updating solution:', error);
             alert('Failed to update solution.');
@@ -145,7 +147,16 @@ const Solutions = () => {
         setCreationData((prev: any) => ({ ...prev, ...data }));
     };
 
-    // Inject partners into schema (for providedByPartnerId)
+    const handleSearch = (query: string) => {
+        setCurrentSearch(query);
+        setPage(1); // Reset to first page on new search
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    // ... Schema Injection (Same as before) ...
     const activeSchema = (schema && partners.length > 0) ? {
         ...schema,
         properties: {
@@ -161,7 +172,6 @@ const Solutions = () => {
         }
     } : schema;
 
-    // Add providedByPartnerId to UI schema if not present
     let finalUiSchema = (uischema && !JSON.stringify(uischema).includes('providedByPartnerId')) ? {
         ...uischema,
         elements: [
@@ -170,12 +180,8 @@ const Solutions = () => {
         ]
     } : uischema;
 
-    // Status Restriction: Only Moderators can edit status
     if (finalUiSchema && !isModerator(user)) {
-        // Deep clone to avoid mutation issues if uischema is reused (though currently it's from hook)
         finalUiSchema = JSON.parse(JSON.stringify(finalUiSchema));
-
-        // Helper to find and patch status control
         const patchStatus = (elements: any[]) => {
             elements.forEach((element: any) => {
                 if (element.scope === '#/properties/status') {
@@ -186,13 +192,11 @@ const Solutions = () => {
                 }
             });
         };
-
         if (finalUiSchema.elements) {
             patchStatus(finalUiSchema.elements);
         }
     }
 
-    // If creating, hide "System Info" group
     if (isCreating && finalUiSchema && finalUiSchema.elements) {
         finalUiSchema = {
             ...finalUiSchema,
@@ -217,7 +221,7 @@ const Solutions = () => {
                     }}
                     sx={{ mb: 2 }}
                 >
-                    Back to List
+                    {useLanguage().t('common.back_to_list')}
                 </Button>
                 {isCreating && (
                     <Button
@@ -226,11 +230,11 @@ const Solutions = () => {
                         sx={{ ml: 2, mb: 2 }}
                         onClick={() => setImportDialogOpen(true)}
                     >
-                        AI Assisted Import
+                        {useLanguage().t('common.ai_import')}
                     </Button>
                 )}
                 <DetailView
-                    title={isCreating ? 'Submit New Solution' : 'Solution Details'}
+                    title={isCreating ? useLanguage().t('solutions.submit_new') : useLanguage().t('solutions.details')}
                     data={selectedSolution || (isCreating ? creationData : {})}
                     schema={activeSchema}
                     uischema={finalUiSchema}
@@ -250,12 +254,22 @@ const Solutions = () => {
         );
     }
 
+    const { t } = useLanguage();
+
+    // ... (rest of code)
+
+    // ...
+
     const columns = [
-        { key: 'name', label: 'Name' },
-        { key: 'domain', label: 'Domain' },
+        { key: 'name', label: t('list.column_name') },
+        {
+            key: 'domain',
+            label: t('list.column_domain'),
+            render: (value: string) => t(`domain.${value}`)
+        },
         {
             key: 'status',
-            label: 'Status',
+            label: t('list.column_status'),
             render: (value: string) => {
                 let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
                 if (value === 'APPROVED' || value === 'MATURE') color = "success";
@@ -263,7 +277,7 @@ const Solutions = () => {
                 else if (value === 'PENDING' || value === 'DRAFT') color = "warning";
                 else if (value === 'PILOT') color = "info";
 
-                return <Chip label={value} color={color} size="small" />;
+                return <Chip label={t(`status.${value}`) || value} color={color} size="small" />;
             }
         }
     ];
@@ -279,10 +293,10 @@ const Solutions = () => {
                     size="small"
                 >
                     <ToggleButton value="list" aria-label="list view">
-                        <ViewList sx={{ mr: 1 }} /> List
+                        <ViewList sx={{ mr: 1 }} /> {t('list.toggle_list')}
                     </ToggleButton>
                     <ToggleButton value="ai" aria-label="ai chat">
-                        <SmartToy sx={{ mr: 1 }} /> AI Assistant
+                        <SmartToy sx={{ mr: 1 }} /> {t('list.toggle_ai')}
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Box>
@@ -291,16 +305,19 @@ const Solutions = () => {
                 <AiChatView />
             ) : (
                 <ListView
-                    title="Solutions"
+                    title={useLanguage().t('solutions.title')}
                     items={solutions}
                     columns={columns}
                     loading={loading}
                     onSelect={(item) => navigate(`/solutions/${item.id}`)}
                     onCreate={user ? () => { setIsCreating(true); setCreationData({ status: 'PROPOSED' }); } : undefined}
-                    searchKeys={['name', 'domain', 'description']}
-                    hasMore={!!nextPageToken}
-                    onLoadMore={() => nextPageToken && fetchSolutions(nextPageToken)}
+                    // Pagination & Search
+                    onSearch={handleSearch}
+                    page={page}
+                    totalPages={totalPages}
                     totalItems={totalItems}
+                    onPageChange={handlePageChange}
+                // Legacy props removed
                 />
             )}
             <AiImportDialog

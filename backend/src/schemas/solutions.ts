@@ -21,7 +21,8 @@ export const SolutionSchema = z.object({
     targetBeneficiaries: z.array(z.string()).optional().describe('Target Beneficiaries'),
     status: z.enum(['PROPOSED', 'DRAFT', 'PENDING', 'APPROVED', 'MATURE', 'PILOT', 'REJECTED']).describe('Status'),
     references: z.array(z.string()).optional().describe('References (Links)'),
-    attachments: z.array(z.string()).optional().describe('Attachments')
+    attachments: z.array(z.string()).optional().describe('Attachments'),
+    translations: z.record(z.string(), z.any()).optional().describe('Translations')
 });
 
 const generatedSchema = zodToJsonSchema(SolutionSchema as any, 'solutionSchema');

@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useState } from 'react';
 import {
     AppBar,
@@ -11,14 +12,14 @@ import {
     MenuItem,
     Container,
     Box,
-    // Avatar removed
-    // Avatar removed
 } from '@mui/material';
 import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon } from '@mui/icons-material';
 import { canSeeUsers } from '../utils/permissions';
+import { LanguageSelector } from './common/LanguageSelector';
 
 const Layout = () => {
     const { user, logout } = useAuth();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -42,18 +43,18 @@ const Layout = () => {
     };
 
     const navItems = [
-        { label: 'Dashboard', path: '/' },
-        { label: 'Solutions', path: '/solutions' },
-        { label: 'Reports', path: '/reports' },
-        { label: 'Partners', path: '/partners' },
+        { label: t('nav.dashboard'), path: '/' },
+        { label: t('nav.solutions'), path: '/solutions' },
+        { label: t('nav.reports'), path: '/reports' },
+        { label: t('nav.partners'), path: '/partners' },
     ];
 
     if (user) {
-        navItems.push({ label: 'Tickets', path: '/tickets' });
+        navItems.push({ label: t('nav.tickets'), path: '/tickets' });
     }
 
     if (canSeeUsers(user)) {
-        navItems.push({ label: 'Users', path: '/users' });
+        navItems.push({ label: t('nav.users'), path: '/users' });
     }
 
     return (
@@ -83,7 +84,7 @@ const Layout = () => {
                         <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                             {navItems.map((item) => (
                                 <Button
-                                    key={item.label}
+                                    key={item.path}
                                     component={Link}
                                     to={item.path}
                                     sx={{
@@ -99,7 +100,8 @@ const Layout = () => {
                             ))}
                         </Box>
 
-                        <Box sx={{ flexGrow: 0 }}>
+                        <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+                            <LanguageSelector />
                             {user ? (
                                 <>
                                     <IconButton
@@ -136,12 +138,12 @@ const Layout = () => {
                                         </MenuItem>
                                         <MenuItem onClick={handleLogout}>
                                             <Logout fontSize="small" sx={{ mr: 1 }} />
-                                            Sign out
+                                            {t('nav.logout')}
                                         </MenuItem>
                                     </Menu>
                                 </>
                             ) : (
-                                <Button color="inherit" component={Link} to="/login">Login</Button>
+                                <Button color="inherit" component={Link} to="/login">{t('nav.login')}</Button>
                             )}
                         </Box>
                     </Toolbar>

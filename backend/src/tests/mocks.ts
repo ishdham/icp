@@ -20,6 +20,7 @@ const mockFirestore = {
         }),
         where: mockWhere.mockReturnThis(),
         limit: mockLimit.mockReturnThis(),
+        offset: jest.fn().mockReturnThis(), // Add offset here too
         get: mockGet,
         count: mockCount.mockReturnValue({ // Add count -> get
             get: mockGet
@@ -40,14 +41,14 @@ export const auth = mockAuth;
 
 // Reset mocks helper
 export const resetMocks = () => {
-    mockCollection.mockClear();
-    mockDoc.mockClear();
-    mockAdd.mockClear();
-    mockGet.mockClear();
-    mockUpdate.mockClear();
-    mockWhere.mockClear();
-    mockLimit.mockClear();
-    mockVerifyIdToken.mockClear();
+    mockCollection.mockReset();
+    mockDoc.mockReset();
+    mockAdd.mockReset();
+    mockGet.mockReset();
+    mockUpdate.mockReset();
+    mockWhere.mockReset();
+    mockLimit.mockReset();
+    mockVerifyIdToken.mockReset();
 
     // Default behaviors
     mockCollection.mockReturnValue({
@@ -59,7 +60,11 @@ export const resetMocks = () => {
         }),
         where: mockWhere.mockReturnThis(),
         limit: mockLimit.mockReturnThis(),
+        offset: jest.fn().mockReturnThis(), // Add offset
         get: mockGet,
         count: mockCount.mockReturnValue({ get: mockGet }),
     });
+
+    // Prevent crashes if mockGet runs out of values
+    mockGet.mockResolvedValue({ exists: false, data: () => undefined, docs: [] });
 };

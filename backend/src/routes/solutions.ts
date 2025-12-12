@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import { db } from '../config/firebase';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
+import { aiService } from '../services/ai.service';
+import { translationService } from '../services/translation.service';
 
 const router = Router();
 
@@ -13,33 +15,110 @@ import { paginate } from '../utils/pagination';
 // GET /solutions - Search and Filter
 router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { q, domain, status, limit = '20', pageToken } = req.query;
+        const { q, domain, status, limit = '20', page = '1' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
-        const token = pageToken as string | undefined;
+        const pageNum = parseInt(page as string) || 1;
+        const offset = (pageNum - 1) * limitNum;
 
-        // Base Query Helper (returns Query, not results)
+        let results: any[] = [];
+        let total: number = 0;
+        let totalPages: number = 0;
+
+        const isMod = isModerator(req.user);
+
+        // helper to enrich data (names)
+        const enrichResults = async (items: any[]) => {
+            return Promise.all(items.map(async (s: any) => {
+                let updates: any = {};
+                if (s.providedByPartnerId && !s.providedByPartnerName) {
+                    try {
+                        const pDoc = await db.collection('partners').doc(s.providedByPartnerId).get();
+                        if (pDoc.exists) updates.providedByPartnerName = pDoc.data()?.organizationName;
+                    } catch (e) { }
+                }
+                if (s.proposedByUserId && !s.proposedByUserName) {
+                    try {
+                        const uDoc = await db.collection('users').doc(s.proposedByUserId).get();
+                        if (uDoc.exists) {
+                            const u = uDoc.data();
+                            updates.proposedByUserName = `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
+                        }
+                    } catch (e) { }
+                }
+                return { ...s, ...updates };
+            }));
+        };
+
+        // SEARCH MODE (Vector)
+        if (q) {
+            const searchResults = await aiService.search(q as string, {
+                // Fetch enough candidates to filter. 
+                // In production, we'd push status filters to the vector DB. 
+                // Here we fetch broadly by domain/type and filter in memory for complex permissions.
+                limit: 200,
+                filters: {
+                    type: 'solution',
+                    domain: domain as string
+                }
+            });
+
+            // Map to objects
+            let candidates = searchResults.map(r => ({ ...r.metadata, _score: r.score }));
+
+            // Apply Permissions (Filtering Candidates)
+            if (isMod) {
+                if (status) candidates = candidates.filter((s: any) => s.status === status);
+                results = candidates;
+            } else if (req.user) {
+                if (status) {
+                    if (status === 'MATURE') {
+                        results = candidates.filter((s: any) => s.status === 'MATURE');
+                    } else {
+                        results = candidates.filter((s: any) => s.proposedByUserId === req.user!.uid && s.status === status);
+                    }
+                } else {
+                    // Combined: MATURE OR OWN
+                    results = candidates.filter((s: any) => s.status === 'MATURE' || s.proposedByUserId === req.user!.uid);
+                }
+            } else {
+                // Anonymous
+                results = candidates.filter((s: any) => s.status === 'MATURE');
+                if (status && status !== 'MATURE') results = [];
+            }
+
+            total = results.length;
+            totalPages = Math.ceil(total / limitNum);
+            // Paginate
+            results = results.slice(offset, offset + limitNum);
+
+            // Enrich
+            const enriched = await enrichResults(results);
+
+            // Apply Translations (if cached)
+            // Apply Translations (Lazy Translation for Lists)
+            const { lang } = req.query;
+            if (lang && typeof lang === 'string' && lang !== 'en') {
+                const translatedResults = await Promise.all(enriched.map(async (item) => {
+                    return await translationService.ensureTranslation(item, 'solutions', lang);
+                }));
+                return res.json({ items: translatedResults, total, page: pageNum, totalPages });
+            }
+
+            return res.json({ items: enriched, total, page: pageNum, totalPages });
+        }
+
+        // STANDARD LIST MODE (No Search)
+        // ... (Existing Logic using Firestore Paginate or Fetch All) ...
+
+        // Base Query Helper
         const buildQuery = (collection: FirebaseFirestore.CollectionReference) => {
             let query: FirebaseFirestore.Query = collection;
             if (domain) query = query.where('domain', '==', domain);
             return query;
         };
 
-        // Helper to run query with pagination
-        // We use our paginate helper.
-        // We need to handle "Combined View" manually if needed, 
-        // OR we can just use the helper if we have a single query.
-
-        let results: any[] = [];
-        let nextPageToken: string | null = null;
-        let total: number = 0;
-
-        const isMod = isModerator(req.user);
-
-        /* ... comments ... */
-
-        // Pagination wrapper
         const runPaged = async (query: FirebaseFirestore.Query) => {
-            return paginate(query, limitNum, token, 'solutions');
+            return paginate(query, limitNum, offset);
         };
 
         // CASE 1: Moderator -> See everything
@@ -49,8 +128,8 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
 
             const paged = await runPaged(query);
             results = paged.items;
-            nextPageToken = paged.nextPageToken;
             total = paged.total;
+            totalPages = paged.totalPages;
         }
         // CASE 2: Regular User -> See MATURE OR Own
         else if (req.user) {
@@ -61,8 +140,8 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
                     let query = buildQuery(solutionsRef).where('status', '==', 'MATURE');
                     const paged = await runPaged(query);
                     results = paged.items;
-                    nextPageToken = paged.nextPageToken;
                     total = paged.total;
+                    totalPages = paged.totalPages;
                 } else {
                     // Own solutions with specific status
                     let query = buildQuery(solutionsRef)
@@ -70,109 +149,64 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
                         .where('status', '==', status);
                     const paged = await runPaged(query);
                     results = paged.items;
-                    nextPageToken = paged.nextPageToken;
                     total = paged.total;
+                    totalPages = paged.totalPages;
                 }
             } else {
                 // Combined View (Mature + Own)
+                // We use Fetch All & Slice strategy here too since we don't have 'q' but need logic
                 const matureQuery = buildQuery(solutionsRef).where('status', '==', 'MATURE');
                 const ownQuery = buildQuery(solutionsRef).where('proposedByUserId', '==', req.user.uid);
 
-                const [maturePaged, ownPaged] = await Promise.all([
-                    runPaged(matureQuery),
-                    runPaged(ownQuery)
+                const [matureDocs, ownDocs] = await Promise.all([
+                    matureQuery.get(),
+                    ownQuery.get()
                 ]);
 
-                // Merge and Sort by ID
                 const map = new Map();
-                maturePaged.items.forEach((d: any) => map.set(d.id, d));
-                ownPaged.items.forEach((d: any) => map.set(d.id, d));
+                matureDocs.docs.forEach((d: any) => map.set(d.id, { id: d.id, ...d.data() }));
+                ownDocs.docs.forEach((d: any) => map.set(d.id, { id: d.id, ...d.data() }));
 
                 let combined = Array.from(map.values());
+
+                // Sort by ID 
                 combined.sort((a, b) => a.id.localeCompare(b.id));
 
-                if (combined.length > limitNum) {
-                    combined = combined.slice(0, limitNum);
-                }
-
-                results = combined;
-
-                // Approximation of total: Sum of both totals. 
-                // Note: Double counts strict intersection (Own + Mature) but acceptable for list view metadata
-                // unless we run a third intersection query which is expensive.
-                total = maturePaged.total + ownPaged.total;
-
-                // Determine Next Token
-                if (results.length > 0) {
-                    nextPageToken = results[results.length - 1].id;
-                } else {
-                    nextPageToken = null;
-                }
-
-                if (!maturePaged.nextPageToken && !ownPaged.nextPageToken) {
-                    if (combined.length <= limitNum && map.size <= limitNum) nextPageToken = null;
-                }
+                total = combined.length;
+                totalPages = Math.ceil(total / limitNum);
+                results = combined.slice(offset, offset + limitNum);
             }
         }
         // CASE 3: Anonymous -> See MATURE only
         else {
             if (status && status !== 'MATURE') {
                 results = [];
-                nextPageToken = null;
                 total = 0;
+                totalPages = 0;
             } else {
                 let query = buildQuery(db.collection('solutions')).where('status', '==', 'MATURE');
                 const paged = await runPaged(query);
                 results = paged.items;
-                nextPageToken = paged.nextPageToken;
                 total = paged.total;
+                totalPages = paged.totalPages;
             }
         }
 
-        // ... filtering ...
+        // Aggregate Names (Post-Fetch for Standard Mode)
+        const enriched = await enrichResults(results);
 
-
-        // Simple in-memory filter for 'q'
-        // WARNING: This filters AFTER pagination logic. 
-        // This means a page of 20 might become 0. Client handles "load more".
-        let filteredSolutions = results;
-        if (q) {
-            const search = (q as string).toLowerCase();
-            filteredSolutions = results.filter((s: any) =>
-                s.name?.toLowerCase().includes(search) ||
-                s.description?.toLowerCase().includes(search)
-            );
+        // Apply Translations (if cached)
+        // Apply Translations (Lazy Translation for Lists)
+        const { lang } = req.query;
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            const translatedResults = await Promise.all(enriched.map(async (item) => {
+                return await translationService.ensureTranslation(item, 'solutions', lang);
+            }));
+            return res.json({ items: translatedResults, total, page: pageNum, totalPages });
         }
 
-        // Aggregate Names
-        const solutionWithNames = await Promise.all(filteredSolutions.map(async (s: any) => {
-            let updates: any = {};
+        res.json({ items: enriched, total, page: pageNum, totalPages });
 
-            // providedByPartnerName
-            if (s.providedByPartnerId && !s.providedByPartnerName) {
-                try {
-                    const pDoc = await db.collection('partners').doc(s.providedByPartnerId).get();
-                    if (pDoc.exists) {
-                        updates.providedByPartnerName = pDoc.data()?.organizationName;
-                    }
-                } catch (e) { console.error(e); }
-            }
-
-            // proposedByUserName
-            if (s.proposedByUserId && !s.proposedByUserName) {
-                try {
-                    const uDoc = await db.collection('users').doc(s.proposedByUserId).get();
-                    if (uDoc.exists) {
-                        const u = uDoc.data();
-                        updates.proposedByUserName = `${u?.firstName || ''} ${u?.lastName || ''}`.trim();
-                    }
-                } catch (e) { console.error(e); }
-            }
-
-            return { ...s, ...updates };
-        }));
-
-        res.json({ items: solutionWithNames, nextPageToken, total });
     } catch (error) {
         console.error('Error fetching solutions:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -254,6 +288,21 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 // GET /solutions/:id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
     try {
+        const { lang } = req.query;
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            try {
+                const translated = await translationService.getTranslatedEntity(req.params.id, 'solutions', lang);
+                return res.json({ id: req.params.id, ...translated });
+            } catch (e: any) {
+                // If not found or error, fall back to normal fetch or 404
+                if (e.message && e.message.includes('not found')) {
+                    return res.status(404).json({ error: 'Solution not found' });
+                }
+                console.error('Translation error:', e);
+                // Fallthrough to normal fetch
+            }
+        }
+
         const doc = await db.collection('solutions').doc(req.params.id).get();
         if (!doc.exists) {
             res.status(404).json({ error: 'Solution not found' });
@@ -312,7 +361,30 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         // Always update updatedAt
         data.updatedAt = new Date().toISOString();
 
-        await docRef.update(data);
+        const { lang } = req.query;
+        if (lang && typeof lang === 'string' && lang !== 'en') {
+            // Update Translation Only
+            const updateData = {
+                [`translations.${lang}`]: data
+            };
+            // Note: This replaces the whole translation object for that lang if we use dot notation with object value?
+            // Actually, data contains ALL fields from the form.
+            // We only want to save the translatable fields to translations.
+            // But simplest way is to save what we got. 
+            // Ideally we filter fields. 
+            // Use merge: true is not applicable for update() unless using set().
+            // update({'translations.hi': data}) will replace the map at translations.hi with data.
+            // This is acceptable if data contains the full form for that language.
+
+            await docRef.update({
+                [`translations.${lang}`]: data,
+                updatedAt: new Date().toISOString()
+            });
+        } else {
+            // Normal Update (Base Language)
+            await docRef.update(data);
+        }
+
         res.json({ success: true });
     } catch (error) {
         console.error(error);

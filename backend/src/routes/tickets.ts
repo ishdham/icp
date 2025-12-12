@@ -18,9 +18,9 @@ const StatusUpdateSchema = z.object({
 // GET /tickets
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { status, assignedToMe, limit = '20', pageToken } = req.query;
+        const { status, assignedToMe, limit = '20', offset = '0' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
-        const token = pageToken as string | undefined;
+        const offsetNum = parseInt(offset as string) || 0;
 
         let query: FirebaseFirestore.Query = db.collection('tickets');
 
@@ -36,10 +36,9 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         }
 
         // Pagination
-        const paged = await paginate(query, limitNum, token, 'tickets');
+        const paged = await paginate(query, limitNum, offsetNum, 'tickets');
         const tickets = paged.items;
-        const nextPageToken = paged.nextPageToken;
-        const total = paged.total;
+        const { total, page, totalPages } = paged;
 
         // Aggregate Creator Names
         const ticketsWithNames = await Promise.all(tickets.map(async (t: any) => {
@@ -57,7 +56,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
             return { ...t, createdByUserName: 'Unknown' };
         }));
 
-        res.json({ items: ticketsWithNames, nextPageToken, total });
+        res.json({ items: ticketsWithNames, total, page, totalPages });
     } catch (error) {
         console.error('Error fetching tickets:', error);
         res.status(500).json({ error: 'Internal Server Error' });

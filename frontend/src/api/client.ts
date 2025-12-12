@@ -13,6 +13,12 @@ client.interceptors.request.use(async (config) => {
         const token = await user.getIdToken();
         config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const lang = localStorage.getItem('app_language');
+    if (lang) {
+        config.params = { ...config.params, lang };
+    }
+
     return config;
 });
 

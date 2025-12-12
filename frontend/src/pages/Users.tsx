@@ -1,39 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ListView from '../components/common/ListView';
-import DetailView from '../components/common/DetailView';
-import { useSchema } from '../hooks/useSchema';
-import { Chip, Button, Box, Typography, CircularProgress } from '@mui/material';
+import { Chip, Button, Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { canSeeUsers, canEditUsers } from '../utils/permissions';
 
 const Users = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
     const { user } = useAuth();
-    const { schema, uischema, loading: schemaLoading } = useSchema('user');
+    const navigate = useNavigate();
+    const { id } = useParams();
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
-    const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-    const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
 
-    const fetchUsers = async (pageToken?: string) => {
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [currentSearch, setCurrentSearch] = useState('');
+
+    const fetchUsers = async (pageNum: number = 1, searchQuery: string = '') => {
         setLoading(true);
         try {
-            const params: any = { limit: 20 };
-            if (pageToken) params.pageToken = pageToken;
+            const params: any = { limit: 20, page: pageNum };
+            if (searchQuery) params.q = searchQuery;
 
             const response = await client.get('/users', { params });
-            const newItems = response.data.items || [];
+            const { items, total, totalPages: pages } = response.data;
 
-            setUsers(prev => pageToken ? [...prev, ...newItems] : newItems);
-            setNextPageToken(response.data.nextPageToken || null);
-            if (response.data.total !== undefined) {
-                setTotalItems(response.data.total);
-            }
+            setUsers(items || []);
+            setTotalItems(total || 0);
+            setTotalPages(pages || 1);
         } catch (error) {
             console.error('Error fetching users:', error);
         } finally {
@@ -41,10 +39,10 @@ const Users = () => {
         }
     };
 
-    const fetchUser = async (userId: string) => {
+    const fetchUser = async (uid: string) => {
         setLoading(true);
         try {
-            const response = await client.get(`/users/${userId}`);
+            const response = await client.get(`/users/${uid}`);
             setSelectedUser(response.data);
         } catch (error) {
             console.error('Error fetching user:', error);
@@ -55,103 +53,115 @@ const Users = () => {
     };
 
     useEffect(() => {
-        if (canSeeUsers(user)) {
-            fetchUsers();
+        if (user && user.role === 'ADMIN') {
+            fetchUsers(page, currentSearch);
+        } else if (user) {
+            // Non-admin trying to access users list? 
+            // Currently Users page is strictly Admin.
+            // But if user is accessing his own profile via /users/me or /users/:id 
+            // We should allow detailing view if ID matches.
         }
-    }, [user]);
+    }, [user, page, currentSearch]);
 
     useEffect(() => {
-        if (canSeeUsers(user)) {
-            if (id) {
-                const found = users.find(u => u.id === id);
-                if (found) {
-                    setSelectedUser(found);
-                } else {
-                    if (!loading && users.length > 0) {
-                        fetchUser(id);
-                    } else if (!loading && users.length === 0) {
-                        fetchUser(id);
-                    }
-                    if (!selectedUser || selectedUser.id !== id) {
-                        fetchUser(id);
-                    }
-                }
-            } else {
-                setSelectedUser(null);
-            }
+        if (id && user) {
+            if (id === selectedUser?.uid) return;
+            fetchUser(id);
+        } else {
+            setSelectedUser(null);
         }
-    }, [id, user, users.length]);
+    }, [id, user]);
 
-    const handleUpdate = async (data: any) => {
-        if (!selectedUser?.id) return;
+    const handleUpdateRole = async (uid: string, newRole: string) => {
         try {
-            const { id, ...updateData } = data;
-            await client.put(`/users/${selectedUser.id}`, updateData);
-            fetchUser(selectedUser.id);
-            alert('User updated successfully!');
+            await client.put(`/users/${uid}`, { role: newRole });
+            alert('User role updated');
+            fetchUser(uid); // Refresh details
+            fetchUsers(page, currentSearch); // Refresh list
         } catch (error) {
-            console.error('Error updating user:', error);
-            alert('Failed to update user.');
+            console.error('Error updating role:', error);
+            alert('Failed to update role');
         }
     };
 
-    if (!canSeeUsers(user)) {
-        return <Typography color="error" sx={{ p: 3 }}>Unauthorized: Admins only.</Typography>;
+    const handleSearch = (query: string) => {
+        setCurrentSearch(query);
+        setPage(1);
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
+
+
+    if (!user || user.role !== 'ADMIN') {
+        return <Typography variant="h6" p={4}>Access Denied</Typography>;
     }
 
     if (selectedUser) {
-        if (schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
-
         return (
             <Box>
-                <Button
-                    startIcon={<ArrowBack />}
-                    onClick={() => navigate('/users')}
-                    sx={{ mb: 2 }}
-                >
+                <Button startIcon={<ArrowBack />} onClick={() => navigate('/users')} sx={{ mb: 2 }}>
                     Back to List
                 </Button>
-                <DetailView
-                    title="User Details"
-                    data={selectedUser}
-                    schema={schema}
-                    uischema={uischema}
-                    canEdit={canEditUsers(user)}
-                    onSave={handleUpdate}
-                    onCancel={() => navigate('/users')}
-                />
+                <Paper sx={{ p: 4 }}>
+                    <Typography variant="h5" gutterBottom>User Profile: {selectedUser.email}</Typography>
+                    <Typography><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</Typography>
+                    <Typography><strong>UID:</strong> {selectedUser.uid}</Typography>
+                    <Box mt={2} display="flex" alignItems="center" gap={2}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Role</InputLabel>
+                            <Select
+                                value={selectedUser.role || 'REGULAR'}
+                                label="Role"
+                                onChange={(e) => handleUpdateRole(selectedUser.uid, e.target.value)}
+                            >
+                                <MenuItem value="REGULAR">Regular</MenuItem>
+                                <MenuItem value="ICP_SUPPORT">ICP Support</MenuItem>
+                                <MenuItem value="ADMIN">Admin</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
+                    <Box mt={4}>
+                        <Typography variant="h6">Associations</Typography>
+                        {/* List associations if any */}
+                    </Box>
+                </Paper>
             </Box>
         );
     }
 
     const columns = [
         { key: 'email', label: 'Email' },
-        { key: 'firstName', label: 'First Name' },
-        { key: 'lastName', label: 'Last Name' },
+        {
+            key: 'firstName',
+            label: 'Name',
+            render: (_: any, item: any) => `${item.firstName || ''} ${item.lastName || ''}`
+        },
         {
             key: 'role',
             label: 'Role',
-            render: (value: string) => {
-                let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
-                if (value === 'ADMIN') color = "secondary";
-                else if (value === 'ICP_SUPPORT') color = "primary";
-
-                return <Chip label={value || 'REGULAR'} color={color} size="small" variant={value ? "filled" : "outlined"} />;
-            }
+            render: (value: string) => <Chip label={value} size="small" color={value === 'ADMIN' ? 'secondary' : 'default'} />
+        },
+        {
+            key: 'createdAt',
+            label: 'Joined',
+            render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
         }
     ];
 
     return (
         <ListView
-            title="User Management"
+            title="Users Management"
             items={users}
             columns={columns}
             loading={loading}
-            onSelect={(item) => navigate(`/users/${item.id}`)}
-            searchKeys={['email', 'firstName', 'lastName']}
-            hasMore={!!nextPageToken}
-            onLoadMore={() => nextPageToken && fetchUsers(nextPageToken)}
+            onSelect={(item) => navigate(`/users/${item.uid}`)}
+            onSearch={handleSearch}
+            page={page}
+            totalPages={totalPages}
             totalItems={totalItems}
+            onPageChange={handlePageChange}
         />
     );
 };

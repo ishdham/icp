@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
@@ -13,6 +14,7 @@ const Tickets = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { language } = useLanguage();
     const { schema, uischema, loading: schemaLoading } = useSchema('ticket');
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,7 +46,7 @@ const Tickets = () => {
 
     useEffect(() => {
         fetchTickets();
-    }, []);
+    }, [language]);
 
     useEffect(() => {
         if (id) {
@@ -127,7 +129,7 @@ const Tickets = () => {
                             navigate('/tickets');
                         }}
                     >
-                        Back to List
+                        {useLanguage().t('common.back_to_list')}
                     </Button>
                     {!isCreating && canApprove && (
                         <Button
@@ -135,12 +137,12 @@ const Tickets = () => {
                             color="success"
                             onClick={handleResolve}
                         >
-                            Approve Request
+                            {useLanguage().t('tickets.approve_request')}
                         </Button>
                     )}
                 </Box>
                 <DetailView
-                    title={isCreating ? 'Submit New Ticket' : 'Ticket Details'}
+                    title={isCreating ? useLanguage().t('tickets.submit_new') : useLanguage().t('tickets.details')}
                     data={selectedTicket || {}}
                     schema={schema}
                     uischema={uischema}
@@ -156,12 +158,14 @@ const Tickets = () => {
         );
     }
 
+    const { t } = useLanguage();
+
     const columns = [
-        { key: 'title', label: 'Title' },
-        { key: 'type', label: 'Type' },
+        { key: 'title', label: t('list.column_title') },
+        { key: 'type', label: t('list.column_type') },
         {
             key: 'status',
-            label: 'Status',
+            label: t('list.column_status'),
             render: (value: string) => {
                 let color: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" = "default";
                 if (value === 'RESOLVED') color = "success";
@@ -169,14 +173,14 @@ const Tickets = () => {
                 else if (value === 'NEW') color = "warning";
                 else if (value === 'IN_PROGRESS') color = "info";
 
-                return <Chip label={value} color={color} size="small" />;
+                return <Chip label={t(`status.${value}`) || value} color={color} size="small" />;
             }
         }
     ];
 
     return (
         <ListView
-            title="Tickets"
+            title={useLanguage().t('tickets.title')}
             items={tickets}
             columns={columns}
             loading={loading}

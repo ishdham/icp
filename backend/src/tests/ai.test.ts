@@ -50,9 +50,9 @@ describe('ICP AI API', () => {
 
             const mockStream = {
                 async *[Symbol.asyncIterator]() {
-                    yield { text: () => 'Mocked ' };
-                    yield { text: () => 'AI ' };
-                    yield { text: () => 'response' };
+                    yield { text: 'Mocked ' };
+                    yield { text: 'AI ' };
+                    yield { text: 'response' };
                 }
             };
 
