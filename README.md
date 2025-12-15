@@ -100,22 +100,28 @@ Role-Based Access Control (RBAC) is enforced using **Firebase Custom Claims**.
 
 ## Utility Scripts (`backend/scripts`)
 
-You can manage the system using these scripts:
+You can manage the system using these scripts. Run them from the `backend` directory.
 
-#### 1. Promote User to Admin
-```bash
-npx ts-node scripts/setAdmin.ts <email_address>
-```
-*Note: Make sure your backend `.env` variables (or Firebase credentials) match the project used by the frontend.*
+### Admin & User Management
 
-#### 2. Create Admin User (Programmatic)
-If user does not exist, this creates a new user with ADMIN role:
-```bash
-npx ts-node scripts/createAdmin.ts
-```
+*   **Promote User to Admin**: `{ "cmd": "npx ts-node scripts/setAdmin.ts <email>" }` - Grants ADMIN role to an existing user.
+*   **Create Default Admin**: `{ "cmd": "npx ts-node scripts/createAdmin.ts" }` - Creates a hardcoded admin user if not exists.
+*   **Seed Users**: `{ "cmd": "npx ts-node scripts/seed_users.ts" }` - Populates the database with test users.
+*   **Set Claims**: `{ "cmd": "npx ts-node scripts/set_claims.ts <email> <role>" }` - Manually set custom claims (roles) for a user.
+*   **Generate Admin Token**: `{ "cmd": "npx ts-node scripts/generate_token_admin.ts" }` - Generates a test ID token for the admin user (useful for curl/Postman).
 
-#### 3. Seed Database
-Populate Firestore with sample data:
-```bash
-npx ts-node scripts/seed_all.ts
-```
+### Data Management
+
+*   **Seed All Data**: `{ "cmd": "npx ts-node scripts/seed_all.ts" }` - Clears and repopulates Firestore with sample data (solutions, partners, users).
+*   **Import Data**: `{ "cmd": "npx ts-node scripts/import_data.ts" }` - Imports data from CSV files.
+*   **Find Duplicates**: `{ "cmd": "npx ts-node scripts/find_duplicates.ts" }` - Scans for duplicate solution entries.
+*   **Delete Duplicates**: `{ "cmd": "npx ts-node scripts/delete_duplicates.ts" }` - Removes recognized duplicate entries.
+*   **Migrate Solutions**: `{ "cmd": "npx ts-node scripts/migrate_solutions.ts" }` - Runs migration logic for solution schema updates.
+*   **Migrate V2 Solutions**: `{ "cmd": "npx ts-node scripts/migrate_v2_solutions.ts" }` - Specific migration script for V2 schema.
+
+### Development & Testing Utilities
+
+*   **Generate OpenAPI Spec**: `{ "cmd": "npx ts-node scripts/generateOpenApi.ts" }` - Generates `openapi.json` from Zod schemas.
+*   **Test Vertex AI**: `{ "cmd": "./scripts/test_vertex_curl.sh" }` - Test script for Vertex AI connectivity via curl.
+*   **Test Storage**: `{ "cmd": "npx ts-node scripts/test_storage.ts" }` - Verifies Firebase Storage configuration and access.
+*   **Test I18n**: `{ "cmd": "npx ts-node scripts/test_i18n_backend.ts" }` - Tests backend internationalization logic.
