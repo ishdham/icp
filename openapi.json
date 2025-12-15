@@ -1,0 +1,603 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Impact Collaboration Platform API",
+    "version": "1.0.0",
+    "description": "API for the Impact Collaboration Platform (DPG Candidate).",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/v1",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Solution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID"
+          },
+          "providedByPartnerId": {
+            "type": "string",
+            "description": "Provided By Partner ID"
+          },
+          "providedByPartnerName": {
+            "type": "string",
+            "description": "Provided By Partner Name"
+          },
+          "proposedByUserId": {
+            "type": "string",
+            "description": "Proposed By User ID"
+          },
+          "proposedByUserName": {
+            "type": "string",
+            "description": "Proposed By User Name"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated At"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Solution Name"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "description": "Summary (One Line)"
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Detailed Description"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "Water",
+              "Health",
+              "Energy",
+              "Education",
+              "Livelihood",
+              "Sustainability"
+            ],
+            "description": "Domain"
+          },
+          "verticalDomain": {
+            "type": "string",
+            "description": "Vertical Domain"
+          },
+          "benefit": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique Value Proposition (Benefit)"
+          },
+          "costAndEffort": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Cost and Effort"
+          },
+          "returnOnInvestment": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Return on Investment (ROI)"
+          },
+          "launchYear": {
+            "type": "integer",
+            "description": "Launch Year"
+          },
+          "targetBeneficiaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Target Beneficiaries"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROPOSED",
+              "DRAFT",
+              "PENDING",
+              "APPROVED",
+              "MATURE",
+              "PILOT",
+              "REJECTED"
+            ],
+            "description": "Status"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "References (Links)"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Attachments"
+          },
+          "translations": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Translations"
+          }
+        },
+        "required": [
+          "name",
+          "summary",
+          "detail",
+          "domain",
+          "benefit",
+          "costAndEffort",
+          "returnOnInvestment",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "Partner": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID"
+          },
+          "proposedByUserId": {
+            "type": "string",
+            "description": "Proposer ID"
+          },
+          "proposedByUserName": {
+            "type": "string",
+            "description": "Proposed By"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated At"
+          },
+          "organizationName": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Organization Name"
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "NGO",
+              "Social Impact Entity",
+              "Academic",
+              "Corporate"
+            ],
+            "description": "Entity Type"
+          },
+          "websiteUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Website URL"
+          },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email"
+              },
+              "phone": {
+                "type": "string",
+                "description": "Phone"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Contact Information"
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "city": {
+                "type": "string",
+                "description": "City"
+              },
+              "country": {
+                "type": "string",
+                "description": "Country"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Address"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROPOSED",
+              "APPROVED",
+              "REJECTED",
+              "MATURE"
+            ],
+            "description": "Status"
+          },
+          "translations": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Translations"
+          }
+        },
+        "required": [
+          "organizationName",
+          "entityType",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID"
+          },
+          "uid": {
+            "type": "string",
+            "description": "UID"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated At"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First Name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "REGULAR",
+              "ADMIN",
+              "ICP_SUPPORT"
+            ],
+            "description": "Role"
+          },
+          "language": {
+            "type": "string",
+            "default": "en",
+            "description": "Preferred Language"
+          },
+          "phone": {
+            "type": "object",
+            "properties": {
+              "countryCode": {
+                "type": "string",
+                "description": "Country Code"
+              },
+              "number": {
+                "type": "string",
+                "description": "Number"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Phone"
+          },
+          "discoverySource": {
+            "type": "string",
+            "description": "Discovery Source"
+          },
+          "bookmarks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "solutionId": {
+                  "type": "string",
+                  "description": "Solution ID"
+                },
+                "solutionName": {
+                  "type": "string",
+                  "description": "Solution Name"
+                },
+                "bookmarkedAt": {
+                  "type": "string",
+                  "description": "Bookmarked At"
+                }
+              },
+              "required": [
+                "solutionId"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Bookmarks"
+          },
+          "associatedPartners": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "partnerId": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "APPROVED",
+                    "REJECTED"
+                  ]
+                },
+                "requestedAt": {
+                  "type": "string"
+                },
+                "approvedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "partnerId",
+                "status"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Associated Partners"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "email",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID"
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "Creator ID"
+          },
+          "createdByUserName": {
+            "type": "string",
+            "description": "Created By"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Updated At"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PROBLEM_SUBMISSION",
+              "OPTIMIZATION",
+              "FUNDING",
+              "CAPACITY_BUILDING",
+              "TRAINING",
+              "SUCCESS_STORIES",
+              "PARTNER_INFO",
+              "USER_GROUP_CHANGE",
+              "PARTNER_CONNECT",
+              "SOLUTION_VALIDATION",
+              "SOLUTION_APPROVAL",
+              "PARTNER_APPROVAL"
+            ],
+            "description": "Ticket Type"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "IN_PROGRESS",
+              "RESOLVED",
+              "CLOSED"
+            ],
+            "description": "Status"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string",
+                  "description": "Message"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Date"
+                },
+                "userId": {
+                  "type": "string",
+                  "description": "User"
+                }
+              },
+              "required": [
+                "content",
+                "createdAt",
+                "userId"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Comments"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "type",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/solutions": {
+      "get": {
+        "summary": "List Solutions",
+        "responses": {
+          "200": {
+            "description": "A list of solutions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Solution"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a Solution",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Solution"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Solution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Solution"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/partners": {
+      "get": {
+        "summary": "List Partners",
+        "responses": {
+          "200": {
+            "description": "A list of partners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Partner"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a Partner",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Partner"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Partner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Partner"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "List Users",
+        "responses": {
+          "200": {
+            "description": "A list of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

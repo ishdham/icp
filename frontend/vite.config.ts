@@ -18,5 +18,10 @@ export default defineConfig({
     fs: {
       allow: ['..']
     }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
   }
 })

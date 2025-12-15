@@ -22,7 +22,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         const limitNum = parseInt(limit as string) || 20;
         const offsetNum = parseInt(offset as string) || 0;
 
-        let query: FirebaseFirestore.Query = db.collection('tickets');
+        let query: admin.firestore.Query = db.collection('tickets');
 
         if (status) {
             query = query.where('status', '==', status);

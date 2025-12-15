@@ -1,6 +1,18 @@
 import { translationService } from '../services/translation.service';
 import { ai } from '../services/ai.service';
 
+jest.mock('../config/firebase', () => ({
+    db: {
+        collection: jest.fn().mockReturnValue({
+            doc: jest.fn().mockReturnValue({
+                get: jest.fn(),
+                update: jest.fn(),
+                set: jest.fn()
+            })
+        })
+    }
+}));
+
 jest.mock('../services/ai.service', () => ({
     ai: {
         generate: jest.fn()

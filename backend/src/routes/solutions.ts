@@ -1,3 +1,4 @@
+import { firestore } from 'firebase-admin';
 import { Router, Response } from 'express';
 import { db } from '../config/firebase';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
@@ -110,16 +111,19 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
         // STANDARD LIST MODE (No Search)
         // ... (Existing Logic using Firestore Paginate or Fetch All) ...
 
+        // ...
+
         // Base Query Helper
-        const buildQuery = (collection: FirebaseFirestore.CollectionReference) => {
-            let query: FirebaseFirestore.Query = collection;
+        const buildQuery = (collection: firestore.CollectionReference) => {
+            let query: firestore.Query = collection;
             if (domain) query = query.where('domain', '==', domain);
             return query;
         };
 
-        const runPaged = async (query: FirebaseFirestore.Query) => {
+        const runPaged = async (query: firestore.Query) => {
             return paginate(query, limitNum, offset);
         };
+
 
         // CASE 1: Moderator -> See everything
         if (isMod) {

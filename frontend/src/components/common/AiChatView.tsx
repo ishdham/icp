@@ -180,6 +180,7 @@ const AiChatView = () => {
                         onClick={handleSend}
                         disabled={!input.trim() || isLoading}
                         sx={{ alignSelf: 'flex-end', mb: 0.5 }}
+                        aria-label="send"
                     >
                         {isLoading ? <CircularProgress size={24} /> : <Send />}
                     </IconButton>

@@ -2,6 +2,16 @@
 
 A demo of the Impact Collaboration Platform for Wheels Foundation, facilitating connections between Partners, Solutions, and Funding for social impact.
 
+## Vision & SDGs
+Our mission is to accelerate social impact by connecting innovators with implementation partners. We directly support **UN Sustainable Development Goal 17: Partnerships for the Goals**. By facilitating the discovery of solutions in Health, Education, and Water, we also contribute to SDGs 3, 4, and 6.
+
+## Documentation & Governance
+As a Digital Public Good (DPG) candidate, we adhere to open standards and transparent governance:
+*   [Contributing Guidelines](./CONTRIBUTING.md)
+*   [Code of Conduct](./CODE_OF_CONDUCT.md)
+*   [Governance Model](./GOVERNANCE.md)
+*   [Privacy Policy](./PRIVACY.md)
+
 ## Project Structure
 
 - **`frontend/`**: React application (Vite + TypeScript + TailwindCSS).
