@@ -220,16 +220,13 @@ export class AIService {
         return stream;
     }
 
-    async extractSolution(history: any[], userPrompt?: string) {
+    async researchSolution(userPrompt: string) {
         if (!this.isInitialized) await this.initialize();
 
         try {
-            // Construct the conversation history text
-            const conversationText = history.map(h => `${h.role}: ${h.content}`).join('\n');
-
             // Pass 1: Grounded Research
             const researchPrompt = `
-            You are an expert analyst. Your goal is to research and synthesize information for a "Solution" based on the conversation history and any additional context.
+            You are an expert analyst. Your goal is to research and synthesize information for a "Solution" based on the user's request.
             
             REQUIRED INFORMATION TO GATHER:
             - Name
@@ -244,41 +241,54 @@ export class AIService {
             - Target Beneficiaries
             - References (Links)
 
-            CONVERSATION HISTORY:
-            ${conversationText}
-            
-            USER PROMPT (if any):
-            ${userPrompt || 'Research the solution details.'}
+            USER PROMPT:
+            ${userPrompt}
             
             INSTRUCTIONS:
             1. Synthesize all information into a detailed, well-structured text summary.
             2. IMPORTANT: When listing References, ONLY use public, accessible HTTP/HTTPS URLs (e.g. official websites, news articles, PDFs). Do NOT use internal search links or grounding IDs.
+            3. Use at most 5 high-quality sources to ensure timely results.
             `;
 
-            console.log('Starting Pass 1: Research (Genkit)...');
-            // Using Gemini 2.5 Flash via Vertex
+            console.log('Starting Research (Genkit)...');
             const researchResult = await ai.generate({
                 model: 'vertexai/gemini-2.5-flash',
                 prompt: researchPrompt,
                 config: {
                     temperature: 0.7,
+                    maxOutputTokens: 2048,
                     googleSearchRetrieval: {}
                 }
             });
-            const researchText = researchResult.text;
-            console.log('Pass 1 Output:', researchText);
 
-            // Pass 2: JSON Formatting
+            return {
+                researchText: researchResult.text
+            };
+
+        } catch (error) {
+            console.error('Research Error:', error);
+            throw error;
+        }
+    }
+
+    async extractStructuredData(researchText: string) {
+        if (!this.isInitialized) await this.initialize();
+
+        try {
             const formattingPrompt = `
-            Take the following text and reformat it exactly into the provided JSON schema.
-            TEXT: ${researchText}
+            Take the following research text and reformat it exactly into the provided JSON schema.
+            
+            CRITICAL INSTRUCTIONS:
+            - For 'domain', you MUST choose ONE single value that best fits from the allowed list (Water, Health, Energy, Education, Livelihood, Sustainability). Do NOT provide a list.
+            - For 'status', you MUST choose ONE single value from the allowed list (PROPOSED, DRAFT, PENDING, APPROVED, MATURE, PILOT, REJECTED).
+            - For 'launchYear', ensure it is an integer.
+            
+            TEXT:
+            ${researchText}
             `;
 
-            console.log('Starting Pass 2: Formatting (Genkit)...');
+            console.log('Starting Formatting (Genkit)...');
 
-            // Genkit can output structured data directly if schema is provided!
-            // Relaxed Schema for AI Extraction (allow partial/optional fields)
-            // We use .partial() to dynamically make all fields optional, avoiding maintenance overhead.
             const RelaxedSolutionSchema = SolutionSchema.partial();
 
             const finalResult = await ai.generate({

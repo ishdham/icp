@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import client from '../api/client';
-import { Box, Typography, CircularProgress, Paper, FormControl, InputLabel, Select, MenuItem, Chip, OutlinedInput, Stack, Card, CardContent, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, FormControl, InputLabel, Select, MenuItem, Chip, OutlinedInput, Stack, Card, CardContent, Button, Link } from '@mui/material';
 import Plot from 'react-plotly.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -253,7 +253,9 @@ const Reports = () => {
                                 <Paper key={s.id} variant="outlined" sx={{ p: 2 }}>
                                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                                         <Box flex={2} minWidth={0}>
-                                            <Typography variant="subtitle1" fontWeight="bold" noWrap>{s.name}</Typography>
+                                            <Link component={RouterLink} to={`/solutions/${s.id}`} underline="hover" color="primary">
+                                                <Typography variant="subtitle1" fontWeight="bold" noWrap component="span">{s.name}</Typography>
+                                            </Link>
                                             <Typography variant="caption" color="textSecondary">{s.id}</Typography>
                                         </Box>
                                         <Box flex={1}>

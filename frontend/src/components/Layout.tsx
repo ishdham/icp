@@ -13,7 +13,7 @@ import {
     Container,
     Box,
 } from '@mui/material';
-import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon } from '@mui/icons-material';
+import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { canSeeUsers } from '../utils/permissions';
 import { LanguageSelector } from './common/LanguageSelector';
 
@@ -23,6 +23,15 @@ const Layout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
+
+    const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElNav(event.currentTarget);
+    };
+
+    const handleCloseNavMenu = () => {
+        setAnchorElNav(null);
+    };
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -62,7 +71,44 @@ const Layout = () => {
             <AppBar position="static">
                 <Container maxWidth="xl">
                     <Toolbar disableGutters>
-                        <DashboardIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+                        <Box sx={{ flexGrow: 0, display: 'flex' }}>
+                            <IconButton
+                                size="large"
+                                aria-label="navigation menu"
+                                aria-controls="menu-appbar-nav"
+                                aria-haspopup="true"
+                                onClick={handleOpenNavMenu}
+                                color="inherit"
+                            >
+                                <MenuIcon />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar-nav"
+                                anchorEl={anchorElNav}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'left',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'left',
+                                }}
+                                open={Boolean(anchorElNav)}
+                                onClose={handleCloseNavMenu}
+                                sx={{
+                                    display: 'block',
+                                }}
+                            >
+                                {navItems.map((item) => (
+                                    <MenuItem key={item.path} onClick={() => { handleCloseNavMenu(); navigate(item.path); }}>
+                                        <Typography textAlign="center">{item.label}</Typography>
+                                    </MenuItem>
+                                ))}
+                            </Menu>
+                        </Box>
+
+                        <DashboardIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, ml: 1 }} />
                         <Typography
                             variant="h6"
                             noWrap

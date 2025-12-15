@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeWrapper } from './components/common/ThemeWrapper';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Solutions from './pages/Solutions';
@@ -21,24 +22,26 @@ function App() {
     <AuthProvider>
       <LanguageProvider>
         <ThemeWrapper>
-          <Router>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="solutions" element={<Solutions />} />
-                <Route path="solutions/:id" element={<Solutions />} />
-                <Route path="partners" element={<Partners />} />
-                <Route path="partners/:id" element={<Partners />} />
-                <Route path="tickets" element={<Tickets />} />
-                <Route path="tickets/:id" element={<Tickets />} />
-                <Route path="users" element={<Users />} />
-                <Route path="users/:id" element={<Users />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="login" element={<Login />} />
-              </Route>
-            </Routes>
-          </Router>
+          <ErrorBoundary>
+            <Router>
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="solutions" element={<Solutions />} />
+                  <Route path="solutions/:id" element={<Solutions />} />
+                  <Route path="partners" element={<Partners />} />
+                  <Route path="partners/:id" element={<Partners />} />
+                  <Route path="tickets" element={<Tickets />} />
+                  <Route path="tickets/:id" element={<Tickets />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="users/:id" element={<Users />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="login" element={<Login />} />
+                </Route>
+              </Routes>
+            </Router>
+          </ErrorBoundary>
         </ThemeWrapper>
       </LanguageProvider>
     </AuthProvider>

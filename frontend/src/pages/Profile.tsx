@@ -3,7 +3,11 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
-import { Box, Typography, Container, CircularProgress } from '@mui/material';
+import { Box, Typography, Container, CircularProgress, Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions } from '@mui/material';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { auth } from '../config/firebase';
+
+
 
 const Profile = () => {
     const { user } = useAuth();
@@ -41,7 +45,7 @@ const Profile = () => {
         const fetchPartners = async () => {
             try {
                 const response = await client.get('/partners?status=APPROVED'); // user can only join approved partners? Likely.
-                setPartners(response.data || []);
+                setPartners(response.data.items || []);
             } catch (error) {
                 console.error('Error fetching partners', error);
             }
@@ -73,23 +77,90 @@ const Profile = () => {
         }
     };
 
+    const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    // Check if user is authenticated via password provider
+    const isPasswordUser = user?.providerData?.some(p => p.providerId === 'password');
+
+    const handleChangePassword = async () => {
+        setPasswordError('');
+        if (newPassword !== confirmPassword) {
+            setPasswordError('New passwords do not match.');
+            return;
+        }
+        if (newPassword.length < 6) {
+            setPasswordError('Password must be at least 6 characters.');
+            return;
+        }
+
+        if (!auth.currentUser) return;
+
+        try {
+            await updatePassword(auth.currentUser, newPassword);
+            alert('Password updated successfully!');
+            setChangePasswordOpen(false);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+        } catch (error: any) {
+            console.error('Error updating password:', error);
+            if (error.code === 'auth/requires-recent-login') {
+                // Re-authenticate
+                if (!currentPassword) {
+                    setPasswordError('Please enter current password to verify your identity.');
+                    return;
+                }
+                try {
+                    if (!auth.currentUser?.email) throw new Error('No user email found');
+                    const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+                    await reauthenticateWithCredential(auth.currentUser, credential);
+                    // Retry update
+                    await updatePassword(auth.currentUser, newPassword);
+                    alert('Password updated successfully!');
+                    setChangePasswordOpen(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                } catch (reAuthError: any) {
+                    console.error('Re-auth failed:', reAuthError);
+                    setPasswordError('Failed to verify current password. Please try again.');
+                }
+            } else {
+                setPasswordError(error.message || 'Failed to update password.');
+            }
+        }
+    };
+
     if (loading || schemaLoading) return <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>;
     if (!user) return <Typography p={4}>Please log in.</Typography>;
     if (!userSchema || !userUiSchema) return <Typography p={4} color="error">Failed to load profile form.</Typography>;
 
-    const profileSchema = {
+    const profileSchema = userSchema ? {
         ...userSchema,
         properties: {
-            ...userSchema.properties,
-            role: { ...userSchema.properties.role, readOnly: true },
-            email: { ...userSchema.properties.email, readOnly: true }
+            ...(userSchema.properties || {}),
+            role: { ...(userSchema.properties?.role || {}), readOnly: true },
+            email: { ...(userSchema.properties?.email || {}), readOnly: true }
         }
-    };
+    } : {};
 
     return (
         <Container maxWidth="md">
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h4" gutterBottom>My Profile</Typography>
+                {isPasswordUser && (
+                    <Button variant="outlined" color="primary" onClick={() => setChangePasswordOpen(true)}>
+                        Change Password
+                    </Button>
+                )}
+            </Box>
+
             <DetailView
-                title="My Profile"
+                title="Profile Details"
                 data={profileData || {}}
                 schema={profileSchema}
                 uischema={userUiSchema}
@@ -150,6 +221,52 @@ const Profile = () => {
                     </button>
                 </Box>
             </Box>
+
+            {/* Change Password Dialog */}
+            <Dialog open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)}>
+                <DialogTitle>Change Password</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        To change your password, please enter your current password and the new password.
+                    </DialogContentText>
+                    {passwordError && <Typography color="error" variant="body2" gutterBottom>{passwordError}</Typography>}
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="current-password"
+                        label="Current Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="new-password"
+                        label="New Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="confirm-password"
+                        label="Confirm New Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setChangePasswordOpen(false)}>Cancel</Button>
+                    <Button onClick={handleChangePassword}>Change Password</Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };
