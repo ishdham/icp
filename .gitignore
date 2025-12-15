@@ -3,3 +3,13 @@ dist
 .env
 .DS_Store
 coverage
+
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Logs
+*.log

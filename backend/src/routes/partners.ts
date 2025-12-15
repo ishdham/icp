@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import admin from 'firebase-admin';
 import { db } from '../config/firebase';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
@@ -96,14 +97,14 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
         // STANDARD LIST MODE
         const partnersRef = db.collection('partners');
 
-        const buildQuery = (collection: FirebaseFirestore.CollectionReference | FirebaseFirestore.Query) => {
-            let query: FirebaseFirestore.Query = collection;
+        const buildQuery = (collection: admin.firestore.CollectionReference | admin.firestore.Query) => {
+            let query: admin.firestore.Query = collection;
             if (entityType) query = query.where('entityType', '==', entityType);
             if (mainDomain) query = query.where('mainDomain', '==', mainDomain);
             return query;
         };
 
-        const runPaged = async (query: FirebaseFirestore.Query) => {
+        const runPaged = async (query: admin.firestore.Query) => {
             return paginate(query, limitNum, offset);
         };
 

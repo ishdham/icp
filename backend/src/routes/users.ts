@@ -204,7 +204,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         const pageNum = parseInt(page as string) || 1;
         const offset = (pageNum - 1) * limitNum;
 
-        let query: FirebaseFirestore.Query = db.collection('users');
+        let query: admin.firestore.Query = db.collection('users');
 
         if (role) {
             query = query.where('role', '==', role);

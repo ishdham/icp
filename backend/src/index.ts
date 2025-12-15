@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import app from './app';
 import { aiService } from './services/ai.service';
 
@@ -15,4 +15,4 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-export const api = functions.https.onRequest(app);
+export const api = onRequest({ cors: true, invoker: 'public' }, app);
