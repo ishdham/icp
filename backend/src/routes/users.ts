@@ -6,7 +6,7 @@ import admin from 'firebase-admin';
 
 const router = Router();
 
-import { UserSchema } from '../schemas/users';
+import { UserSchema } from '@shared/schemas/users';
 import { paginate } from '../utils/pagination';
 
 // GET /users/me

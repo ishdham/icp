@@ -1,8 +1,8 @@
 import { Router, Response, Request } from 'express';
-import { userJsonSchema, userUiSchema } from '../schemas/users';
-import { partnerJsonSchema, partnerUiSchema } from '../schemas/partners';
-import { solutionJsonSchema, solutionUiSchema } from '../schemas/solutions';
-import { ticketJsonSchema, ticketUiSchema } from '../schemas/tickets';
+import { userJsonSchema, userUiSchema } from '@shared/schemas/users';
+import { partnerJsonSchema, partnerUiSchema } from '@shared/schemas/partners';
+import { solutionJsonSchema, solutionUiSchema } from '@shared/schemas/solutions';
+import { ticketJsonSchema, ticketUiSchema } from '@shared/schemas/tickets';
 
 const router = Router();
 

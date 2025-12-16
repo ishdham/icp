@@ -31,6 +31,12 @@
     "paths": {
       "@shared/*": [
         "../shared/*"
+      ],
+      "zod": [
+        "node_modules/zod"
+      ],
+      "zod-to-json-schema": [
+        "node_modules/zod-to-json-schema"
       ]
     }
   },

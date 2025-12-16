@@ -8,7 +8,7 @@ import { translationService } from '../services/translation.service';
 
 const router = Router();
 
-import { PartnerSchema } from '../schemas/partners';
+import { PartnerSchema } from '@shared/schemas/partners';
 import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
 import { paginate } from '../utils/pagination';
 

@@ -9,6 +9,9 @@ export const TicketSchema = z.object({
     updatedAt: z.string().describe('Updated At').readonly().optional(),
     title: z.string().describe('Title'),
     description: z.string().describe('Description'),
+    solutionId: z.string().describe('Solution ID').optional(),
+    partnerId: z.string().describe('Partner ID').optional(),
+    ticketId: z.string().describe('Ticket Display ID').optional(),
     type: z.enum([
         'PROBLEM_SUBMISSION', 'OPTIMIZATION', 'FUNDING', 'CAPACITY_BUILDING',
         'TRAINING', 'SUCCESS_STORIES', 'PARTNER_INFO', 'USER_GROUP_CHANGE',

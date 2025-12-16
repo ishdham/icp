@@ -1,5 +1,5 @@
 import { db } from '../config/firebase'; // Access firebase-admin db from config to avoid circular dependency
-import { SolutionSchema, solutionJsonSchema } from '../schemas/solutions';
+import { SolutionSchema, solutionJsonSchema } from '@shared/schemas/solutions';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 

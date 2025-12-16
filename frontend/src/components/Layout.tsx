@@ -14,7 +14,7 @@ import {
     Box,
 } from '@mui/material';
 import { AccountCircle, Logout, Settings, Dashboard as DashboardIcon, Menu as MenuIcon } from '@mui/icons-material';
-import { canSeeUsers } from '../utils/permissions';
+import { canSeeUsers } from '@shared/permissions';
 import { LanguageSelector } from './common/LanguageSelector';
 
 const Layout = () => {

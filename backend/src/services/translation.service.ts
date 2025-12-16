@@ -1,7 +1,7 @@
 import { db } from '../config/firebase';
 import { ai } from './ai.service';
-import { SolutionSchema } from '../schemas/solutions';
-import { PartnerSchema } from '../schemas/partners';
+import { SolutionSchema } from '@shared/schemas/solutions';
+import { PartnerSchema } from '@shared/schemas/partners';
 
 export class TranslationService {
 

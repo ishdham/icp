@@ -8,7 +8,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ArrowBack, ViewList, SmartToy } from '@mui/icons-material';
-import { canEditSolution, isModerator } from '../utils/permissions';
+import { canEditSolution, isModerator } from '@shared/permissions';
 import AiChatView from '../components/common/AiChatView';
 import AiImportDialog from '../components/common/AiImportDialog';
 

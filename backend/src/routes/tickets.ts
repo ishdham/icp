@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const router = Router();
 
-import { TicketSchema } from '../schemas/tickets';
+import { TicketSchema } from '@shared/schemas/tickets';
 import { canSeeTickets, canEditTickets } from '../../../shared/permissions';
 import { paginate } from '../utils/pagination';
 

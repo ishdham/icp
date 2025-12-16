@@ -1,0 +1,16 @@
+import { ZodSchema } from 'zod';
+
+export interface ChatMessage {
+    role: 'user' | 'model' | 'system';
+    content: string;
+}
+
+export interface IAIService {
+    // Research & Extraction
+    researchTopic(topic: string): Promise<string>;
+    extractStructuredData<T>(text: string, schema: ZodSchema<T>): Promise<T>;
+
+    // Chat & Embeddings
+    generateEmbedding(text: string): Promise<number[]>;
+    chatStream(systemPrompt: string, userMessage: string, history: ChatMessage[]): Promise<any>;
+}

@@ -8,7 +8,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { canEditPartner, isModerator } from '../utils/permissions';
+import { canEditPartner, isModerator } from '@shared/permissions';
 
 const Partners = () => {
     const { id } = useParams();

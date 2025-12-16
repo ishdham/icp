@@ -8,7 +8,7 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { canEditTickets } from '../utils/permissions';
+import { canEditTickets } from '@shared/permissions';
 
 const Tickets = () => {
     const { id } = useParams();
