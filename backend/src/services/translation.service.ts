@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { ai } from './ai.service';
+import { aiService } from '../container';
 import { SolutionSchema } from '@shared/schemas/solutions';
 import { PartnerSchema } from '@shared/schemas/partners';
 
@@ -7,29 +7,7 @@ export class TranslationService {
 
     // Core Translation using Genkit (Gemini)
     async translateText(text: string, targetLanguage: string): Promise<string> {
-        if (!text) return '';
-
-        try {
-            const prompt = `
-            Translate the following text into ${targetLanguage}.
-            Only return the translated text. Do not add any explanations or quotes.
-            
-            Text: "${text}"
-            `;
-
-            const result = await ai.generate({
-                model: 'vertexai/gemini-2.5-flash',
-                prompt: prompt,
-                config: {
-                    temperature: 0.3, // Lower temperature for more deterministic translation
-                }
-            });
-
-            return result.text.trim();
-        } catch (error) {
-            console.error(`Translation failed for lang ${targetLanguage}:`, error);
-            return text; // Fallback to original
-        }
+        return aiService.translateText(text, targetLanguage);
     }
 
     // Lazy Translation for Entities
@@ -76,63 +54,32 @@ export class TranslationService {
 
     private async translateSolutionFields(data: any, targetLang: string): Promise<Record<string, string>> {
         const fieldsToTranslate = ['name', 'summary', 'detail', 'benefit', 'costAndEffort', 'returnOnInvestment']; // Key text fields
-        const result: Record<string, string> = {};
 
-        // Parallel translation requests (or could be batched in one prompt)
-        // For better quality/context, let's do a single prompt for structured translation
+        // Filter data to only text fields relevant for translation
+        const dataToTranslate: Record<string, string> = {};
+        for (const key of fieldsToTranslate) {
+            if (data[key]) {
+                dataToTranslate[key] = data[key];
+            }
+        }
 
-        const prompt = `
-        You are a professional translator. Translate the following fields of a Solution into ${targetLang}.
-        Maintain the original meaning and tone.
-        
-        Fields to translate:
-        Name: ${data.name || ''}
-        Summary: ${data.summary || ''}
-        Detail: ${data.detail || ''}
-        Benefit: ${data.benefit || ''}
-        CostAndEffort: ${data.costAndEffort || ''}
-        
-        Return the result as a valid JSON object with the same keys: name, summary, detail, benefit, costAndEffort.
-        `;
+        if (Object.keys(dataToTranslate).length === 0) return {};
 
         try {
-            const translationResult = await ai.generate({
-                model: 'vertexai/gemini-2.5-flash',
-                prompt: prompt,
-                output: { format: 'json' } // Request JSON output
-            });
-
-            const outputFunc = translationResult.output;
-            // Genkit unstructured output might need parsing if format:json isn't strictly schema-bound, 
-            // but 2.5-flash with 'json' hints usually works. 
-            // Ideally we use structured output schema.
-
-            return outputFunc || {};
+            return await aiService.translateStructured(dataToTranslate, targetLang);
         } catch (e) {
-            console.error('Batch translation failed, falling back to field-by-field or original', e);
-            // Fallback: empty (so we return original text for now) or individual calls?
-            // For MVP, if batch fails, we just don't save translations yet.
+            console.error('Batch translation failed', e);
             return {};
         }
     }
 
     private async translatePartnerFields(data: any, targetLang: string): Promise<Record<string, string>> {
-        const prompt = `
-        Translate the following Partner fields into ${targetLang}.
-        
-        Organization Name: ${data.organizationName || ''}
-        (Note: If organization name is a proper noun that shouldn't change, keep it or transliterate it).
-        
-        Return JSON with key: organizationName.
-        `;
+        const dataToTranslate = {
+            organizationName: data.organizationName
+        };
 
         try {
-            const translationResult = await ai.generate({
-                model: 'vertexai/gemini-2.5-flash',
-                prompt: prompt,
-                output: { format: 'json' }
-            });
-            return translationResult.output || {};
+            return await aiService.translateStructured(dataToTranslate, targetLang);
         } catch (e) {
             console.error('Partner translation failed', e);
             return {};

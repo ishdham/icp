@@ -19,7 +19,8 @@ A shared library consumed by both Frontend and Backend at build time.
 - **Entities**: Strongly typed data structures derived strictly from Shared Schemas (e.g., `Solution`, `Partner`).
 - **Interfaces**: Abstract contracts defining *what* the system can do without specifying *how*.
     - `IRepository<T>`: Generic contract for persistence (CRUD) and Semantic Search (`searchByVector`).
-    - `IAIService`: Contract for AI operations (Research, Extraction, Chat).
+    - `IAIService`: Contract for AI operations (Research, Extraction, Chat, Translation).
+    - `IAuthService`: Contract for User Authentication.
     - `IAuthService`: Contract for User Authentication.
 
 ### 3. Application Layer (`src/application`)
@@ -77,6 +78,15 @@ Enables semantic search across Solutions and Partners.
 A conversational interface (`AiChatView`) that helps users find information.
 - **Context Injection**: Relevant entities retrieved via Vector Search are injected into the system prompt.
 - **Smart Linking**: The AI generates Markdown links (`[Name](/path/ID)`) to entities.
+
+#### 4. Real-time Translation
+Enables multi-lingual support for dynamic content.
+- **Architecture**: `TranslationService` (App Service) -> `IAIService.translateStructured` (Infra Service).
+- **Process**:
+  1. Frontend requests Entity in `lang=hi`.
+  2. Service checks `translations.hi` in Firestore.
+  3. If missing, calls `VertexAIService` to translate structural JSON fields.
+  4. Saves result to Firestore for caching.
 
 ## Reporting Mechanism
 The platform provides a "Solutions Report" to visualize ecosystem data.

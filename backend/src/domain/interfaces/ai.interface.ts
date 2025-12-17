@@ -13,4 +13,8 @@ export interface IAIService {
     // Chat & Embeddings
     generateEmbedding(text: string): Promise<number[]>;
     chatStream(systemPrompt: string, userMessage: string, history: ChatMessage[]): Promise<any>;
+
+    // Translation
+    translateText(text: string, targetLanguage: string): Promise<string>;
+    translateStructured<T>(data: any, targetLanguage: string, schema?: ZodSchema<T>): Promise<T>;
 }

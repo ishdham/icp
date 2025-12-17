@@ -75,5 +75,44 @@ export class VertexAIService implements IAIService {
         });
 
         return stream;
+        return stream;
+    }
+
+    async translateText(text: string, targetLanguage: string): Promise<string> {
+        if (!text) return '';
+        const prompt = `
+        Translate the following text into ${targetLanguage}.
+        Only return the translated text. Do not add any explanations or quotes.
+        
+        Text: "${text}"
+        `;
+
+        const result = await ai.generate({
+            model: 'vertexai/gemini-2.5-flash',
+            prompt: prompt,
+            config: {
+                temperature: 0.3,
+            }
+        });
+
+        return result.text.trim();
+    }
+
+    async translateStructured<T>(data: any, targetLanguage: string, schema?: ZodSchema<T>): Promise<T> {
+        const prompt = `
+        Translate the values of the following JSON object into ${targetLanguage}.
+        Keep logic, keys, and structure exactly the same. Only translate the human-readable text values.
+        
+        JSON:
+        ${JSON.stringify(data, null, 2)}
+        `;
+
+        const result = await ai.generate({
+            model: 'vertexai/gemini-2.5-flash',
+            prompt: prompt,
+            output: schema ? { schema: schema as any } : { format: 'json' }
+        });
+
+        return result.output as T;
     }
 }
