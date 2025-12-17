@@ -3,9 +3,9 @@
   "version": "0.2.0",
   "main": "dist/backend/src/index.js",
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "node ../generate-build-info.js && tsc && tsc-alias",
     "start": "node dist/backend/src/index.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+    "dev": "node ../generate-build-info.js && ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
     "test": "jest"
   },
   "keywords": [],

@@ -56,6 +56,7 @@ const Layout = () => {
         { label: t('nav.solutions'), path: '/solutions' },
         { label: t('nav.reports'), path: '/reports' },
         { label: t('nav.partners'), path: '/partners' },
+        { label: 'About', path: '/about', mobileOnly: true },
     ];
 
     if (user) {
@@ -128,7 +129,7 @@ const Layout = () => {
                         </Typography>
 
                         <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                            {navItems.map((item) => (
+                            {navItems.filter(item => !item.mobileOnly).map((item) => (
                                 <Button
                                     key={item.path}
                                     component={Link}

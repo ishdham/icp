@@ -12,6 +12,7 @@ import authRouter from './routes/auth';
 import commonRoutes from './routes/common';
 import uploadRoutes from './routes/upload';
 import statsRoutes from './routes/stats';
+import systemInfoRoutes from './routes/system-info';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/v1/common', commonRoutes);
 app.use('/v1/common', uploadRoutes); // Mounts /v1/common/upload
 app.use('/v1/auth', authRouter);
 app.use('/v1/stats', statsRoutes);
+app.use('/v1/system-info', systemInfoRoutes);
 
 app.get('/', (req, res) => {
     res.send('ICP Backend is running!');
