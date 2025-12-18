@@ -1,11 +1,8 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-export const UserSchema = z.object({
-    id: z.string().describe('ID').readonly().optional(),
-    uid: z.string().describe('UID').readonly().optional(),
-    createdAt: z.string().describe('Created At').readonly().optional(),
-    updatedAt: z.string().describe('Updated At').readonly().optional(),
+// Base fields
+const UserBase = {
     firstName: z.string().describe('First Name'),
     lastName: z.string().describe('Last Name'),
     email: z.string().email().describe('Email').readonly(),
@@ -27,9 +24,32 @@ export const UserSchema = z.object({
         requestedAt: z.string().optional(),
         approvedAt: z.string().optional()
     })).optional().describe('Associated Partners')
+};
+
+// System fields
+const SystemFields = {
+    id: z.string().describe('ID').readonly(),
+    uid: z.string().describe('UID').readonly(),
+    createdAt: z.string().describe('Created At').readonly(),
+    updatedAt: z.string().describe('Updated At').readonly(),
+};
+
+// Input Schema
+export const UserInputSchema = z.object({
+    ...UserBase,
+    id: SystemFields.id.optional(),
+    uid: SystemFields.uid.optional(),
+    createdAt: SystemFields.createdAt.optional(),
+    updatedAt: SystemFields.updatedAt.optional(),
 });
 
-const generatedSchema = zodToJsonSchema(UserSchema as any, 'userSchema');
+// Entity Schema
+export const UserSchema = z.object({
+    ...UserBase,
+    ...SystemFields
+});
+
+const generatedSchema = zodToJsonSchema(UserInputSchema as any, 'userSchema');
 export const userJsonSchema = (generatedSchema as any).definitions.userSchema;
 
 export const userUiSchema = {

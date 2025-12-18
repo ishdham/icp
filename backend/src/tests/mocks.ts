@@ -14,6 +14,7 @@ const mockFirestore = {
     collection: mockCollection.mockReturnValue({
         add: mockAdd,
         doc: mockDoc.mockReturnValue({
+            id: 'mock-doc-id',
             get: mockGet,
             update: mockUpdate,
             set: mockUpdate, // Reuse update for set
@@ -54,9 +55,10 @@ export const resetMocks = () => {
     mockCollection.mockReturnValue({
         add: mockAdd,
         doc: mockDoc.mockReturnValue({
+            id: 'mock-doc-id',
             get: mockGet,
             update: mockUpdate,
-            set: mockUpdate,
+            set: mockUpdate, // Reuse update for set
         }),
         where: mockWhere.mockReturnThis(),
         limit: mockLimit.mockReturnThis(),

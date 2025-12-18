@@ -5,11 +5,14 @@ import MarkdownControl, { markdownRendererTester } from './renderers/MarkdownRen
 import BeneficiarySelectControl, { beneficiarySelectTester } from './renderers/BeneficiarySelectRenderer';
 import FileUploaderControl, { fileUploaderTester } from './renderers/FileUploaderRenderer';
 
+import AsyncAutocompleteControl, { asyncAutocompleteTester } from './renderers/AsyncAutocompleteRenderer';
+
 const customRenderers = [
     ...materialRenderers,
     { tester: markdownRendererTester, renderer: MarkdownControl },
     { tester: beneficiarySelectTester, renderer: BeneficiarySelectControl },
-    { tester: fileUploaderTester, renderer: FileUploaderControl }
+    { tester: fileUploaderTester, renderer: FileUploaderControl },
+    { tester: asyncAutocompleteTester, renderer: AsyncAutocompleteControl }
 ];
 
 interface JsonFormProps {

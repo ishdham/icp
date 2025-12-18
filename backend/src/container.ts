@@ -24,4 +24,4 @@ export const userRepository = new FirestoreUserRepository();
 export const createSolutionUseCase = new CreateSolutionUseCase(solutionRepository, partnerRepository, ticketRepository);
 export const searchSolutionsUseCase = new SearchSolutionsUseCase(solutionRepository, aiService);
 export const getSolutionUseCase = new GetSolutionUseCase(solutionRepository);
-export const updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository);
+export const updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository, partnerRepository);

@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
+import { useTranslated, useTranslatedList } from '../hooks/useTranslated';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { canEditPartner, isModerator } from '@shared/permissions';
@@ -14,11 +15,10 @@ const Partners = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { language } = useLanguage();
     const { schema, uischema, loading: schemaLoading } = useSchema('partner');
     const [partners, setPartners] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
+    const [rawSelectedPartner, setRawSelectedPartner] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
     // Pagination State
@@ -26,6 +26,10 @@ const Partners = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [currentSearch, setCurrentSearch] = useState('');
+
+    // Translation Hooks
+    const translatedPartners = useTranslatedList(partners);
+    const selectedPartner = useTranslated(rawSelectedPartner);
 
     const fetchPartners = async (pageNum: number = 1, searchQuery: string = '') => {
         setLoading(true);
@@ -49,15 +53,8 @@ const Partners = () => {
     const fetchPartner = async (partnerId: string) => {
         setLoading(true);
         try {
-            // If we don't have a direct endpoint for single partner public fetch, we might fallback to filtered list?
-            // Assuming GET /partners/:id exists. 
-            // If not, we rely on finding it in the list (fetchPartners logic below).
-            // But backend route `backend/src/routes/partners.ts` usually has filtered list.
-            // Let's check if GET /partners/:id exists. If not, we might need to rely on list.
-            // Looking at previous conversations/code, generic CRUD usually has GET /:id.
-            // If not, I should implement it. But assuming standard CRUD.
             const response = await client.get(`/partners/${partnerId}`);
-            setSelectedPartner(response.data);
+            setRawSelectedPartner(response.data);
         } catch (error) {
             console.error('Error fetching partner:', error);
             navigate('/partners');
@@ -68,51 +65,49 @@ const Partners = () => {
 
     useEffect(() => {
         fetchPartners(page, currentSearch);
-    }, [page, currentSearch, language]);
+    }, [page, currentSearch]);
+
 
     useEffect(() => {
         if (id) {
-            if (language === 'en') {
-                const found = partners.find(p => p.id === id);
-                if (found) {
-                    setSelectedPartner(found);
-                } else {
-                    if (!loading) fetchPartner(id);
-                }
+            // Check if present in list first
+            const found = partners.find(p => p.id === id);
+            if (found) {
+                setRawSelectedPartner(found);
             } else {
-                // Non-English: Always fetch to ensure translation trigger
                 fetchPartner(id);
             }
             setIsCreating(false);
         } else {
-            setSelectedPartner(null);
+            setRawSelectedPartner(null);
         }
-    }, [id, partners.length, language]);
+    }, [id, partners.length]);
+
 
     const handleCreate = async (data: any) => {
         try {
             await client.post('/partners', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
-            fetchPartners(1, currentSearch); // Refresh first page
+            fetchPartners(1, currentSearch);
             alert('Partner proposed successfully!');
             navigate('/partners');
         } catch (error) {
             console.error('Error creating partner:', error);
-            alert('Failed to create partner.');
+            throw error;
         }
     };
 
     const handleUpdate = async (data: any) => {
         if (!selectedPartner?.id) return;
         try {
-            const { id, ...updateData } = data;
+            const { id, _score, proposedByUserName, createdAt, updatedAt, ...updateData } = data;
             await client.put(`/partners/${selectedPartner.id}`, updateData);
             fetchPartner(selectedPartner.id);
             alert('Partner updated successfully!');
             fetchPartners(page, currentSearch);
         } catch (error) {
             console.error('Error updating partner:', error);
-            alert('Failed to update partner.');
+            throw error;
         }
     };
 
@@ -212,7 +207,7 @@ const Partners = () => {
     return (
         <ListView
             title={useLanguage().t('partners.title')}
-            items={partners}
+            items={translatedPartners}
             columns={columns}
             loading={loading}
             onSelect={(item) => navigate(`/partners/${item.id}`)}

@@ -13,6 +13,7 @@ export class FirestorePartnerRepository extends FirestoreRepository<Partner> {
     private vectorIndex: VectorDocument[] = [];
     private aiService: IAIService;
     private isIndexInitialized = false;
+    private initializationPromise: Promise<void> | null = null;
 
     constructor(aiService: IAIService) {
         super('partners');
@@ -21,27 +22,54 @@ export class FirestorePartnerRepository extends FirestoreRepository<Partner> {
 
     private async ensureIndex() {
         if (this.isIndexInitialized) return;
-        console.log('Initializing Partner Vector Index...');
+        if (this.initializationPromise) return this.initializationPromise;
 
-        const partners = await this.list();
+        this.initializationPromise = (async () => {
+            console.log('Initializing Partner Vector Index...');
 
-        for (const partner of partners) {
-            try {
-                if (!partner.id) continue;
+            const partners = await this.list();
 
-                const content = `Partner: ${partner.organizationName} (ID: ${partner.id}). Type: ${partner.entityType}.`;
-                const embedding = await this.aiService.generateEmbedding(content);
+            for (const partner of partners) {
+                try {
+                    if (!partner.id) continue;
 
-                this.vectorIndex.push({
-                    id: partner.id,
-                    embedding,
-                    metadata: partner
-                });
-            } catch (error) {
-                console.error(`Failed to index partner ${partner.id}`, error);
+                    const content = `Partner: ${partner.organizationName} (ID: ${partner.id}). Type: ${partner.entityType}.`;
+                    const embedding = await this.aiService.generateEmbedding(content);
+
+                    this.vectorIndex.push({
+                        id: partner.id,
+                        embedding,
+                        metadata: partner
+                    });
+                } catch (error) {
+                    console.error(`Failed to index partner ${partner.id}`, error);
+                }
             }
-        }
-        this.isIndexInitialized = true;
+            this.isIndexInitialized = true;
+        })();
+
+        return this.initializationPromise;
+    }
+
+    async searchByFuzzy(term: string, limit: number, filter?: FilterOptions): Promise<SearchResult<Partner>[]> {
+        await this.ensureIndex();
+
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escaped, 'i');
+
+        const results = this.vectorIndex
+            .filter(doc => {
+                if (filter?.status && doc.metadata.status !== filter.status) return false;
+
+                return regex.test(doc.metadata.organizationName);
+            })
+            .map(doc => ({
+                item: doc.metadata,
+                score: 1
+            }))
+            .slice(0, limit);
+
+        return results;
     }
 
     async searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<Partner>[]> {

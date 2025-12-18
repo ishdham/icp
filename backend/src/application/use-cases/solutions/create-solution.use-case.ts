@@ -4,7 +4,7 @@ import { Partner } from '../../../domain/entities/partner';
 import { Ticket } from '../../../domain/entities/ticket';
 import { canSubmitSolution } from '@shared/permissions';
 import { PermissionUser } from '@shared/types';
-import { SolutionSchema } from '@shared/schemas/solutions';
+import { SolutionInputSchema } from '@shared/schemas/solutions';
 
 export class CreateSolutionUseCase {
     constructor(
@@ -18,21 +18,10 @@ export class CreateSolutionUseCase {
             throw new Error('Unauthorized: User cannot submit solutions');
         }
 
-        // Validate data against schema (Zod)
-        // Note: The raw data might need to be parsed. 
-        // We use .parse() to ensure strictly valid per schema.
-        // Auto-fields like ID, createdAt, updatedAt are handled by Repository or defaults.
-        // We generally validate INPUT here.
+        // Validate input data against Input Schema (System fields optional)
+        const validated = SolutionInputSchema.parse(data);
 
-        // Remove readonly fields if present to avoid Zod issues or allow them to be stripped?
-        // Zod .parse() will strip unknown if strictly set, but here schema has readonly().
-        // We should validate the input DTO.
-
-        // Let's assume input data matches schema shape roughly.
-        // We can parse with partial or omit validation for server fields?
-        // For now, let's trust the schema parsing.
-
-        const validated = SolutionSchema.parse(data);
+        const isModerator = user.role === 'ADMIN' || user.role === 'ICP_SUPPORT';
 
         // Handle providedByPartnerId
         let providedByPartnerName = undefined;
@@ -45,8 +34,6 @@ export class CreateSolutionUseCase {
 
             // Association Check
             const isAssociated = user.associatedPartners && user.associatedPartners.some((p: any) => p.partnerId === validated.providedByPartnerId && p.status === 'APPROVED');
-            // TODO: Check if moderator can override? Assuming moderator can.
-            const isModerator = user.role === 'ADMIN' || user.role === 'ICP_SUPPORT';
 
             if (!isAssociated && !isModerator) {
                 throw new Error('You are not associated with this partner');
@@ -58,7 +45,7 @@ export class CreateSolutionUseCase {
             providedByPartnerName,
             proposedByUserId: user.uid || user.id,
             proposedByUserName: user.firstName ? `${user.firstName} ${user.lastName}`.trim() : (user.email || 'Unknown'),
-            status: validated.status || 'PROPOSED',
+            status: isModerator ? (validated.status || 'PROPOSED') : 'PROPOSED',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };

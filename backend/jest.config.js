@@ -5,5 +5,6 @@ module.exports = {
     moduleNameMapper: {
         '^@shared/(.*)$': '<rootDir>/../shared/$1'
     },
-    moduleDirectories: ['node_modules', '<rootDir>/node_modules']
+    moduleDirectories: ['node_modules', '<rootDir>/node_modules'],
+    testPathIgnorePatterns: ['/node_modules/', '/dist/']
 };

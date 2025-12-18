@@ -7,7 +7,11 @@ export class FirestoreUserRepository extends FirestoreRepository<User> {
         super('users');
     }
 
-    async searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<User>[]> {
-        throw new Error('Vector search not supported for Users');
+    async searchByVector(vector: number[], limit: number): Promise<SearchResult<User>[]> {
+        return [];
+    }
+
+    async searchByFuzzy(term: string, limit: number): Promise<SearchResult<User>[]> {
+        return [];
     }
 }

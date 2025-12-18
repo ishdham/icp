@@ -55,4 +55,5 @@ export abstract class FirestoreRepository<T extends { id?: string }> implements 
     }
 
     abstract searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<T>[]>;
+    abstract searchByFuzzy(term: string, limit: number, filter?: FilterOptions): Promise<SearchResult<T>[]>;
 }

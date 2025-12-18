@@ -71,6 +71,9 @@ router.post('/extract-structured', async (req: Request, res: Response) => {
 
         if (errorMessage.includes('429') || errorMessage.includes('Quota exceeded')) {
             res.status(429).json({ error: 'AI Usage Limit Exceeded', details: 'The AI service is currently busy or your quota is exceeded. Please try again later.' });
+        } else if (errorMessage.includes('Validation Failed')) {
+            // Provide explicit validation details to frontend
+            res.status(400).json({ error: 'Extraction Validation Failed', details: errorMessage });
         } else {
             res.status(500).json({ error: 'Failed to extract solution details', details: errorMessage });
         }

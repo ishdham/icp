@@ -8,6 +8,8 @@ import {
     updateSolutionUseCase,
     aiService
 } from '../container';
+import { partnerRepository } from '../container';
+import { aiService as globalAiService } from '../services/ai.service';
 import { translationService } from '../services/translation.service';
 
 const router = Router();
@@ -15,7 +17,7 @@ const router = Router();
 // GET /solutions - Search and Filter
 router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const { q, domain, status, limit, page, lang } = req.query;
+        const { q, domain, status, limit, page, lang, mode } = req.query;
 
         // Prepare Use Case Arguments
         const filters: any = {};
@@ -59,7 +61,8 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
 
         const results = await searchSolutionsUseCase.execute(q as string, {
             limit: parseInt(limit as string) || 20,
-            filters: permissionsFilters
+            filters: permissionsFilters,
+            mode: (mode as 'semantic' | 'fuzzy') || 'semantic'
         });
 
         // Pagination metadata is missing from Use Case return (it returns Solution[]).
@@ -93,6 +96,10 @@ router.get('/', optionalAuthenticate, async (req: AuthRequest, res: Response) =>
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const result = await createSolutionUseCase.execute(req.body, req.user!);
+
+        // Index newly created solution
+        globalAiService.indexEntity(result.id, 'solution', result).catch(e => console.error('Index Error:', e));
+
         res.status(201).json(result);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -123,6 +130,15 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
             solution = await translationService.ensureTranslation(solution, 'solutions', lang);
         }
 
+        // if (solution && solution.providedByPartnerId) {
+        //     try {
+        //         const partner = await partnerRepository.get(solution.providedByPartnerId);
+        //         if (partner) {
+        //             solution = { ...solution, providedByPartnerName: partner.organizationName };
+        //         }
+        //     } catch (e) { console.error('Enrichment error', e); }
+        // }
+
         res.json(solution);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
@@ -144,6 +160,15 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         // Typescript Partial<Solution> allows translations.
 
         await updateSolutionUseCase.execute(req.params.id, req.body, req.user!);
+
+        // Re-index updated solution
+        try {
+            const updated = await getSolutionUseCase.execute(req.params.id);
+            if (updated) {
+                globalAiService.indexEntity(updated.id, 'solution', updated).catch(e => console.error('Index Update Error:', e));
+            }
+        } catch (e) { console.error('Index fetch error', e); }
+
         res.json({ success: true });
     } catch (error) {
         if (error instanceof Error) {

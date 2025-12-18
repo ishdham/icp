@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
+import { useTranslated, useTranslatedList } from '../hooks/useTranslated';
 import { Chip, Button, Box, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { ArrowBack, ViewList, SmartToy } from '@mui/icons-material';
 import { canEditSolution, isModerator } from '@shared/permissions';
@@ -16,28 +17,30 @@ const Solutions = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { language } = useLanguage();
     const { schema, uischema, loading: schemaLoading } = useSchema('solution');
     const [solutions, setSolutions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSolution, setSelectedSolution] = useState<any | null>(null);
+    const [rawSelectedSolution, setRawSelectedSolution] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [viewMode, setViewMode] = useState<'list' | 'ai'>('list');
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [creationData, setCreationData] = useState<any>({ status: 'PROPOSED' });
 
-    const [partners, setPartners] = useState<any[]>([]);
-
-    // New Pagination State
+    // New Pagination & Search State
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [currentSearch, setCurrentSearch] = useState('');
+    const [searchMode, setSearchMode] = useState<'semantic' | 'fuzzy'>('semantic');
 
-    const fetchSolutions = async (pageNum: number = 1, searchQuery: string = '') => {
+    // Translation Hooks
+    const translatedSolutions = useTranslatedList(solutions);
+    const selectedSolution = useTranslated(rawSelectedSolution);
+
+    const fetchSolutions = async (pageNum: number = 1, searchQuery: string = '', mode: 'semantic' | 'fuzzy' = 'semantic') => {
         setLoading(true);
         try {
-            const params: any = { limit: 20, page: pageNum };
+            const params: any = { limit: 20, page: pageNum, mode };
             if (searchQuery) params.q = searchQuery;
 
             const response = await client.get('/solutions', { params });
@@ -57,7 +60,7 @@ const Solutions = () => {
         setLoading(true);
         try {
             const response = await client.get(`/solutions/${solutionId}`);
-            setSelectedSolution(response.data);
+            setRawSelectedSolution(response.data);
         } catch (error) {
             console.error('Error fetching solution:', error);
             // Optionally navigate back to list if not found
@@ -67,79 +70,54 @@ const Solutions = () => {
         }
     };
 
-    const fetchPartners = async () => {
-        try {
-            const response = await client.get('/partners');
-            setPartners(response.data || []);
-        } catch (error) {
-            console.error('Error fetching partners:', error);
-        }
-    };
-
     useEffect(() => {
-        // Initial fetch
-        fetchSolutions(page, currentSearch);
-        fetchPartners();
-    }, []);
-    // Note: We don't depend on 'page' or 'currentSearch' here to avoid double fetch loop 
-    // if handled via handler functions, but for simplicity let's rely on explicit calls.
-    // Actually, proper pattern is useEffect on [page, currentSearch].
-
-    // Let's refactor to standard pattern:
-    useEffect(() => {
-        fetchSolutions(page, currentSearch);
-    }, [page, currentSearch, language]);
+        // Initial fetch & Updates
+        fetchSolutions(page, currentSearch, searchMode);
+    }, [page, currentSearch, searchMode]);
 
 
     useEffect(() => {
         if (id) {
-            // If language is English, we can try to use the cached list item.
-            // If language is NOT English, we MUST fetch individually to trigger the backend "Lazy Translation" logic
-            // (unless we are sure the list item is already translated, but safer to fetch).
-            if (language === 'en') {
-                const found = solutions.find(s => s.id === id);
-                if (found) {
-                    setSelectedSolution(found);
-                } else {
-                    if (!loading) fetchSolution(id);
-                }
+            // Check if we already have the item in the list
+            const found = solutions.find(s => s.id === id);
+            if (found) {
+                setRawSelectedSolution(found);
             } else {
-                // Non-English: Always fetch to ensure translation trigger
                 fetchSolution(id);
             }
             setIsCreating(false);
         } else {
-            setSelectedSolution(null);
+            setRawSelectedSolution(null);
         }
-    }, [id, solutions.length, language]);
+    }, [id, solutions.length]);
 
 
     const handleCreate = async (data: any) => {
         try {
             await client.post('/solutions', { ...data, status: 'PROPOSED' });
             setIsCreating(false);
-            fetchSolutions(1, currentSearch); // Refresh first page
+            fetchSolutions(1, currentSearch, searchMode);
             alert('Solution submitted successfully!');
             navigate('/solutions');
         } catch (error) {
             console.error('Error creating solution:', error);
-            alert('Failed to create solution.');
+            // Rethrow so DetailView can handle validation errors
+            throw error;
         }
     };
 
     const handleUpdate = async (data: any) => {
         if (!selectedSolution?.id) return;
         try {
-            const { id, ...updateData } = data;
+            const { id, _score, providedByPartnerName, proposedByUserName, createdAt, updatedAt, ...updateData } = data;
             await client.put(`/solutions/${selectedSolution.id}`, updateData);
             fetchSolution(selectedSolution.id);
             alert('Solution updated successfully!');
-            // Refresh list too to update row if needed, but might lose page. 
-            // Better to refresh current page:
-            fetchSolutions(page, currentSearch);
+            fetchSolutions(page, currentSearch, searchMode);
         } catch (error) {
             console.error('Error updating solution:', error);
-            alert('Failed to update solution.');
+            // Rethrow so DetailView can handle validation errors
+            throw error;
         }
     };
 
@@ -149,34 +127,39 @@ const Solutions = () => {
 
     const handleSearch = (query: string) => {
         setCurrentSearch(query);
-        setPage(1); // Reset to first page on new search
+        setSearchMode('semantic'); // Enter triggers semantic
+        setPage(1);
+    };
+
+    const handleLiveSearch = (query: string) => {
+        setCurrentSearch(query);
+        setSearchMode('fuzzy'); // Typing triggers fuzzy
+        setPage(1);
     };
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
     };
 
-    // ... Schema Injection (Same as before) ...
-    const activeSchema = (schema && partners.length > 0) ? {
-        ...schema,
-        properties: {
-            ...schema.properties,
-            providedByPartnerId: {
-                type: 'string',
-                title: 'Provided By Partner',
-                oneOf: partners.map(p => ({
-                    const: p.id,
-                    title: p.organizationName
-                }))
-            }
-        }
-    } : schema;
+    // ... Schema Injection ...
+    // Use default schema, do not inject massive Enum
+    const activeSchema = schema;
 
     let finalUiSchema = (uischema && !JSON.stringify(uischema).includes('providedByPartnerId')) ? {
         ...uischema,
         elements: [
             ...uischema.elements,
-            { type: 'Control', scope: '#/properties/providedByPartnerId' }
+            {
+                type: 'Control',
+                scope: '#/properties/providedByPartnerId',
+                options: {
+                    autocomplete: false, // Legacy flag
+                    renderer: 'async-autocomplete', // Explicit hint if needed or handled by tester logic
+                    apiUrl: '/partners',
+                    labelKey: 'organizationName',
+                    valueKey: 'id'
+                }
+            }
         ]
     } : uischema;
 
@@ -256,12 +239,12 @@ const Solutions = () => {
 
     const { t } = useLanguage();
 
-    // ... (rest of code)
-
-    // ...
-
     const columns = [
         { key: 'name', label: t('list.column_name') },
+        {
+            key: 'providedByPartnerName',
+            label: t('list.column_partner'),
+        },
         {
             key: 'domain',
             label: t('list.column_domain'),
@@ -306,18 +289,18 @@ const Solutions = () => {
             ) : (
                 <ListView
                     title={useLanguage().t('solutions.title')}
-                    items={solutions}
+                    items={translatedSolutions}
                     columns={columns}
                     loading={loading}
                     onSelect={(item) => navigate(`/solutions/${item.id}`)}
                     onCreate={user ? () => { setIsCreating(true); setCreationData({ status: 'PROPOSED' }); } : undefined}
                     // Pagination & Search
                     onSearch={handleSearch}
+                    onLiveSearch={handleLiveSearch}
                     page={page}
                     totalPages={totalPages}
                     totalItems={totalItems}
                     onPageChange={handlePageChange}
-                // Legacy props removed
                 />
             )}
             <AiImportDialog

@@ -13,7 +13,9 @@ jest.mock('../services/ai.service', () => {
     return {
         aiService: {
             chatStream: jest.fn(),
-            extractSolution: jest.fn(),
+            extractSolution: jest.fn(), // Deprecated/Legacy
+            researchSolution: jest.fn(),
+            extractStructuredData: jest.fn(),
             initialize: jest.fn(), // If needed
         }
     };
@@ -81,38 +83,69 @@ describe('ICP AI API', () => {
         });
     });
 
-    describe('POST /v1/ai/extract', () => {
-        it('should return extracted JSON', async () => {
+    describe('POST /v1/ai/research', () => {
+        it('should return research text', async () => {
             mockAuthUser('user123');
             const { aiService } = require('../services/ai.service');
 
-            const mockData = {
-                name: "Test Solution",
-                summary: "A summary",
-                detail: "Details",
-                benefit: "Benefits",
-                costAndEffort: "High",
-                returnOnInvestment: "Good",
-                domain: "Water",
-                status: "PROPOSED"
-            };
-
-            (aiService.extractSolution as jest.Mock).mockResolvedValue(mockData);
+            (aiService.researchSolution as jest.Mock).mockResolvedValue({ researchText: 'Researched content' });
 
             const res = await request(app)
-                .post('/v1/ai/extract')
+                .post('/v1/ai/research')
                 .set('Authorization', 'Bearer token')
-                .send({
-                    history: [{ role: 'user', content: 'Here is a link' }],
-                    prompt: 'Extract please'
-                });
+                .send({ prompt: 'Research this' });
+
+            expect(res.status).toBe(200);
+            expect(res.body).toEqual({ researchText: 'Researched content' });
+        });
+    });
+
+    describe('POST /v1/ai/extract-structured', () => {
+        it('should return structured data on success', async () => {
+            mockAuthUser('user123');
+            const { aiService } = require('../services/ai.service');
+
+            const mockData = { name: "Test Solution", domain: "Water" };
+            (aiService.extractStructuredData as jest.Mock).mockResolvedValue(mockData);
+
+            const res = await request(app)
+                .post('/v1/ai/extract-structured')
+                .set('Authorization', 'Bearer token')
+                .send({ researchText: 'Some text' });
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual(mockData);
-            expect(aiService.extractSolution).toHaveBeenCalledWith(
-                [{ role: 'user', content: 'Here is a link' }],
-                'Extract please'
-            );
+        });
+
+        it('should return 400 when validation fails', async () => {
+            mockAuthUser('user123');
+            const { aiService } = require('../services/ai.service');
+
+            // Simulate the service throwing a validation error (as implemented in step 155)
+            (aiService.extractStructuredData as jest.Mock).mockRejectedValue(new Error('Validation Failed: Invalid enum value'));
+
+            const res = await request(app)
+                .post('/v1/ai/extract-structured')
+                .set('Authorization', 'Bearer token')
+                .send({ researchText: 'Bad text' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error).toBe('Extraction Validation Failed');
+            expect(res.body.details).toContain('Invalid enum value');
+        });
+
+        it('should return 500 for other errors', async () => {
+            mockAuthUser('user123');
+            const { aiService } = require('../services/ai.service');
+
+            (aiService.extractStructuredData as jest.Mock).mockRejectedValue(new Error('Random failure'));
+
+            const res = await request(app)
+                .post('/v1/ai/extract-structured')
+                .set('Authorization', 'Bearer token')
+                .send({ researchText: 'Text' });
+
+            expect(res.status).toBe(500);
         });
     });
 });

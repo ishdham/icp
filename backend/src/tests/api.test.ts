@@ -41,7 +41,6 @@ describe('ICP Backend API', () => {
             // 2. get() -> { docs: [...] }
 
             mockGet
-                .mockResolvedValueOnce({ data: () => ({ count: 100 }) }) // Count
                 .mockResolvedValueOnce({ // Items
                     docs: [
                         { id: '1', data: () => ({ name: 'Clean Water', status: 'APPROVED' }) },
@@ -54,7 +53,7 @@ describe('ICP Backend API', () => {
             expect(res.status).toBe(200);
             expect(res.body.items).toHaveLength(2);
             expect(res.body.items[0].name).toBe('Clean Water');
-            expect(res.body.total).toBe(100);
+            expect(res.body.total).toBe(2);
         });
     });
 
@@ -166,7 +165,7 @@ describe('ICP Backend API', () => {
                 });
 
             expect(res.status).toBe(201);
-            expect(res.body.id).toBe('new-sol-id');
+            expect(res.body.id).toBe('mock-doc-id');
             expect(mockVerifyIdToken).toHaveBeenCalled();
         });
 
@@ -197,14 +196,14 @@ describe('ICP Backend API', () => {
             expect(res.status).toBe(201);
 
             // Verify Solution creation with PROPOSED
-            expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
+            expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
                 status: 'PROPOSED'
             }));
 
             // Verify Ticket creation
-            expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
+            expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
                 type: 'SOLUTION_APPROVAL',
-                solutionId: 'new-sol-id'
+                solutionId: 'mock-doc-id'
             }));
         });
 

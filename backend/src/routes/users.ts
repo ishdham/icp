@@ -6,7 +6,7 @@ import admin from 'firebase-admin';
 
 const router = Router();
 
-import { UserSchema } from '@shared/schemas/users';
+import { UserSchema, UserInputSchema } from '@shared/schemas/users';
 import { paginate } from '../utils/pagination';
 
 // GET /users/me
@@ -36,7 +36,7 @@ router.put('/me', authenticate, async (req: AuthRequest, res: Response) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const data = UserSchema.partial().parse(req.body);
+        const data = UserInputSchema.partial().parse(req.body);
         await db.collection('users').doc(uid).update(data);
         res.json({ success: true });
     } catch (error) {

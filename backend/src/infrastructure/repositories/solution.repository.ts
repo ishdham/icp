@@ -14,6 +14,7 @@ export class FirestoreSolutionRepository extends FirestoreRepository<Solution> {
     private vectorIndex: VectorDocument[] = [];
     private aiService: IAIService;
     private isIndexInitialized = false;
+    private initializationPromise: Promise<void> | null = null;
 
     constructor(aiService: IAIService) {
         super('solutions');
@@ -22,29 +23,35 @@ export class FirestoreSolutionRepository extends FirestoreRepository<Solution> {
 
     private async ensureIndex() {
         if (this.isIndexInitialized) return;
-        console.log('Initializing Solution Vector Index...');
+        if (this.initializationPromise) return this.initializationPromise;
 
-        const solutions = await this.list(); // Fetch all
+        this.initializationPromise = (async () => {
+            console.log('Initializing Solution Vector Index...');
 
-        for (const sol of solutions) {
-            try {
-                // Ensure ID is present
-                if (!sol.id) continue;
+            const solutions = await this.list(); // Fetch all
 
-                const content = `Solution: ${sol.name} (ID: ${sol.id}). Domain: ${sol.domain}. Summary: ${sol.summary}. Benefit: ${sol.benefit}.`;
-                const embedding = await this.aiService.generateEmbedding(content);
+            for (const sol of solutions) {
+                try {
+                    // Ensure ID is present
+                    if (!sol.id) continue;
 
-                this.vectorIndex.push({
-                    id: sol.id,
-                    embedding,
-                    metadata: sol
-                });
-            } catch (error) {
-                console.error(`Failed to index solution ${sol.id}`, error);
+                    const content = `Solution: ${sol.name} (ID: ${sol.id}). Domain: ${sol.domain}. Summary: ${sol.summary}. Benefit: ${sol.benefit}.`;
+                    const embedding = await this.aiService.generateEmbedding(content);
+
+                    this.vectorIndex.push({
+                        id: sol.id,
+                        embedding,
+                        metadata: sol
+                    });
+                } catch (error) {
+                    console.error(`Failed to index solution ${sol.id}`, error);
+                }
             }
-        }
-        this.isIndexInitialized = true;
-        console.log(`Solution Index initialized with ${this.vectorIndex.length} items.`);
+            this.isIndexInitialized = true;
+            console.log(`Solution Index initialized with ${this.vectorIndex.length} items.`);
+        })();
+
+        return this.initializationPromise;
     }
 
     async create(data: Solution): Promise<Solution> {
@@ -86,6 +93,32 @@ export class FirestoreSolutionRepository extends FirestoreRepository<Solution> {
                 }
             }
         }
+    }
+
+    async searchByFuzzy(term: string, limit: number, filter?: FilterOptions): Promise<SearchResult<Solution>[]> {
+        await this.ensureIndex();
+
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escaped, 'i');
+
+        const results = this.vectorIndex
+            .filter(doc => {
+                // Filter handling
+                if (filter?.status && doc.metadata.status !== filter.status) return false;
+                if (filter?.domain && doc.metadata.domain !== filter.domain) return false;
+
+                // Fuzzy Match on Name, Summary, or Domain
+                return regex.test(doc.metadata.name) ||
+                    regex.test(doc.metadata.summary || '') ||
+                    regex.test(doc.metadata.domain);
+            })
+            .map(doc => ({
+                item: doc.metadata,
+                score: 1 // Ideal match
+            }))
+            .slice(0, limit);
+
+        return results;
     }
 
     async searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<Solution>[]> {

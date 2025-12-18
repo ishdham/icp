@@ -7,7 +7,11 @@ export class FirestoreTicketRepository extends FirestoreRepository<Ticket> {
         super('tickets');
     }
 
-    async searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<Ticket>[]> {
-        throw new Error('Vector search not supported for Tickets');
+    async searchByVector(vector: number[], limit: number): Promise<SearchResult<Ticket>[]> {
+        return [];
+    }
+
+    async searchByFuzzy(term: string, limit: number): Promise<SearchResult<Ticket>[]> {
+        return [];
     }
 }

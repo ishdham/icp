@@ -8,7 +8,7 @@ import { translationService } from '../services/translation.service';
 
 const router = Router();
 
-import { PartnerSchema } from '@shared/schemas/partners';
+import { PartnerSchema, PartnerInputSchema } from '@shared/schemas/partners';
 import { isModerator, canApprovePartner, canEditPartner } from '../../../shared/permissions';
 import { paginate } from '../utils/pagination';
 
@@ -269,7 +269,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // POST /partners - Propose Partner
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const data = PartnerSchema.parse(req.body);
+        const data = PartnerInputSchema.parse(req.body);
 
         // All created partners start as PROPOSED
         const initialStatus = 'PROPOSED';
@@ -287,6 +287,10 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
         const docRef = await db.collection('partners').add(partnerData);
         const newPartner = await docRef.get();
+
+        // Index the new partner
+        const createdPartnerData = { id: docRef.id, ...newPartner.data() };
+        aiService.indexEntity(docRef.id, 'partner', createdPartnerData).catch(e => console.error('Index Error:', e));
 
         // Auto-create approval ticket if proposed
         if (initialStatus === 'PROPOSED') {
@@ -347,8 +351,16 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
                 [`translations.${lang}`]: data,
                 updatedAt: new Date().toISOString()
             });
+            // Should we index translations? Currently we index main content. 
+            // If main content didn't change, we skip. 
+            // FUTURE: Support multilingual indexing.
         } else {
             await docRef.update(data);
+
+            // Re-index updated partner
+            const updatedDoc = await docRef.get();
+            const updatedData = { id: updatedDoc.id, ...updatedDoc.data() };
+            aiService.indexEntity(updatedDoc.id, 'partner', updatedData).catch(e => console.error('Index Update Error:', e));
         }
         res.json({ success: true });
     } catch (error) {

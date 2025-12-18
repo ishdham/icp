@@ -73,7 +73,7 @@ const AiImportDialog: React.FC<AiImportDialogProps> = ({ open, onClose, onImport
             }
         } catch (error: any) {
             console.error('Extraction failed:', error);
-            const message = error.response?.data?.error || 'Failed to generate form. Please try again.';
+            const message = error.response?.data?.details || error.response?.data?.error || 'Failed to generate form. Please try again.';
             alert(message);
         } finally {
             setLoading(false);

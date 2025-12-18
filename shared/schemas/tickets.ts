@@ -1,12 +1,8 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-export const TicketSchema = z.object({
-    id: z.string().describe('ID').readonly().optional(),
-    createdByUserId: z.string().describe('Creator ID').readonly().optional(),
-    createdByUserName: z.string().describe('Created By').readonly().optional(),
-    createdAt: z.string().describe('Created At').readonly().optional(),
-    updatedAt: z.string().describe('Updated At').readonly().optional(),
+// Base fields
+const TicketBase = {
     title: z.string().describe('Title'),
     description: z.string().describe('Description'),
     solutionId: z.string().describe('Solution ID').optional(),
@@ -23,9 +19,34 @@ export const TicketSchema = z.object({
         createdAt: z.string().datetime().describe('Date'),
         userId: z.string().describe('User')
     })).describe('Comments').readonly().optional()
+};
+
+// System fields
+const SystemFields = {
+    id: z.string().describe('ID').readonly(),
+    createdByUserId: z.string().describe('Creator ID').readonly(),
+    createdByUserName: z.string().describe('Created By').readonly(),
+    createdAt: z.string().describe('Created At').readonly(),
+    updatedAt: z.string().describe('Updated At').readonly(),
+};
+
+// Input Schema
+export const TicketInputSchema = z.object({
+    ...TicketBase,
+    id: SystemFields.id.optional(),
+    createdByUserId: SystemFields.createdByUserId.optional(),
+    createdByUserName: SystemFields.createdByUserName.optional(),
+    createdAt: SystemFields.createdAt.optional(),
+    updatedAt: SystemFields.updatedAt.optional(),
 });
 
-const generatedSchema = zodToJsonSchema(TicketSchema as any, 'ticketSchema');
+// Entity Schema
+export const TicketSchema = z.object({
+    ...TicketBase,
+    ...SystemFields
+});
+
+const generatedSchema = zodToJsonSchema(TicketInputSchema as any, 'ticketSchema');
 export const ticketJsonSchema = (generatedSchema as any).definitions.ticketSchema;
 
 export const ticketUiSchema = {

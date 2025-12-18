@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const router = Router();
 
-import { TicketSchema } from '@shared/schemas/tickets';
+import { TicketSchema, TicketInputSchema } from '@shared/schemas/tickets';
 import { canSeeTickets, canEditTickets } from '../../../shared/permissions';
 import { paginate } from '../utils/pagination';
 
@@ -66,7 +66,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 // POST /tickets
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        const data = TicketSchema.parse(req.body);
+        const data = TicketInputSchema.parse(req.body);
 
         const ticketData = {
             ...data,
@@ -131,8 +131,38 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
             const ticketData = ticketDoc.data();
             if (ticketData?.type === 'SOLUTION_APPROVAL' && ticketData.solutionId) {
                 await db.collection('solutions').doc(ticketData.solutionId).update({ status: 'APPROVED' });
+                // Update Index
+                try {
+                    const solDoc = await db.collection('solutions').doc(ticketData.solutionId).get();
+                    if (solDoc.exists) {
+                        const solData = { id: solDoc.id, ...solDoc.data() };
+                        // We import aiService dynamically or ensure it is imported at top.
+                        // Ideally we should inject it or import it.
+                        // Assuming imported as 'aiService' from '../services/ai.service' or similar.
+                        // Check imports above. If not imported, we need to add import. 
+                        // But I can't check imports here easily without reading whole file again. 
+                        // 'tickets.ts' usually imports db. Let's assume I need to check imports.
+                        // Wait, I can see imports in previous `view_file`.
+                        // 'tickets.ts' did NOT import aiService.
+                        // So I must add import too.
+                        await require('../services/ai.service').aiService.indexEntity(solDoc.id, 'solution', solData);
+                    }
+                } catch (idxErr) {
+                    console.error('Failed to strict-index solution on approval:', idxErr);
+                }
+
             } else if (ticketData?.type === 'PARTNER_APPROVAL' && ticketData.partnerId) {
                 await db.collection('partners').doc(ticketData.partnerId).update({ status: 'APPROVED' });
+                // Update Index
+                try {
+                    const pDoc = await db.collection('partners').doc(ticketData.partnerId).get();
+                    if (pDoc.exists) {
+                        const pData = { id: pDoc.id, ...pDoc.data() };
+                        await require('../services/ai.service').aiService.indexEntity(pDoc.id, 'partner', pData);
+                    }
+                } catch (idxErr) {
+                    console.error('Failed to strict-index partner on approval:', idxErr);
+                }
             }
         }
 

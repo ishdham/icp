@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import JsonForm from './JsonForm';
 import { translateSchema, translateUiSchema } from '../../utils/schemaTranslator';
+import { getDirtyValues } from '../../utils/diff';
 import {
     Button,
     Paper,
@@ -105,13 +106,41 @@ const DetailView: React.FC<DetailViewProps> = ({
 
         if (onSave) {
             try {
-                await onSave(currentData);
+                let payload = currentData;
+
+                // If it's an update (has ID) and we have initial data to compare against
+                if (!readOnly && initialData.id) {
+                    const changes = getDirtyValues(initialData, currentData);
+                    if (Object.keys(changes).length === 0) {
+                        console.log("No changes detected.");
+                        setIsEditing(false);
+                        return;
+                    }
+                    payload = changes;
+                }
+
+                await onSave(payload);
                 setIsEditing(false);
-                // Update local state with the cleaned data
+                // We don't perform setData(payload) because payload might be partial.
+                // We expect parent to refresh data or for initialData prop to change.
                 setData(currentData);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Save failed", error);
-                alert("Failed to save changes.");
+                // Check if it's a backend validation error (Zod)
+                if (error.response?.data?.error) {
+                    const errData = error.response.data.error;
+                    // If Zod error array
+                    if (Array.isArray(errData)) {
+                        const formatted = errData.map((e: any) => `${e.path.join('.')} - ${e.message}`).join('\n');
+                        alert(`Server Validation Failed:\n${formatted}`);
+                    } else {
+                        // Generic string error
+                        alert(`Save Failed: ${errData}`);
+                    }
+                } else {
+                    alert("Failed to save changes. Please try again.");
+                }
+                // Do NOT close edit mode, so user can fix it
             }
         }
     };

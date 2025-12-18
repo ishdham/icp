@@ -8,16 +8,23 @@ export class SearchSolutionsUseCase {
         private aiService: IAIService
     ) { }
 
-    async execute(query: string, options: { limit?: number; filters?: any } = {}): Promise<Solution[]> {
+    async execute(query: string, options: { limit?: number; filters?: any; mode?: 'semantic' | 'fuzzy' } = {}): Promise<Solution[]> {
         const limit = options.limit || 20;
+        const mode = options.mode || 'semantic'; // Default to semantic
 
         if (!query || query.trim() === '') {
             return this.solutionRepo.list(options.filters);
         }
 
-        // Semantic Search
-        const vector = await this.aiService.generateEmbedding(query);
-        const results = await this.solutionRepo.searchByVector(vector, limit, options.filters);
+        let results;
+        if (mode === 'fuzzy') {
+            // Fast In-Memory Fuzzy Search
+            results = await this.solutionRepo.searchByFuzzy(query, limit, options.filters);
+        } else {
+            // Deep Semantic Search
+            const vector = await this.aiService.generateEmbedding(query);
+            results = await this.solutionRepo.searchByVector(vector, limit, options.filters);
+        }
 
         return results.map(r => r.item);
     }

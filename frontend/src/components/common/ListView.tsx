@@ -19,6 +19,7 @@ import {
     Tooltip
 } from '@mui/material';
 import { Search, FirstPage, LastPage, ChevronLeft, ChevronRight } from '@mui/icons-material';
+import debounce from 'lodash.debounce';
 
 interface Column {
     key: string;
@@ -35,6 +36,7 @@ interface ListViewProps {
     loading?: boolean;
     // Search
     onSearch?: (query: string) => void;
+    onLiveSearch?: (query: string) => void; // Triggered on Type (debounced)
     // Pagination
     page?: number;
     totalPages?: number;
@@ -57,6 +59,7 @@ const ListView: React.FC<ListViewProps> = ({
     onCreate,
     loading = false,
     onSearch,
+    onLiveSearch,
     page = 1,
     totalPages = 1,
     totalItems,
@@ -69,11 +72,36 @@ const ListView: React.FC<ListViewProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredItems, setFilteredItems] = useState(items);
 
+    // Debounced Live Search
+    const debouncedLiveSearch = React.useMemo(
+        () => debounce((query: string) => {
+            if (onLiveSearch) onLiveSearch(query);
+        }, 300),
+        [onLiveSearch]
+    );
+
+    useEffect(() => {
+        return () => {
+            debouncedLiveSearch.cancel();
+        };
+    }, [debouncedLiveSearch]);
+
+    // Handle Input Change
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setSearchTerm(val);
+
+        if (onLiveSearch) {
+            debouncedLiveSearch(val);
+        }
+    };
+
     // If onSearch is provided, we rely on parent to filter/search. 
     // If NOT provided, we filter locally (legacy behavior).
     useEffect(() => {
-        if (onSearch) {
-            setFilteredItems(items); // Parent handles filtering
+        if (onSearch || onLiveSearch) {
+            if (!onSearch && !onLiveSearch) setFilteredItems(items);
+            setFilteredItems(items);
             return;
         }
 
@@ -90,10 +118,11 @@ const ListView: React.FC<ListViewProps> = ({
             })
         );
         setFilteredItems(filtered);
-    }, [searchTerm, items, searchKeys, onSearch]);
+    }, [searchTerm, items, searchKeys, onSearch, onLiveSearch]);
 
     const handleSearchSubmit = (e?: React.FormEvent) => {
         e?.preventDefault();
+        debouncedLiveSearch.cancel();
         if (onSearch) {
             onSearch(searchTerm);
         }
@@ -121,9 +150,9 @@ const ListView: React.FC<ListViewProps> = ({
                 <TextField
                     fullWidth
                     variant="outlined"
-                    placeholder={onSearch ? t('list.search_placeholder') : "Filter..."}
+                    placeholder={onSearch || onLiveSearch ? t('list.search_placeholder') : "Filter..."}
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={handleInputChange}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">

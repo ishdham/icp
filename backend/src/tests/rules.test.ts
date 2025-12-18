@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { db, auth, mockCollection, mockDoc, mockGet, mockUpdate, mockWhere, mockLimit } from './mocks';
+import { db, auth, mockCollection, mockDoc, mockGet, mockUpdate, mockWhere, mockLimit, resetMocks } from './mocks';
 
 // Mock the firebase config module
 jest.mock('../config/firebase', () => ({
@@ -17,8 +17,8 @@ describe('Enforcement Rules', () => {
     let ticketCreationAddMock: jest.Mock;
 
     beforeEach(() => {
-        // Reset mocks
-        jest.clearAllMocks();
+        // Reset mocks to safe defaults
+        resetMocks();
 
         // Default auth mock
         auth.verifyIdToken.mockResolvedValue({

@@ -99,6 +99,47 @@ export class AIService {
         this.vectorStore = newVectorStore;
     }
 
+    public async upsertDocument(id: string, type: 'solution' | 'partner', data: any, content: string) {
+        if (!this.isInitialized) await this.initialize();
+
+        try {
+            const embedding = await this.generateEmbedding(content);
+            const doc: VectorDocument = {
+                id,
+                type,
+                content,
+                metadata: data,
+                embedding
+            };
+
+            const existingIndex = this.vectorStore.findIndex(d => d.id === id);
+            if (existingIndex >= 0) {
+                this.vectorStore[existingIndex] = doc;
+            } else {
+                this.vectorStore.push(doc);
+            }
+            console.log(`Upserted document ${id} (${type}) to index.`);
+        } catch (error) {
+            console.error(`Failed to upsert document ${id}:`, error);
+        }
+    }
+
+    public async removeDocument(id: string) {
+        if (!this.isInitialized) await this.initialize();
+        this.vectorStore = this.vectorStore.filter(d => d.id !== id);
+        console.log(`Removed document ${id} from index.`);
+    }
+
+    public async indexEntity(id: string, type: 'solution' | 'partner', data: any) {
+        let content = '';
+        if (type === 'solution') {
+            content = `Solution: ${data.name} (ID: ${id}). Domain: ${data.domain}. Description: ${data.description}. Value Proposition: ${data.uniqueValueProposition}.`;
+        } else if (type === 'partner') {
+            content = `Partner: ${data.organizationName} (ID: ${id}). Type: ${data.entityType || data.organisationType}. Description: ${data.description || ''}.`;
+        }
+        await this.upsertDocument(id, type, data, content);
+    }
+
     private async generateEmbedding(text: string): Promise<number[]> {
         // Cleaning text slightly
         const cleanText = text.replace(/\n/g, ' ');
@@ -230,15 +271,15 @@ export class AIService {
             
             REQUIRED INFORMATION TO GATHER:
             - Name
-            - Summary (One line)
+            - Summary (One line less than 200 characters)
             - Detailed Description
             - Unique Value Proposition (Benefit)
             - Cost and Effort
             - Return on Investment (ROI)
-            - Domain (Water, Health, Energy, Education, Livelihood, Sustainability)
-            - Status (PROPOSED, DRAFT, PENDING, APPROVED, MATURE, PILOT, REJECTED) - Default to PROPOSED
+            - Domain (One of Water, Health, Energy, Education, Livelihood, Sustainability)
+            - Status (One of PROPOSED, DRAFT, PENDING, APPROVED, MATURE, PILOT, REJECTED) - Default to PROPOSED
             - Launch Year
-            - Target Beneficiaries
+            - Target Beneficiaries (list of single phrases like Farmer, Women, Students, People with Disabilities, Amputeesetc)
             - References (Links)
 
             USER PROMPT:
@@ -301,8 +342,12 @@ export class AIService {
 
             return finalResult.output;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Extraction Error:', error);
+            // Check if it's a structural/validation error from Genkit
+            if (error.status === 'INVALID_ARGUMENT' || error.message?.includes('schema')) {
+                throw new Error(`Validation Failed: ${error.message}`);
+            }
             throw error;
         }
     }

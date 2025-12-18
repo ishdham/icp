@@ -16,4 +16,7 @@ export interface IRepository<T> {
 
     // Semantic Search Support
     searchByVector(vector: number[], limit: number, filter?: FilterOptions): Promise<SearchResult<T>[]>;
+
+    // Fuzzy Search Support (In-Memory)
+    searchByFuzzy(term: string, limit: number, filter?: FilterOptions): Promise<SearchResult<T>[]>;
 }
