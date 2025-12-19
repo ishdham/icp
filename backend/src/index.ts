@@ -1,6 +1,6 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import app from './app';
-import { aiService } from './services/ai.service';
+import { aiService } from './container';
 
 const PORT = process.env.PORT || 3000;
 

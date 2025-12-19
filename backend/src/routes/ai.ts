@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { aiService } from '../services/ai.service';
+// import { aiService } from '../services/ai.service'; // Removed direct import
+import { aiService } from '../container';
 
 const router = Router();
 

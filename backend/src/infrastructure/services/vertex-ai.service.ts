@@ -12,10 +12,10 @@ const ai = genkit({
 
 export class VertexAIService implements IAIService {
 
-    async researchTopic(topic: string): Promise<string> {
+    async researchTopic(topic: string, instructions?: string): Promise<string> {
         const researchPrompt = `
         You are an expert analyst. Research and synthesize information about: ${topic}.
-        Provide a detailed summary, key benefits, and relevant details.
+        ${instructions ? `SPECIFIC INSTRUCTIONS:\n${instructions}` : 'Provide a detailed summary, key benefits, and relevant details.'}
         Concise and professional.
         `;
 

@@ -1,21 +1,12 @@
-import { db } from '../config/firebase'; // Access firebase-admin db from config to avoid circular dependency
-import { SolutionSchema, solutionJsonSchema } from '@shared/schemas/solutions';
-import dotenv from 'dotenv';
-import { z } from 'zod';
+import { db } from '../config/firebase';
+import { SolutionSchema } from '@shared/schemas/solutions'; // Removed solutionJsonSchema if not used, or keep if needed validation but schema seems unused directly. Kept Schema for types.
+import { IAIService, ChatMessage } from '../domain/interfaces/ai.interface';
+// import { IAIService, ChatMessage } from '../domain/interfaces/ai.interface'; // Removed duplicate
+import { Solution } from '../domain/entities/solution'; // Assuming Solution entity exists or we use raw data
+import { Partner } from '../domain/entities/partner'; // Assuming Partner entity exists
+import { ZodSchema } from 'zod';
 
-// Genkit Imports
-import { genkit, z as genkitZ } from 'genkit';
-import { vertexAI, gemini15Flash, gemini15Pro, textEmbedding004 } from '@genkit-ai/vertexai';
-
-
-dotenv.config();
-
-// Initialize Genkit
-export const ai = genkit({
-    plugins: [
-        vertexAI({ location: 'us-central1', projectId: 'icp-demo-480309' }),
-    ],
-});
+// Removed direct Genkit imports
 
 // Simple in-memory vector store interface
 interface VectorDocument {
@@ -31,8 +22,7 @@ export class AIService {
     private vectorStore: VectorDocument[] = [];
     private isInitialized = false;
 
-    constructor() {
-        // Genkit is initialized globally above
+    constructor(private provider: IAIService) {
     }
 
     async initialize() {
@@ -141,14 +131,7 @@ export class AIService {
     }
 
     private async generateEmbedding(text: string): Promise<number[]> {
-        // Cleaning text slightly
-        const cleanText = text.replace(/\n/g, ' ');
-        // Using real Vertex AI Embeddings via Genkit
-        const result = await ai.embed({
-            embedder: textEmbedding004,
-            content: cleanText
-        });
-        return result[0].embedding;
+        return this.provider.generateEmbedding(text);
     }
 
     // Cosine similarity search
@@ -219,8 +202,8 @@ export class AIService {
     async chatStream(message: string, history: any[] = []) {
         if (!this.isInitialized) await this.initialize();
 
-        // 1. Search for context (Mocked for now)
-        const relevantDocs = await this.search(message, { limit: 20 }); // Returns top docs - Increased limit to 20 for better context
+        // 1. Search for context
+        const relevantDocs = await this.search(message, { limit: 20 });
         const contextText = relevantDocs.map(d => d.content).join('\n---\n');
 
         // 2. Construct System Prompt with Context
@@ -241,34 +224,21 @@ export class AIService {
         - Use standard Markdown for formatting (bold, lists, etc.).
         `;
 
-        // Genkit Format History
-        // history is [{role: 'user'|'model', content: string}]
-        // Genkit wants MessageData[]
+        // Map history to ChatMessage interface
+        const chatHistory: ChatMessage[] = history.map(h => ({
+            role: h.role === 'ai' ? 'model' : 'user',
+            content: h.content
+        }));
 
-        const { stream } = await ai.generateStream({
-            model: 'vertexai/gemini-2.5-flash',
-            prompt: message,
-            system: systemInstruction,
-            // Note: Genkit history handling is different, usually managed via flow state or passed as 'messages'.
-            // For simple streaming, we might need to construct the prompt with history or use the messages param if avail in this version.
-            // We will prepend history to prompt or use messages if supported.
-            messages: history.map(h => ({
-                role: (h.role === 'ai' ? 'model' : 'user') as 'model' | 'user',
-                content: [{ text: h.content }]
-            })),
-        });
-
-        return stream;
+        return this.provider.chatStream(systemInstruction, message, chatHistory);
     }
 
     async researchSolution(userPrompt: string) {
-        if (!this.isInitialized) await this.initialize();
+        // if (!this.isInitialized) await this.initialize(); // Research might not need vector store init? Assuming yes for now if we grounded it later, but currently pure cloud.
 
-        try {
-            // Pass 1: Grounded Research
-            const researchPrompt = `
-            You are an expert analyst. Your goal is to research and synthesize information for a "Solution" based on the user's request.
-            
+        console.log('Starting Research via Provider...');
+
+        const instructions = `
             REQUIRED INFORMATION TO GATHER:
             - Name
             - Summary (One line less than 200 characters)
@@ -282,75 +252,30 @@ export class AIService {
             - Target Beneficiaries (list of single phrases like Farmer, Women, Students, People with Disabilities, Amputeesetc)
             - References (Links)
 
-            USER PROMPT:
-            ${userPrompt}
-            
             INSTRUCTIONS:
             1. Synthesize all information into a detailed, well-structured text summary.
             2. IMPORTANT: When listing References, ONLY use public, accessible HTTP/HTTPS URLs (e.g. official websites, news articles, PDFs). Do NOT use internal search links or grounding IDs.
             3. Use at most 5 high-quality sources to ensure timely results.
-            `;
+        `;
 
-            console.log('Starting Research (Genkit)...');
-            const researchResult = await ai.generate({
-                model: 'vertexai/gemini-2.5-flash',
-                prompt: researchPrompt,
-                config: {
-                    temperature: 0.7,
-                    maxOutputTokens: 2048,
-                    googleSearchRetrieval: {}
-                }
-            });
+        const researchText = await this.provider.researchTopic(userPrompt, instructions);
 
-            return {
-                researchText: researchResult.text
-            };
-
-        } catch (error) {
-            console.error('Research Error:', error);
-            throw error;
-        }
+        return {
+            researchText
+        };
     }
 
     async extractStructuredData(researchText: string) {
-        if (!this.isInitialized) await this.initialize();
+        console.log('Starting Formatting via Provider...');
+        const RelaxedSolutionSchema = SolutionSchema.partial();
+        return this.provider.extractStructuredData(researchText, RelaxedSolutionSchema);
+    }
 
-        try {
-            const formattingPrompt = `
-            Take the following research text and reformat it exactly into the provided JSON schema.
-            
-            CRITICAL INSTRUCTIONS:
-            - For 'domain', you MUST choose ONE single value that best fits from the allowed list (Water, Health, Energy, Education, Livelihood, Sustainability). Do NOT provide a list.
-            - For 'status', you MUST choose ONE single value from the allowed list (PROPOSED, DRAFT, PENDING, APPROVED, MATURE, PILOT, REJECTED).
-            - For 'launchYear', ensure it is an integer.
-            
-            TEXT:
-            ${researchText}
-            `;
+    async translateText(text: string, targetLanguage: string): Promise<string> {
+        return this.provider.translateText(text, targetLanguage);
+    }
 
-            console.log('Starting Formatting (Genkit)...');
-
-            const RelaxedSolutionSchema = SolutionSchema.partial();
-
-            const finalResult = await ai.generate({
-                model: 'vertexai/gemini-2.5-flash',
-                prompt: formattingPrompt,
-                output: {
-                    schema: RelaxedSolutionSchema
-                }
-            });
-
-            return finalResult.output;
-
-        } catch (error: any) {
-            console.error('Extraction Error:', error);
-            // Check if it's a structural/validation error from Genkit
-            if (error.status === 'INVALID_ARGUMENT' || error.message?.includes('schema')) {
-                throw new Error(`Validation Failed: ${error.message}`);
-            }
-            throw error;
-        }
+    async translateStructured<T>(data: any, targetLanguage: string, schema?: ZodSchema<T>): Promise<T> {
+        return this.provider.translateStructured(data, targetLanguage, schema);
     }
 }
-
-export const aiService = new AIService();

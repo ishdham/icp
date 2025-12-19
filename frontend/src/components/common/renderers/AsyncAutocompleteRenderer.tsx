@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { rankWith, scopeEndsWith, isStringControl } from '@jsonforms/core';
+import { rankWith, scopeEndsWith } from '@jsonforms/core';
 import type { ControlProps } from '@jsonforms/core';
 import { withJsonFormsControlProps } from '@jsonforms/react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
@@ -119,11 +119,11 @@ const AsyncAutocompleteControl = (props: AsyncAutocompleteControlProps) => {
             loading={loading}
             disabled={!enabled}
             value={value}
-            onChange={(event: any, newValue: any | null) => {
+            onChange={(_event: any, newValue: any | null) => {
                 setValue(newValue);
                 handleChange(path, newValue ? newValue[valueKey] : null);
             }}
-            onInputChange={(event, newInputValue) => {
+            onInputChange={(_event, newInputValue) => {
                 setInputValue(newInputValue);
             }}
             renderInput={(params) => (

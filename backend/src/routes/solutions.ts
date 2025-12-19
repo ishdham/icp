@@ -9,7 +9,7 @@ import {
     aiService
 } from '../container';
 import { partnerRepository } from '../container';
-import { aiService as globalAiService } from '../services/ai.service';
+// import { aiService as globalAiService } from '../services/ai.service'; // Removed direct import
 import { translationService } from '../services/translation.service';
 
 const router = Router();
@@ -98,7 +98,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
         const result = await createSolutionUseCase.execute(req.body, req.user!);
 
         // Index newly created solution
-        globalAiService.indexEntity(result.id, 'solution', result).catch(e => console.error('Index Error:', e));
+        aiService.indexEntity(result.id, 'solution', result).catch(e => console.error('Index Error:', e));
 
         res.status(201).json(result);
     } catch (error) {
@@ -165,7 +165,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         try {
             const updated = await getSolutionUseCase.execute(req.params.id);
             if (updated) {
-                globalAiService.indexEntity(updated.id, 'solution', updated).catch(e => console.error('Index Update Error:', e));
+                aiService.indexEntity(updated.id, 'solution', updated).catch(e => console.error('Index Update Error:', e));
             }
         } catch (e) { console.error('Index fetch error', e); }
 

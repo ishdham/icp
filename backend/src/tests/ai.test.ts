@@ -9,14 +9,18 @@ jest.mock('../config/firebase', () => ({
 }));
 
 // Mock the AI service
-jest.mock('../services/ai.service', () => {
+// Mock the Container to provide mocked services
+jest.mock('../container', () => {
+    const { aiService, ...rest } = jest.requireActual('../container');
     return {
+        ...rest,
         aiService: {
             chatStream: jest.fn(),
-            extractSolution: jest.fn(), // Deprecated/Legacy
             researchSolution: jest.fn(),
             extractStructuredData: jest.fn(),
-            initialize: jest.fn(), // If needed
+            initialize: jest.fn(),
+            indexEntity: jest.fn(),
+            search: jest.fn(),
         }
     };
 });
@@ -26,9 +30,10 @@ describe('ICP AI API', () => {
         resetMocks();
         // Clear mock for chatStream
         // We need to access the mock we created
-        const { aiService } = require('../services/ai.service');
+        const { aiService } = require('../container');
         (aiService.chatStream as jest.Mock).mockReset();
-        (aiService.extractSolution as jest.Mock).mockReset();
+        (aiService.extractStructuredData as jest.Mock).mockReset();
+        (aiService.researchSolution as jest.Mock).mockReset();
     });
 
     const mockAuthUser = (uid: string) => {
@@ -43,7 +48,7 @@ describe('ICP AI API', () => {
     describe('POST /v1/ai/chat', () => {
         it('should return generated content', async () => {
             mockAuthUser('user123');
-            const { aiService } = require('../services/ai.service');
+            const { aiService } = require('../container');
 
             // Mock chatStream to return simple stream or string-like behavior
             // Since route iterates over stream, we need an async generator or similar
@@ -86,7 +91,7 @@ describe('ICP AI API', () => {
     describe('POST /v1/ai/research', () => {
         it('should return research text', async () => {
             mockAuthUser('user123');
-            const { aiService } = require('../services/ai.service');
+            const { aiService } = require('../container');
 
             (aiService.researchSolution as jest.Mock).mockResolvedValue({ researchText: 'Researched content' });
 
@@ -103,7 +108,7 @@ describe('ICP AI API', () => {
     describe('POST /v1/ai/extract-structured', () => {
         it('should return structured data on success', async () => {
             mockAuthUser('user123');
-            const { aiService } = require('../services/ai.service');
+            const { aiService } = require('../container');
 
             const mockData = { name: "Test Solution", domain: "Water" };
             (aiService.extractStructuredData as jest.Mock).mockResolvedValue(mockData);
@@ -119,7 +124,7 @@ describe('ICP AI API', () => {
 
         it('should return 400 when validation fails', async () => {
             mockAuthUser('user123');
-            const { aiService } = require('../services/ai.service');
+            const { aiService } = require('../container');
 
             // Simulate the service throwing a validation error (as implemented in step 155)
             (aiService.extractStructuredData as jest.Mock).mockRejectedValue(new Error('Validation Failed: Invalid enum value'));
@@ -136,7 +141,7 @@ describe('ICP AI API', () => {
 
         it('should return 500 for other errors', async () => {
             mockAuthUser('user123');
-            const { aiService } = require('../services/ai.service');
+            const { aiService } = require('../container');
 
             (aiService.extractStructuredData as jest.Mock).mockRejectedValue(new Error('Random failure'));
 

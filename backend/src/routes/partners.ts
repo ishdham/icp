@@ -3,7 +3,8 @@ import admin from 'firebase-admin';
 import { db } from '../config/firebase';
 import { authenticate, optionalAuthenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
-import { aiService } from '../services/ai.service';
+// import { aiService } from '../services/ai.service'; // Removed direct import
+import { aiService } from '../container';
 import { translationService } from '../services/translation.service';
 
 const router = Router();

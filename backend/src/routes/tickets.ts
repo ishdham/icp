@@ -3,6 +3,7 @@ import admin from 'firebase-admin';
 import { db } from '../config/firebase';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
+import { aiService } from '../container';
 
 const router = Router();
 
@@ -145,7 +146,7 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
                         // Wait, I can see imports in previous `view_file`.
                         // 'tickets.ts' did NOT import aiService.
                         // So I must add import too.
-                        await require('../services/ai.service').aiService.indexEntity(solDoc.id, 'solution', solData);
+                        await aiService.indexEntity(solDoc.id, 'solution', solData);
                     }
                 } catch (idxErr) {
                     console.error('Failed to strict-index solution on approval:', idxErr);
@@ -158,7 +159,7 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res: Response
                     const pDoc = await db.collection('partners').doc(ticketData.partnerId).get();
                     if (pDoc.exists) {
                         const pData = { id: pDoc.id, ...pDoc.data() };
-                        await require('../services/ai.service').aiService.indexEntity(pDoc.id, 'partner', pData);
+                        await aiService.indexEntity(pDoc.id, 'partner', pData);
                     }
                 } catch (idxErr) {
                     console.error('Failed to strict-index partner on approval:', idxErr);
