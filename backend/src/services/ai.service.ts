@@ -1,9 +1,9 @@
 import { db } from '../config/firebase';
-import { SolutionSchema } from '@shared/schemas/solutions'; // Removed solutionJsonSchema if not used, or keep if needed validation but schema seems unused directly. Kept Schema for types.
-import { IAIService, ChatMessage } from '../domain/interfaces/ai.interface';
-// import { IAIService, ChatMessage } from '../domain/interfaces/ai.interface'; // Removed duplicate
-import { Solution } from '../domain/entities/solution'; // Assuming Solution entity exists or we use raw data
-import { Partner } from '../domain/entities/partner'; // Assuming Partner entity exists
+import { SolutionSchema } from '@shared/schemas/solutions';
+import { PartnerSchema } from '@shared/schemas/partners';
+import { IAIService, ChatMessage, AiAttachment } from '../domain/interfaces/ai.interface';
+import { Solution } from '../domain/entities/solution';
+import { Partner } from '../domain/entities/partner';
 import { ZodSchema } from 'zod';
 
 // Removed direct Genkit imports
@@ -321,12 +321,77 @@ export class AIService {
         }
     }
 
+    async researchEntity(userPrompt: string, type: 'solution' | 'partner' = 'solution', attachments?: AiAttachment[]) {
+        console.log(`Starting Research for ${type}...`);
+
+        // Conflict Check
+        const detectedType = await this.detectEntityType(userPrompt, attachments);
+        let warning: string | undefined;
+
+        if (detectedType && detectedType !== type) {
+            warning = `Based on the provided info, this looks like a ${detectedType.toUpperCase()}, but you selected ${type.toUpperCase()}.`;
+        }
+
+        const instructions = this.getResearchInstructions(type);
+        const researchText = await this.provider.researchTopic(userPrompt, instructions, attachments);
+
+        return {
+            researchText,
+            warning,
+            detectedType
+        };
+    }
+
+    // Alias for backward compatibility if needed, or remove and update usage
     async researchSolution(userPrompt: string) {
-        // if (!this.isInitialized) await this.initialize(); // Research might not need vector store init? Assuming yes for now if we grounded it later, but currently pure cloud.
+        return this.researchEntity(userPrompt, 'solution');
+    }
 
-        console.log('Starting Research via Provider...');
+    private async detectEntityType(prompt: string, attachments?: AiAttachment[]): Promise<'solution' | 'partner' | undefined> {
+        // We use the prompt text for classification. 
+        // Future: could use mm-model if prompt is empty but attachment is present.
+        if (!prompt && (!attachments || attachments.length === 0)) return undefined;
 
-        const instructions = `
+        const detectionPrompt = `
+        Analyze the text below. Is it describing a "Solution" (product, technology, intervention, project) OR a "Partner" (organization, company, NGO, university)?
+        
+        Text: "${prompt}"
+        
+        Return ONLY "SOLUTION" or "PARTNER". If ambiguous, return "UNKNOWN".
+        `;
+
+        try {
+            const result = await this.provider.generateResponse(detectionPrompt);
+            const clean = result.trim().toUpperCase();
+            if (clean.includes('SOLUTION')) return 'solution';
+            if (clean.includes('PARTNER')) return 'partner';
+            return undefined;
+        } catch (e) {
+            console.warn('Entity detection failed:', e);
+            return undefined;
+        }
+    }
+
+    private getResearchInstructions(type: 'solution' | 'partner'): string {
+        if (type === 'partner') {
+            return `
+            REQUIRED INFORMATION TO GATHER:
+            - Organization Name
+            - Entity Type (One of: NGO, Social Impact Entity, Academic, Corporate)
+            - Website URL
+            - Contact Email and Phone
+            - Address (City, Country)
+            - Status (One of PROPOSED, APPROVED, REJECTED, MATURE) - Default to PROPOSED
+            - Description (Mission, key activities, background - detailed)
+            
+            INSTRUCTIONS:
+            1. Synthesize all information into a detailed summary.
+            2. Infer Entity Type from context if not explicit.
+            3. Ensure City and Country are extracted if available.
+            `;
+        }
+
+        return `
             REQUIRED INFORMATION TO GATHER:
             - Name
             - Summary (One line less than 200 characters)
@@ -345,18 +410,16 @@ export class AIService {
             2. IMPORTANT: When listing References, ONLY use public, accessible HTTP/HTTPS URLs (e.g. official websites, news articles, PDFs). Do NOT use internal search links or grounding IDs.
             3. Use at most 5 high-quality sources to ensure timely results.
         `;
-
-        const researchText = await this.provider.researchTopic(userPrompt, instructions);
-
-        return {
-            researchText
-        };
     }
 
-    async extractStructuredData(researchText: string) {
-        console.log('Starting Formatting via Provider...');
-        const RelaxedSolutionSchema = SolutionSchema.partial();
-        return this.provider.extractStructuredData(researchText, RelaxedSolutionSchema);
+    async extractStructuredData(researchText: string, type: 'solution' | 'partner' = 'solution') {
+        console.log(`Starting Formatting for ${type}...`);
+
+        if (type === 'partner') {
+            return this.provider.extractStructuredData(researchText, PartnerSchema.partial());
+        } else {
+            return this.provider.extractStructuredData(researchText, SolutionSchema.partial());
+        }
     }
 
     async translateText(text: string, targetLanguage: string): Promise<string> {

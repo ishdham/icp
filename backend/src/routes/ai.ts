@@ -38,12 +38,16 @@ router.post('/chat', async (req: Request, res: Response) => {
 
 router.post('/research', async (req: Request, res: Response) => {
     try {
-        const { prompt } = req.body;
+        const { prompt, type, attachments } = req.body;
         if (!prompt) {
             res.status(400).json({ error: 'Prompt is required' });
             return;
         }
-        const result = await aiService.researchSolution(prompt);
+
+        // Default to solution if not provided
+        const entityType = type === 'partner' ? 'partner' : 'solution';
+
+        const result = await aiService.researchEntity(prompt, entityType, attachments);
         res.json(result);
     } catch (error) {
         console.error('Error researching solution:', error);
@@ -59,12 +63,15 @@ router.post('/research', async (req: Request, res: Response) => {
 
 router.post('/extract-structured', async (req: Request, res: Response) => {
     try {
-        const { researchText } = req.body;
+        const { researchText, type } = req.body;
         if (!researchText) {
             res.status(400).json({ error: 'Research text is required' });
             return;
         }
-        const result = await aiService.extractStructuredData(researchText);
+
+        const entityType = type === 'partner' ? 'partner' : 'solution';
+
+        const result = await aiService.extractStructuredData(researchText, entityType);
         res.json(result);
     } catch (error) {
         console.error('Error extracting structured data:', error);

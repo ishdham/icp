@@ -5,10 +5,16 @@ export interface ChatMessage {
     content: string;
 }
 
+export interface AiAttachment {
+    type: 'image' | 'file';
+    content: string; // base64
+    mimeType: string;
+}
+
 export interface IAIService {
     // Research & Extraction
     generateResponse(prompt: string): Promise<string>;
-    researchTopic(topic: string, instructions?: string): Promise<string>;
+    researchTopic(topic: string, instructions?: string, attachments?: AiAttachment[]): Promise<string>;
     extractStructuredData<T>(text: string, schema: ZodSchema<T>): Promise<T>;
 
     // Chat & Embeddings

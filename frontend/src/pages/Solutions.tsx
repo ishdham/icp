@@ -307,6 +307,7 @@ const Solutions = () => {
                 open={importDialogOpen}
                 onClose={() => setImportDialogOpen(false)}
                 onImport={handleImport}
+                type="solution"
             />
         </Box>
     );

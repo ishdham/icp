@@ -14,10 +14,11 @@ const PartnerBase = {
         city: z.string().optional().describe('City'),
         country: z.string().optional().describe('Country')
     }).optional().describe('Address'),
+    description: z.string().optional().describe('Description'),
     status: z.enum(['PROPOSED', 'APPROVED', 'REJECTED', 'MATURE']).describe('Status'),
     translations: z.record(z.string(), z.object({
         organizationName: z.string().optional(),
-        description: z.string().optional(), // In case description is added later
+        description: z.string().optional(),
         // Add other translatable fields here as needed
     }).partial()).optional().describe('Translations')
 };
@@ -86,6 +87,11 @@ export const partnerUiSchema = {
                 {
                     type: 'Control',
                     scope: '#/properties/entityType'
+                },
+                {
+                    type: 'Control',
+                    scope: '#/properties/description',
+                    options: { format: 'markdown', multi: true }
                 },
                 {
                     type: 'Control',

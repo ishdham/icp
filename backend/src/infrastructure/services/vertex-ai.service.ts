@@ -1,4 +1,4 @@
-import { IAIService, ChatMessage } from '../../domain/interfaces/ai.interface';
+import { IAIService, ChatMessage, AiAttachment } from '../../domain/interfaces/ai.interface';
 import { genkit } from 'genkit';
 import { vertexAI, textEmbedding004 } from '@genkit-ai/vertexai';
 import { ZodSchema } from 'zod';
@@ -23,16 +23,30 @@ export class VertexAIService implements IAIService {
         return result.text;
     }
 
-    async researchTopic(topic: string, instructions?: string): Promise<string> {
-        const researchPrompt = `
+    async researchTopic(topic: string, instructions?: string, attachments?: AiAttachment[]): Promise<string> {
+        const textPrompt = `
         You are an expert analyst. Research and synthesize information about: ${topic}.
         ${instructions ? `SPECIFIC INSTRUCTIONS:\n${instructions}` : 'Provide a detailed summary, key benefits, and relevant details.'}
         Concise and professional.
         `;
 
+        let promptPayload: any = textPrompt;
+
+        if (attachments && attachments.length > 0) {
+            promptPayload = [
+                { text: textPrompt },
+                ...attachments.map(att => ({
+                    media: {
+                        url: att.content,
+                        contentType: att.mimeType
+                    }
+                }))
+            ];
+        }
+
         const result = await ai.generate({
             model: 'vertexai/gemini-2.5-flash',
-            prompt: researchPrompt,
+            prompt: promptPayload,
             config: {
                 temperature: 0.7,
                 maxOutputTokens: 2048,

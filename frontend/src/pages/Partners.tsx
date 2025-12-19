@@ -8,8 +8,9 @@ import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
 import { useTranslated, useTranslatedList } from '../hooks/useTranslated';
 import { Chip, Button, Box, CircularProgress } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, SmartToy } from '@mui/icons-material';
 import { canEditPartner, isModerator } from '@shared/permissions';
+import AiImportDialog from '../components/common/AiImportDialog';
 
 const Partners = () => {
     const { id } = useParams();
@@ -20,6 +21,8 @@ const Partners = () => {
     const [loading, setLoading] = useState(true);
     const [rawSelectedPartner, setRawSelectedPartner] = useState<any | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [creationData, setCreationData] = useState<any>({ status: 'PROPOSED' });
 
     // Pagination State
     const [page, setPage] = useState(1);
@@ -82,6 +85,10 @@ const Partners = () => {
             setRawSelectedPartner(null);
         }
     }, [id, partners.length]);
+
+    const handleImport = (data: any) => {
+        setCreationData((prev: any) => ({ ...prev, ...data }));
+    };
 
 
     const handleCreate = async (data: any) => {
@@ -155,9 +162,19 @@ const Partners = () => {
                 >
                     {useLanguage().t('common.back_to_list')}
                 </Button>
+                {isCreating && (
+                    <Button
+                        startIcon={<SmartToy />}
+                        variant="outlined"
+                        sx={{ ml: 2, mb: 2 }}
+                        onClick={() => setImportDialogOpen(true)}
+                    >
+                        {useLanguage().t('common.ai_import')}
+                    </Button>
+                )}
                 <DetailView
                     title={isCreating ? useLanguage().t('partners.propose_new') : useLanguage().t('partners.details')}
-                    data={selectedPartner || { status: 'PROPOSED' }}
+                    data={selectedPartner || (isCreating ? creationData : { status: 'PROPOSED' })}
                     schema={schema}
                     uischema={finalUiSchema}
                     canEdit={isCreating ? false : canEditPartner(user, selectedPartner)}
@@ -172,6 +189,12 @@ const Partners = () => {
                         {/* We could add Solutions by Partner list here later */}
                     </Box>
                 )}
+                <AiImportDialog
+                    open={importDialogOpen}
+                    onClose={() => setImportDialogOpen(false)}
+                    onImport={handleImport}
+                    type="partner"
+                />
             </Box>
         );
     }
@@ -205,20 +228,28 @@ const Partners = () => {
     ];
 
     return (
-        <ListView
-            title={useLanguage().t('partners.title')}
-            items={translatedPartners}
-            columns={columns}
-            loading={loading}
-            onSelect={(item) => navigate(`/partners/${item.id}`)}
-            onCreate={user ? () => setIsCreating(true) : undefined}
-            // Pagination & Search
-            onSearch={handleSearch}
-            page={page}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-        />
+        <Box>
+            <ListView
+                title={useLanguage().t('partners.title')}
+                items={translatedPartners}
+                columns={columns}
+                loading={loading}
+                onSelect={(item) => navigate(`/partners/${item.id}`)}
+                onCreate={user ? () => { setIsCreating(true); setCreationData({ status: 'PROPOSED' }); } : undefined}
+                // Pagination & Search
+                onSearch={handleSearch}
+                page={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+            />
+            <AiImportDialog
+                open={importDialogOpen}
+                onClose={() => setImportDialogOpen(false)}
+                onImport={handleImport}
+                type="partner"
+            />
+        </Box>
     );
 };
 
