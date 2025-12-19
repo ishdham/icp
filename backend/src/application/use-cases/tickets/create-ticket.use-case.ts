@@ -22,7 +22,12 @@ export class CreateTicketUseCase {
             // createdByEmail: user.email, // Not in schema
             createdAt: now,
             updatedAt: now,
-            comments: []
+            comments: [{
+                id: crypto.randomUUID(),
+                content: `Ticket created by ${createdByUserName} at ${new Date().toLocaleString()}`,
+                userId: user.uid,
+                createdAt: now
+            }]
         };
 
         const createdTicket = await this.ticketRepo.create(ticketData);

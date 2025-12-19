@@ -131,5 +131,26 @@ describe('Tickets API', () => {
             expect(res.status).toBe(200);
             expect(updateTicketUseCase.execute).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Updated Title' }), expect.anything());
         });
+
+        it('should allow updating comments', async () => {
+            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
+            (updateTicketUseCase.execute as jest.Mock).mockResolvedValue(undefined);
+
+            const comments = [{ id: 'c1', content: 'New Comment', userId: 'user123', createdAt: '2023-01-01' }];
+
+            const res = await request(app)
+                .put('/v1/tickets/t1')
+                .set('Authorization', 'Bearer token')
+                .send({
+                    comments
+                });
+
+            expect(res.status).toBe(200);
+            expect(updateTicketUseCase.execute).toHaveBeenCalledWith(
+                't1',
+                expect.objectContaining({ comments }),
+                expect.anything()
+            );
+        });
     });
 });

@@ -6,8 +6,11 @@ import { useLanguage } from '../context/LanguageContext';
 import ListView from '../components/common/ListView';
 import DetailView from '../components/common/DetailView';
 import { useSchema } from '../hooks/useSchema';
-import { Chip, Button, Box, CircularProgress } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import {
+    Chip, Button, Box, CircularProgress,
+    List, ListItem, ListItemAvatar, ListItemText, Avatar, TextField, Typography, Divider, IconButton
+} from '@mui/material';
+import { ArrowBack, Send, Edit } from '@mui/icons-material';
 import { canEditTickets } from '@shared/permissions';
 
 const Tickets = () => {
@@ -22,6 +25,8 @@ const Tickets = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [nextPageToken, setNextPageToken] = useState<string | null>(null);
     const [totalItems, setTotalItems] = useState<number | undefined>(undefined);
+    const [commentText, setCommentText] = useState('');
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
 
     const fetchTickets = async (pageToken?: string) => {
         setLoading(true);
@@ -112,6 +117,50 @@ const Tickets = () => {
         }
     };
 
+    const handleSaveComment = async () => {
+        if (!commentText.trim() || !selectedTicket) return;
+
+        // Use crypto.randomUUID if available, else fallback
+        const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+        const newComment = {
+            id: editingCommentId || newId,
+            content: commentText,
+            userId: user?.uid || 'anonymous',
+            createdAt: new Date().toISOString()
+        };
+
+        let updatedComments;
+        if (editingCommentId) {
+            updatedComments = (selectedTicket.comments || []).map((c: any) =>
+                c.id === editingCommentId ? { ...c, content: commentText } : c
+            );
+        } else {
+            updatedComments = [...(selectedTicket.comments || []), newComment];
+        }
+
+        try {
+            // Call API directly to avoid double alert if we want, but reuse handleUpdate for consistency
+            // For better UX, we might want to silence the alert in handleUpdate or just call client.put directly here.
+            // Let's call client.put directly to avoid "Ticket updated" alert which is generic.
+            await client.put(`/tickets/${selectedTicket.id}`, { ...selectedTicket, comments: updatedComments });
+
+            // Update local state
+            setSelectedTicket(prev => ({ ...prev, comments: updatedComments }));
+            setCommentText('');
+            setEditingCommentId(null);
+            // fetchTickets(); // background update?
+        } catch (error) {
+            console.error('Error updating comments:', error);
+            alert('Failed to save comment.');
+        }
+    };
+
+    const handleEditComment = (comment: any) => {
+        setCommentText(comment.content);
+        setEditingCommentId(comment.id);
+    };
+
     const canApprove = (user?.role === 'ADMIN' || user?.role === 'ICP_SUPPORT') &&
         selectedTicket?.status !== 'RESOLVED' &&
         (selectedTicket?.type === 'SOLUTION_APPROVAL' || selectedTicket?.type === 'PARTNER_APPROVAL');
@@ -154,6 +203,81 @@ const Tickets = () => {
                         navigate('/tickets');
                     }}
                 />
+
+                {!isCreating && selectedTicket && (
+                    <Box mt={4} p={2} bgcolor="background.paper" borderRadius={1}>
+                        <Typography variant="h6" gutterBottom>
+                            {useLanguage().t('tickets.comments') || 'Comments'}
+                        </Typography>
+                        <List>
+                            {(selectedTicket.comments || []).map((comment: any, index: number) => (
+                                <Box key={comment.id || index}>
+                                    <ListItem alignItems="flex-start"
+                                        secondaryAction={
+                                            user?.uid === comment.userId && (
+                                                <IconButton edge="end" aria-label="edit" onClick={() => handleEditComment(comment)}>
+                                                    <Edit />
+                                                </IconButton>
+                                            )
+                                        }
+                                    >
+                                        <ListItemAvatar>
+                                            <Avatar alt={comment.userId} src="/static/images/avatar/1.jpg" />
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={
+                                                <Typography variant="subtitle2" component="span">
+                                                    {comment.userId === user?.uid ? 'You' : (comment.userName || comment.userId)}
+                                                    <Typography component="span" variant="caption" color="text.secondary" ml={2}>
+                                                        {new Date(comment.createdAt).toLocaleString()}
+                                                    </Typography>
+                                                </Typography>
+                                            }
+                                            secondary={
+                                                <Typography variant="body1" color="text.primary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
+                                                    {comment.content}
+                                                </Typography>
+                                            }
+                                        />
+                                    </ListItem>
+                                    <Divider variant="inset" component="li" />
+                                </Box>
+                            ))}
+                        </List>
+                        <Box display="flex" gap={2} mt={2}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                minRows={2}
+                                variant="outlined"
+                                placeholder={useLanguage().t('tickets.add_comment') || "Add a comment..."}
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                            />
+                            <Button
+                                variant="contained"
+                                endIcon={<Send />}
+                                onClick={handleSaveComment}
+                                disabled={!commentText.trim()}
+                                sx={{ height: 'fit-content', alignSelf: 'flex-end' }}
+                            >
+                                {editingCommentId ? (useLanguage().t('common.save') || 'Save') : (useLanguage().t('common.post') || 'Post')}
+                            </Button>
+                            {editingCommentId && (
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => {
+                                        setEditingCommentId(null);
+                                        setCommentText('');
+                                    }}
+                                    sx={{ height: 'fit-content', alignSelf: 'flex-end' }}
+                                >
+                                    {useLanguage().t('common.cancel') || 'Cancel'}
+                                </Button>
+                            )}
+                        </Box>
+                    </Box>
+                )}
             </Box>
         );
     }

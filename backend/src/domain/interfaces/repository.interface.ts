@@ -22,11 +22,10 @@ export interface IRepository<T> {
 }
 
 export interface TicketComment {
-    text: string;
-    authorId?: string;
-    timestamp: string;
-    type?: string;
-    newStatus?: string;
+    id: string;
+    content: string;
+    userId: string;
+    createdAt: string;
 }
 
 export interface ITicketRepository extends IRepository<any> {

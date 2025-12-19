@@ -15,10 +15,11 @@ const TicketBase = {
     ]).describe('Ticket Type'),
     status: z.enum(['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']).describe('Status'),
     comments: z.array(z.object({
+        id: z.string().describe('ID'),
         content: z.string().describe('Message'),
         createdAt: z.string().datetime().describe('Date'),
         userId: z.string().describe('User')
-    })).describe('Comments').readonly().optional()
+    })).describe('Comments').optional()
 };
 
 // System fields
@@ -83,10 +84,6 @@ export const ticketUiSchema = {
             scope: '#/properties/description',
             options: { multi: true }
         },
-        {
-            type: 'Control',
-            scope: '#/properties/comments',
-            options: { readonly: true }
-        }
+
     ]
 };

@@ -25,11 +25,10 @@ export class ResolveTicketUseCase {
 
         // Add Comment
         const newComment = {
-            text: comment,
-            authorId: user.uid,
-            timestamp: new Date().toISOString(),
-            type: 'STATUS_CHANGE',
-            newStatus: status
+            id: crypto.randomUUID(),
+            content: `${comment} (Status changed to ${status})`,
+            userId: user.uid,
+            createdAt: new Date().toISOString()
         };
         await this.ticketRepo.addComment(id, newComment);
 
