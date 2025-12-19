@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, TextField, Typography, Paper, IconButton, CircularProgress, Chip } from '@mui/material';
-import { Send, SmartToy, Person } from '@mui/icons-material';
+import { Box, TextField, Typography, Paper, IconButton, CircularProgress, Chip, Button } from '@mui/material';
+import { Send, SmartToy, Person, Add } from '@mui/icons-material';
 import client from '../../api/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -25,6 +25,11 @@ const AiChatView = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    const handleNewChat = () => {
+        setMessages([]);
+        setInput('');
+    };
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -94,6 +99,21 @@ const AiChatView = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', maxWidth: '1000px', margin: '0 auto' }}>
+            {/* Header */}
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SmartToy color="primary" /> Innovation Co-Pilot
+                </Typography>
+                <Button
+                    variant="outlined"
+                    startIcon={<Add />}
+                    onClick={handleNewChat}
+                    size="small"
+                >
+                    New Chat
+                </Button>
+            </Box>
+
             {/* Messages Area */}
             <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {messages.length === 0 && (

@@ -20,29 +20,44 @@ jest.mock('firebase-admin', () => ({
     }
 }));
 
+// Mock Container
+jest.mock('../container', () => ({
+    searchPartnersUseCase: { execute: jest.fn() },
+    createPartnerUseCase: { execute: jest.fn() },
+    getPartnerUseCase: { execute: jest.fn() },
+    updatePartnerUseCase: { execute: jest.fn() },
+    searchSolutionsUseCase: { execute: jest.fn() },
+    aiService: { indexEntity: jest.fn().mockResolvedValue(undefined) }
+}));
+
+import {
+    searchPartnersUseCase,
+    createPartnerUseCase,
+    getPartnerUseCase,
+    updatePartnerUseCase
+} from '../container';
+
 describe('Partners API', () => {
     beforeEach(() => {
         resetMocks();
+        (searchPartnersUseCase.execute as jest.Mock).mockReset();
+        (createPartnerUseCase.execute as jest.Mock).mockReset();
+        (getPartnerUseCase.execute as jest.Mock).mockReset();
+        (updatePartnerUseCase.execute as jest.Mock).mockReset();
     });
 
     describe('GET /v1/partners', () => {
         it('should return a list of partners', async () => {
-            // Mock Partners List (Anonymous)
-            // 1. Count
-            // 2. Items
-            mockGet
-                .mockResolvedValueOnce({ data: () => ({ count: 1 }) })
-                .mockResolvedValueOnce({
-                    docs: [
-                        { id: '1', data: () => ({ organizationName: 'Org 1', status: 'MATURE' }) }
-                    ]
-                });
+            (searchPartnersUseCase.execute as jest.Mock).mockResolvedValue([
+                { id: '1', organizationName: 'Org 1', status: 'MATURE' }
+            ]);
 
             const res = await request(app).get('/v1/partners');
 
             expect(res.status).toBe(200);
             expect(res.body.items).toHaveLength(1);
             expect(res.body.items[0].organizationName).toBe('Org 1');
+            expect(searchPartnersUseCase.execute).toHaveBeenCalled();
         });
     });
 
@@ -50,12 +65,10 @@ describe('Partners API', () => {
         it('should force status to PROPOSED and create ticket for regular users', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
 
-            // Auth User
-            mockGet.mockResolvedValueOnce({ exists: true, data: () => ({ role: 'REGULAR' }) });
-
-            mockAdd.mockResolvedValue({
+            (createPartnerUseCase.execute as jest.Mock).mockResolvedValue({
                 id: 'p1',
-                get: jest.fn().mockResolvedValue({ data: () => ({}) })
+                organizationName: 'My NGO',
+                status: 'PROPOSED'
             });
 
             await request(app)
@@ -64,60 +77,44 @@ describe('Partners API', () => {
                 .send({
                     organizationName: 'My NGO',
                     entityType: 'NGO',
-                    status: 'APPROVED' // Trying to sneak in APPROVED
+                    status: 'APPROVED'
                 });
 
-            expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
-                status: 'PROPOSED'
-            }));
-
-            // Verify Ticket creation
-            expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
-                type: 'PARTNER_APPROVAL',
-                partnerId: 'p1'
-            }));
+            expect(createPartnerUseCase.execute).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    organizationName: 'My NGO',
+                    status: 'APPROVED'
+                }),
+                expect.objectContaining({ uid: 'user123' })
+            );
         });
     });
 
     describe('PUT /v1/partners/:id', () => {
         it('should prevent regular users from updating status', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
-
-            mockGet
-                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'REGULAR' }) }) // Auth
-                .mockResolvedValueOnce({ // Partner Doc
-                    exists: true,
-                    data: () => ({ status: 'PROPOSED' })
-                });
+            (updatePartnerUseCase.execute as jest.Mock).mockRejectedValue(new Error('Unauthorized to change status'));
 
             const res = await request(app)
                 .put('/v1/partners/p1')
                 .set('Authorization', 'Bearer token')
-                .send({
-                    status: 'APPROVED'
-                });
+                .send({ status: 'APPROVED' });
 
             expect(res.status).toBe(403);
         });
 
         it('should allow ADMIN to update status', async () => {
             mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
-
-            mockGet
-                .mockResolvedValueOnce({ exists: true, data: () => ({ role: 'ADMIN' }) }) // Auth
-                .mockResolvedValueOnce({ // Partner Doc
-                    exists: true,
-                    data: () => ({ status: 'PROPOSED' })
-                });
+            (updatePartnerUseCase.execute as jest.Mock).mockResolvedValue(undefined);
+            (getPartnerUseCase.execute as jest.Mock).mockResolvedValue({ id: 'p1', status: 'APPROVED' });
 
             const res = await request(app)
                 .put('/v1/partners/p1')
                 .set('Authorization', 'Bearer token')
-                .send({
-                    status: 'APPROVED'
-                });
+                .send({ status: 'APPROVED' });
 
             expect(res.status).toBe(200);
+            expect(updatePartnerUseCase.execute).toHaveBeenCalled();
         });
     });
 });

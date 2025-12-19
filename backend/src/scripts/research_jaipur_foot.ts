@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 // Load environment variables immediately
 dotenv.config();
 
-import { aiService } from '../services/ai.service';
+import { aiService } from '../container';
 
 async function main() {
     console.log("=== Starting Manual Research for 'Jaipur Foot' ===");

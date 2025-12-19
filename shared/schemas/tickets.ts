@@ -39,6 +39,7 @@ export const TicketInputSchema = z.object({
     createdAt: SystemFields.createdAt.optional(),
     updatedAt: SystemFields.updatedAt.optional(),
 });
+export type TicketInput = z.infer<typeof TicketInputSchema>;
 
 // Entity Schema
 export const TicketSchema = z.object({

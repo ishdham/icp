@@ -46,3 +46,39 @@ export const searchSolutionsUseCase = new SearchSolutionsUseCase(solutionReposit
 // So it needs `IAIService`. `aiProvider` fits.
 export const getSolutionUseCase = new GetSolutionUseCase(solutionRepository);
 export const updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository, partnerRepository);
+
+import { CreatePartnerUseCase } from './application/use-cases/partners/create-partner.use-case';
+import { SearchPartnersUseCase } from './application/use-cases/partners/search-partners.use-case';
+import { GetPartnerUseCase } from './application/use-cases/partners/get-partner.use-case';
+import { UpdatePartnerUseCase } from './application/use-cases/partners/update-partner.use-case';
+
+export const createPartnerUseCase = new CreatePartnerUseCase(partnerRepository, ticketRepository);
+export const searchPartnersUseCase = new SearchPartnersUseCase(partnerRepository, aiProvider);
+export const getPartnerUseCase = new GetPartnerUseCase(partnerRepository);
+export const updatePartnerUseCase = new UpdatePartnerUseCase(partnerRepository);
+
+import { CreateTicketUseCase } from './application/use-cases/tickets/create-ticket.use-case';
+import { GetTicketUseCase } from './application/use-cases/tickets/get-ticket.use-case';
+import { ListTicketsUseCase } from './application/use-cases/tickets/list-tickets.use-case';
+import { UpdateTicketUseCase } from './application/use-cases/tickets/update-ticket.use-case';
+import { ResolveTicketUseCase } from './application/use-cases/tickets/resolve-ticket.use-case';
+
+export const createTicketUseCase = new CreateTicketUseCase(ticketRepository);
+export const getTicketUseCase = new GetTicketUseCase(ticketRepository);
+export const listTicketsUseCase = new ListTicketsUseCase(ticketRepository);
+export const updateTicketUseCase = new UpdateTicketUseCase(ticketRepository);
+export const resolveTicketUseCase = new ResolveTicketUseCase(ticketRepository, solutionRepository, partnerRepository, aiService);
+
+import { SyncUserUseCase } from './application/use-cases/users/sync-user.use-case';
+import { GetUserUseCase } from './application/use-cases/users/get-user.use-case';
+import { UpdateUserUseCase } from './application/use-cases/users/update-user.use-case';
+import { ManageBookmarksUseCase } from './application/use-cases/users/manage-bookmarks.use-case';
+import { ListUsersUseCase } from './application/use-cases/users/list-users.use-case';
+import { ManageAssociationsUseCase } from './application/use-cases/users/manage-associations.use-case';
+
+export const syncUserUseCase = new SyncUserUseCase(userRepository);
+export const getUserUseCase = new GetUserUseCase(userRepository);
+export const updateUserUseCase = new UpdateUserUseCase(userRepository);
+export const manageBookmarksUseCase = new ManageBookmarksUseCase(userRepository, solutionRepository);
+export const listUsersUseCase = new ListUsersUseCase(userRepository);
+export const manageAssociationsUseCase = new ManageAssociationsUseCase(userRepository, partnerRepository, ticketRepository);

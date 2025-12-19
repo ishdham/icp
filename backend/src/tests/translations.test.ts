@@ -1,13 +1,17 @@
 import { translationService } from '../services/translation.service';
-import { ai } from '../services/ai.service';
+import { aiService as ai } from '../container';
 import { db } from '../config/firebase';
 
 // Mock AI Service (Genkit)
-jest.mock('../services/ai.service', () => ({
-    ai: {
-        generate: jest.fn(),
-    }
-}));
+jest.mock('../services/ai.service', () => {
+    return {
+        AIService: jest.fn().mockImplementation(() => ({
+            translateStructured: jest.fn(),
+            translateText: jest.fn(),
+            // Add other methods if needed by translation service
+        }))
+    };
+});
 
 // Mock Firebase
 jest.mock('../config/firebase', () => ({
@@ -40,7 +44,7 @@ describe('TranslationService', () => {
             const result = await translationService.getTranslatedEntity('1', 'solutions', 'hi');
 
             expect(result.name).toBe('Translated Name');
-            expect(ai.generate).not.toHaveBeenCalled();
+            expect(ai.translateStructured).not.toHaveBeenCalled();
         });
 
         it('should trigger AI translation if cache missing and save it', async () => {
@@ -61,16 +65,14 @@ describe('TranslationService', () => {
             (db.collection as jest.Mock).mockReturnValue({ doc: mockDoc });
 
             // Mock AI Response
-            (ai.generate as jest.Mock).mockResolvedValue({
-                output: { // Genkit returns output
-                    name: 'Hindi Name',
-                    returnOnInvestment: 'High ROI'
-                }
+            (ai.translateStructured as jest.Mock).mockResolvedValue({
+                name: 'Hindi Name',
+                returnOnInvestment: 'High ROI'
             });
 
             const result = await translationService.getTranslatedEntity('1', 'solutions', 'hi');
 
-            expect(ai.generate).toHaveBeenCalled();
+            expect(ai.translateStructured).toHaveBeenCalled();
 
             // Verify returnOnInvestment is included in the merged result
             expect(result.name).toBe('Hindi Name');
@@ -95,8 +97,8 @@ describe('TranslationService', () => {
             (db.collection as jest.Mock).mockReturnValue({ doc: mockDoc });
 
             // Mock AI
-            (ai.generate as jest.Mock).mockResolvedValue({
-                output: { name: 'Translated' }
+            (ai.translateStructured as jest.Mock).mockResolvedValue({
+                name: 'Translated'
             });
 
             const items = [
@@ -118,7 +120,7 @@ describe('TranslationService', () => {
             const result = await translationService.ensureTranslation(itemToTranslate, 'solutions', 'hi');
 
             expect(result.name).toBe('Translated');
-            expect(ai.generate).toHaveBeenCalled();
+            expect(ai.translateStructured).toHaveBeenCalled();
             expect(mockSet).toHaveBeenCalled();
         });
     });

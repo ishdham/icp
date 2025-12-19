@@ -40,6 +40,7 @@ export const PartnerInputSchema = z.object({
     createdAt: SystemFields.createdAt.optional(),
     updatedAt: SystemFields.updatedAt.optional(),
 });
+export type PartnerInput = z.infer<typeof PartnerInputSchema>;
 
 // Entity Schema: System fields are required (for backend/types)
 export const PartnerSchema = z.object({

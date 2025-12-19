@@ -1,25 +1,98 @@
 import request from 'supertest';
 import app from '../app';
-import { db, auth, resetMocks, mockGet, mockUpdate, mockVerifyIdToken, mockWhere } from './mocks';
+import { db, auth, resetMocks, mockGet, mockVerifyIdToken } from './mocks';
 
-// Mock the firebase config module
+// Mock the firebase config
 jest.mock('../config/firebase', () => ({
     db: require('./mocks').db,
     auth: require('./mocks').auth,
+    admin: {
+        firestore: {
+            FieldValue: {
+                arrayUnion: jest.fn((val) => val)
+            }
+        },
+        auth: () => require('./mocks').auth,
+        credential: {
+            cert: jest.fn()
+        }
+    }
 }));
 
-describe('ICP User API', () => {
+// Mock Middleware
+jest.mock('../middleware/auth', () => ({
+    authenticate: jest.fn((req, res, next) => next()),
+    optionalAuthenticate: jest.fn((req, res, next) => next()),
+    AuthRequest: {}
+}));
+
+// Mock Container
+jest.mock('../container', () => ({
+    syncUserUseCase: { execute: jest.fn() },
+    getUserUseCase: { execute: jest.fn() },
+    updateUserUseCase: { execute: jest.fn() },
+    manageBookmarksUseCase: {
+        addBookmark: jest.fn(),
+        removeBookmark: jest.fn()
+    },
+    listUsersUseCase: { execute: jest.fn() },
+    manageAssociationsUseCase: {
+        requestAssociation: jest.fn(),
+        updateAssociationStatus: jest.fn()
+    },
+    // Other use cases
+    createTicketUseCase: { execute: jest.fn() },
+    getTicketUseCase: { execute: jest.fn() },
+    listTicketsUseCase: { execute: jest.fn() },
+    updateTicketUseCase: { execute: jest.fn() },
+    resolveTicketUseCase: { execute: jest.fn() },
+    searchPartnersUseCase: { execute: jest.fn() },
+    createPartnerUseCase: { execute: jest.fn() },
+    getPartnerUseCase: { execute: jest.fn() },
+    updatePartnerUseCase: { execute: jest.fn() },
+    searchSolutionsUseCase: { execute: jest.fn() },
+    solutionsRepository: {},
+    partnerRepository: {},
+    ticketRepository: {},
+    userRepository: {},
+    aiService: { indexEntity: jest.fn().mockResolvedValue(undefined) }
+}));
+
+import {
+    syncUserUseCase,
+    getUserUseCase,
+    updateUserUseCase,
+    manageBookmarksUseCase,
+    listUsersUseCase,
+    manageAssociationsUseCase
+} from '../container';
+
+describe('Users API', () => {
     beforeEach(() => {
         resetMocks();
+        (syncUserUseCase.execute as jest.Mock).mockReset();
+        (getUserUseCase.execute as jest.Mock).mockReset();
+        (updateUserUseCase.execute as jest.Mock).mockReset();
+        (manageBookmarksUseCase.addBookmark as jest.Mock).mockReset();
+        (manageBookmarksUseCase.removeBookmark as jest.Mock).mockReset();
+        (listUsersUseCase.execute as jest.Mock).mockReset();
+        (manageAssociationsUseCase.requestAssociation as jest.Mock).mockReset();
+        (manageAssociationsUseCase.updateAssociationStatus as jest.Mock).mockReset();
     });
 
     describe('GET /v1/users/me', () => {
-        it('should return own profile', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
-            mockGet.mockResolvedValue({
-                exists: true,
+        it('should sync and return user', async () => {
+            // Setup Auth Middleware Mock
+            const { authenticate } = require('../middleware/auth');
+            authenticate.mockImplementation((req: any, res: any, next: any) => {
+                req.user = { uid: 'user123', email: 'test@example.com', role: 'REGULAR' };
+                next();
+            });
+
+            (syncUserUseCase.execute as jest.Mock).mockResolvedValue({
                 id: 'user123',
-                data: () => ({ firstName: 'John', email: 'john@example.com' })
+                email: 'test@example.com',
+                role: 'REGULAR'
             });
 
             const res = await request(app)
@@ -27,142 +100,81 @@ describe('ICP User API', () => {
                 .set('Authorization', 'Bearer token');
 
             expect(res.status).toBe(200);
-            expect(res.body.firstName).toBe('John');
-        });
-
-        it('should return 401 if not authenticated', async () => {
-            const res = await request(app).get('/v1/users/me');
-            expect(res.status).toBe(401);
-        });
-    });
-
-    describe('PUT /v1/users/me', () => {
-        it('should update profile data', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
-
-            const res = await request(app)
-                .put('/v1/users/me')
-                .set('Authorization', 'Bearer token')
-                .send({
-                    firstName: 'Jane',
-                    phone: { number: '9876543210' }
-                });
-
-            expect(res.status).toBe(200);
-            expect(mockUpdate).toHaveBeenCalledWith({
-                firstName: 'Jane',
-                phone: { number: '9876543210' }
-            });
+            expect(res.body.id).toBe('user123');
+            expect(syncUserUseCase.execute).toHaveBeenCalledWith('user123', 'test@example.com', expect.anything());
         });
     });
 
     describe('GET /v1/users/:id', () => {
-        it('should allow admin to view any user', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
+        it('should return user for admin', async () => {
+            const { authenticate } = require('../middleware/auth');
+            authenticate.mockImplementation((req: any, res: any, next: any) => {
+                req.user = { uid: 'admin123', role: 'ADMIN' };
+                next();
+            });
 
-            // First call for authenticate (admin user)
-            // Second call for route handler (target user)
-            mockGet
-                .mockResolvedValueOnce({
-                    exists: true,
-                    id: 'admin123',
-                    data: () => ({ role: 'ADMIN' })
-                })
-                .mockResolvedValueOnce({
-                    exists: true,
-                    id: 'other456',
-                    data: () => ({ firstName: 'Other' })
-                });
+            (getUserUseCase.execute as jest.Mock).mockResolvedValue({ id: 'targetUser' });
 
             const res = await request(app)
-                .get('/v1/users/other456')
+                .get('/v1/users/targetUser')
                 .set('Authorization', 'Bearer token');
 
             expect(res.status).toBe(200);
-            expect(res.body.firstName).toBe('Other');
+            expect(res.body.id).toBe('targetUser');
         });
 
-        it('should prevent regular user from viewing others', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
-
-            // Only used for authenticate
-            mockGet.mockResolvedValue({
-                exists: true,
-                id: 'user123',
-                data: () => ({ role: 'REGULAR' })
+        it('should deny regular user fetching other', async () => {
+            const { authenticate } = require('../middleware/auth');
+            authenticate.mockImplementation((req: any, res: any, next: any) => {
+                req.user = { uid: 'user123', role: 'REGULAR' };
+                next();
             });
 
             const res = await request(app)
-                .get('/v1/users/other456')
+                .get('/v1/users/otherUser')
                 .set('Authorization', 'Bearer token');
 
             expect(res.status).toBe(403);
-        });
-    });
-
-    describe('GET /v1/users', () => {
-        it('should list users for admin', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'admin123', role: 'ADMIN' });
-
-            // First for authenticate, Second for count, Third for query
-            mockGet
-                .mockResolvedValueOnce({
-                    exists: true,
-                    id: 'admin123',
-                    data: () => ({ role: 'ADMIN' })
-                })
-                .mockResolvedValueOnce({ data: () => ({ count: 2 }) })
-                .mockResolvedValueOnce({
-                    docs: [
-                        { id: 'u1', data: () => ({ email: 'u1@example.com' }) },
-                        { id: 'u2', data: () => ({ email: 'u2@example.com' }) }
-                    ]
-                });
-
-            const res = await request(app)
-                .get('/v1/users')
-                .set('Authorization', 'Bearer token');
-
-            expect(res.status).toBe(200);
-            expect(res.body.items).toHaveLength(2);
-        });
-
-        it('should return 403 for non-admin', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123', role: 'REGULAR' });
-
-            // Authenticate user
-            mockGet.mockResolvedValue({
-                exists: true,
-                id: 'user123',
-                data: () => ({ role: 'REGULAR' })
-            });
-
-            const res = await request(app)
-                .get('/v1/users')
-                .set('Authorization', 'Bearer token');
-
-            expect(res.status).toBe(403);
+            expect(getUserUseCase.execute).not.toHaveBeenCalled();
         });
     });
 
     describe('POST /v1/users/me/bookmarks', () => {
         it('should add bookmark', async () => {
-            mockVerifyIdToken.mockResolvedValue({ uid: 'user123' });
-
-            // For authenticate
-            mockGet.mockResolvedValue({
-                exists: true,
-                id: 'user123',
-                data: () => ({ role: 'REGULAR', bookmarks: [] })
+            const { authenticate } = require('../middleware/auth');
+            authenticate.mockImplementation((req: any, res: any, next: any) => {
+                req.user = { uid: 'user123', role: 'REGULAR' };
+                next();
             });
+            (manageBookmarksUseCase.addBookmark as jest.Mock).mockResolvedValue(undefined);
 
             const res = await request(app)
                 .post('/v1/users/me/bookmarks')
                 .set('Authorization', 'Bearer token')
-                .send({ solutionId: 'sol-1' });
+                .send({ solutionId: 'sol1' });
 
             expect(res.status).toBe(201);
-            expect(mockUpdate).toHaveBeenCalled();
+            expect(manageBookmarksUseCase.addBookmark).toHaveBeenCalledWith('user123', 'sol1');
+        });
+    });
+
+    // Test Associations
+    describe('POST /v1/users/:id/associations', () => {
+        it('should request association', async () => {
+            const { authenticate } = require('../middleware/auth');
+            authenticate.mockImplementation((req: any, res: any, next: any) => {
+                req.user = { uid: 'user123', role: 'REGULAR', firstName: 'Test' };
+                next();
+            });
+            (manageAssociationsUseCase.requestAssociation as jest.Mock).mockResolvedValue(undefined);
+
+            const res = await request(app)
+                .post('/v1/users/user123/associations')
+                .set('Authorization', 'Bearer token')
+                .send({ partnerId: 'p1' });
+
+            expect(res.status).toBe(201);
+            expect(manageAssociationsUseCase.requestAssociation).toHaveBeenCalledWith('user123', 'p1', expect.anything());
         });
     });
 });

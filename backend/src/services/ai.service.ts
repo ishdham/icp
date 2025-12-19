@@ -53,8 +53,8 @@ export class AIService {
         // For MVP we will do them serially or in small batches.
 
         for (const sol of solutions) {
-            // Only embed meaningful content if needed, but for search we want all.
-            const content = `Solution: ${sol.name} (ID: ${sol.id}). Domain: ${sol.domain}. Description: ${sol.description}. Value Proposition: ${sol.uniqueValueProposition}.`;
+            // Enrichment: Include more fields for better grounding
+            const content = this.composeContent('solution', sol);
             // Simplified embedding generation
             try {
                 const embedding = await this.generateEmbedding(content);
@@ -71,7 +71,7 @@ export class AIService {
         }
 
         for (const partner of partners) {
-            const content = `Partner: ${partner.organizationName} (ID: ${partner.id}). Type: ${partner.organisationType}. Description: ${partner.description}.`;
+            const content = this.composeContent('partner', partner);
             try {
                 const embedding = await this.generateEmbedding(content);
                 newVectorStore.push({
@@ -121,13 +121,17 @@ export class AIService {
     }
 
     public async indexEntity(id: string, type: 'solution' | 'partner', data: any) {
-        let content = '';
-        if (type === 'solution') {
-            content = `Solution: ${data.name} (ID: ${id}). Domain: ${data.domain}. Description: ${data.description}. Value Proposition: ${data.uniqueValueProposition}.`;
-        } else if (type === 'partner') {
-            content = `Partner: ${data.organizationName} (ID: ${id}). Type: ${data.entityType || data.organisationType}. Description: ${data.description || ''}.`;
-        }
+        const content = this.composeContent(type, { ...data, id });
         await this.upsertDocument(id, type, data, content);
+    }
+
+    private composeContent(type: 'solution' | 'partner', data: any): string {
+        if (type === 'solution') {
+            return `Solution: ${data.name || ''} (ID: ${data.id}). Domain: ${data.domain || ''}. Status: ${data.status || ''}. Description: ${data.detail || data.description || ''}. Benefit: ${data.benefit || data.uniqueValueProposition || ''}. Cost: ${data.costAndEffort || ''}. ROI: ${data.returnOnInvestment || ''}.`
+        } else {
+            const loc = data.address ? `${data.address.city || ''}, ${data.address.country || ''}` : '';
+            return `Partner: ${data.organizationName || ''} (ID: ${data.id}). Type: ${data.entityType || data.organisationType || ''}. Status: ${data.status || ''}. Location: ${loc}. Description: ${data.description || ''}.`;
+        }
     }
 
     private async generateEmbedding(text: string): Promise<number[]> {
@@ -200,13 +204,29 @@ export class AIService {
 
 
     async chatStream(message: string, history: any[] = []) {
-        if (!this.isInitialized) await this.initialize();
+        console.time('RAG-Total');
+        if (!this.isInitialized) {
+            console.time('RAG-Init');
+            await this.initialize();
+            console.timeEnd('RAG-Init');
+        }
 
-        // 1. Search for context
-        const relevantDocs = await this.search(message, { limit: 20 });
-        const contextText = relevantDocs.map(d => d.content).join('\n---\n');
+        // 0. Contextualize Query (Rewrite based on history)
+        console.time('RAG-RefineQuery');
+        const refinedQuery = await this.generateRefinedQuery(message, history);
+        console.timeEnd('RAG-RefineQuery');
+        console.log(`[RAG] Original: "${message}" -> Refined: "${refinedQuery}"`);
 
-        // 2. Construct System Prompt with Context
+        // 1. Search with Refined Query
+        console.time('RAG-Search');
+        const relevantDocs = await this.search(refinedQuery, { limit: 15 }); // Increased limit slightly
+
+        // 2. Format Context using RICH METADATA (not just similarity index content)
+        const contextText = relevantDocs.map(d => this.formatContext(d)).join('\n---\n');
+        console.timeEnd('RAG-Search');
+
+
+        // 3. Construct System Prompt with Context
         const systemInstruction = `You are a helpful AI assistant for the ICP (Innovation Co-Pilot) platform.
         Your goal is to help users find solutions and partners based on the Context provided below.
         
@@ -230,7 +250,75 @@ export class AIService {
             content: h.content
         }));
 
-        return this.provider.chatStream(systemInstruction, message, chatHistory);
+        console.timeEnd('RAG-Total');
+        return this.provider.chatStream(systemInstruction, refinedQuery, chatHistory);
+    }
+
+    private async generateRefinedQuery(message: string, history: any[]): Promise<string> {
+        if (!history || history.length === 0) return message;
+
+        const recentHistory = history.slice(-3); // Optimization: Reduce to last 3 turns
+        const conversationText = recentHistory.map(h => `${h.role === 'ai' ? 'Assistant' : 'User'}: ${h.content}`).join('\n');
+
+        const prompt = `
+        Given the following conversation history and the user's latest message, rewrite the user's message to be a standalone search query that captures all necessary context (like entities mentioned previously).
+        
+        Chat History:
+        ${conversationText}
+        
+        Latest User Message: "${message}"
+        
+        Standalone Search Query (just the query text, no quotes):
+        `;
+
+        try {
+            // Optimization: Timeout after 1.5s to prevent perceived slowness. Flash model should be fast.
+            const timeoutPromise = new Promise<string>((_, reject) =>
+                setTimeout(() => reject(new Error('Refinement timeout')), 1500)
+            );
+
+            const refinementPromise = this.provider.generateResponse(prompt);
+
+            const refined = await Promise.race([refinementPromise, timeoutPromise]);
+            return refined.trim() || message;
+        } catch (e) {
+            console.log('Query refinement skipped/failed:', e instanceof Error ? e.message : e);
+            return message;
+        }
+    }
+
+    private formatContext(doc: VectorDocument): string {
+        const d = doc.metadata;
+        if (doc.type === 'solution') {
+            return `
+            TYPE: Solution
+            ID: ${doc.id}
+            NAME: ${d.name}
+            STATUS: ${d.status}
+            DOMAIN: ${d.domain}
+            SUMMARY: ${d.summary}
+            DESCRIPTION: ${d.detail || d.description}
+            BENEFIT: ${d.benefit || d.uniqueValueProposition}
+            COST: ${d.costAndEffort}
+            ROI: ${d.returnOnInvestment}
+            LAUNCH YEAR: ${d.launchYear}
+            TARGET: ${Array.isArray(d.targetBeneficiaries) ? d.targetBeneficiaries.join(', ') : d.targetBeneficiaries}
+            `;
+        } else {
+            const addr = d.address ? `${d.address.city}, ${d.address.country}` : 'Unknown';
+            const contact = d.contact ? `Email: ${d.contact.email}` : '';
+            return `
+            TYPE: Partner
+            ID: ${doc.id}
+            NAME: ${d.organizationName}
+            STATUS: ${d.status}
+            ENTITY TYPE: ${d.entityType || d.organisationType}
+            LOCATION: ${addr}
+            WEBSITE: ${d.websiteUrl}
+            CONTACT: ${contact}
+            DESCRIPTION: ${d.description}
+            `;
+        }
     }
 
     async researchSolution(userPrompt: string) {

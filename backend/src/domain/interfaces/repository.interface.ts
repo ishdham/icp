@@ -20,3 +20,22 @@ export interface IRepository<T> {
     // Fuzzy Search Support (In-Memory)
     searchByFuzzy(term: string, limit: number, filter?: FilterOptions): Promise<SearchResult<T>[]>;
 }
+
+export interface TicketComment {
+    text: string;
+    authorId?: string;
+    timestamp: string;
+    type?: string;
+    newStatus?: string;
+}
+
+export interface ITicketRepository extends IRepository<any> {
+    addComment(ticketId: string, comment: TicketComment): Promise<void>;
+}
+
+export interface IUserRepository extends IRepository<any> {
+    addBookmark(userId: string, bookmark: any): Promise<void>;
+    removeBookmark(userId: string, solutionId: string): Promise<void>;
+    updateAssociation(userId: string, association: any): Promise<void>;
+    // Generic 'get' covers getting profile.
+}

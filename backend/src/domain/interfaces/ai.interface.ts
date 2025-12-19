@@ -7,6 +7,7 @@ export interface ChatMessage {
 
 export interface IAIService {
     // Research & Extraction
+    generateResponse(prompt: string): Promise<string>;
     researchTopic(topic: string, instructions?: string): Promise<string>;
     extractStructuredData<T>(text: string, schema: ZodSchema<T>): Promise<T>;
 

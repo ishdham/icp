@@ -1,29 +1,46 @@
 import { Router, Response } from 'express';
-import { db, auth } from '../config/firebase';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { z } from 'zod';
-import admin from 'firebase-admin';
+import {
+    getUserUseCase,
+    updateUserUseCase,
+    listUsersUseCase,
+    manageBookmarksUseCase,
+    manageAssociationsUseCase,
+    syncUserUseCase
+} from '../container';
+import { UserInputSchema } from '@shared/schemas/users';
+import { User } from '../domain/entities/user';
+import { db } from '../config/firebase'; // Keep for enrichment if Use Case doesn't fetch nested strictly
 
 const router = Router();
-
-import { UserSchema, UserInputSchema } from '@shared/schemas/users';
-import { paginate } from '../utils/pagination';
 
 // GET /users/me
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const uid = req.user?.uid;
         if (!uid) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+            return res.status(401).json({ error: 'Unauthorized' });
         }
-        const doc = await db.collection('users').doc(uid).get();
-        if (!doc.exists) {
-            res.status(404).json({ error: 'User profile not found' });
-            return;
-        }
-        res.json({ uid: doc.id, ...doc.data() });
+
+        // Sync or Get
+        // If profile doesn't exist, we might want to sync.
+        // SyncUserUseCase handles create-if-not-exist logic efficiently.
+        // Ideally Middleware did validation, but Sync ensures DB record exists.
+        // Let's usage `syncUserUseCase` to ensure latest record is returned/created.
+        // Passes implicit req.user info (from Auth Middleware decoding).
+
+        // Construct partial User from Auth Token claims if available?
+        // req.user has: uid, email, role, etc.
+        const user = await syncUserUseCase.execute(uid, req.user?.email, {
+            firstName: req.user?.firstName || '', // Usually standard claims don't have names unless custom. 
+            // If auth middleware populates standard fields from Firebase Auth token, usage them.
+            // Otherwise, just sync basics.
+        });
+
+        res.json(user);
     } catch (error) {
+        console.error('Error fetching/syncing user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -32,17 +49,18 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
 router.put('/me', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const uid = req.user?.uid;
-        if (!uid) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
+        if (!uid) return res.status(401).json({ error: 'Unauthorized' });
+
         const data = UserInputSchema.partial().parse(req.body);
-        await db.collection('users').doc(uid).update(data);
+        await updateUserUseCase.execute(uid, data, req.user as unknown as User);
         res.json({ success: true });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ error: error.issues });
+        } else if (error instanceof Error && error.message.includes('Unauthorized')) {
+            res.status(403).json({ error: error.message });
         } else {
+            console.error('Error updating me:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
@@ -52,96 +70,80 @@ router.put('/me', authenticate, async (req: AuthRequest, res: Response) => {
 router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        // Allow if Admin or if requesting own profile
         if (req.user?.role !== 'ADMIN' && req.user?.uid !== id) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const doc = await db.collection('users').doc(id).get();
-        if (!doc.exists) {
-            return res.status(404).json({ error: 'User not found' });
-        }
+        const user = await getUserUseCase.execute(id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
 
-        res.json({ id: doc.id, ...doc.data() });
+        res.json(user);
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// PUT /users/:id - Update user
+// PUT /users/:id - Update user (Admin or Self)
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        // Allow if Admin or if updating own profile
-        if (req.user?.role !== 'ADMIN' && req.user?.uid !== id) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
-        const data = req.body;
-
-        // Prevent regular users from changing their own role
-        if (req.user?.role !== 'ADMIN' && data.role && data.role !== req.user.role) {
-            return res.status(403).json({ error: 'Cannot change own role' });
-        }
-
-        await db.collection('users').doc(id).update(data);
-
-        if (data.role && req.user?.role === 'ADMIN') {
-            await auth.setCustomUserClaims(id, { role: data.role });
-        }
-
+        await updateUserUseCase.execute(id, req.body, req.user as unknown as User);
         res.json({ success: true });
     } catch (error) {
-        console.error('Error updating user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        if (error instanceof Error && error.message.includes('Unauthorized')) {
+            res.status(403).json({ error: error.message });
+        } else {
+            console.error('Error updating user:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 });
 
 // GET /users/me/bookmarks
-console.log('Bookmarks route'); // Debug
+// Logic moved to Use Case? No, `ManageBookmarks` is for mutations.
+// List bookmarks is query.
+// We can use `getUserUseCase` to get bookmarks array, then enrich.
+// Or create `GetBookmarksUseCase`. For now, inline enrichment logic is acceptable for Query,
+// or generic `GetUser` returns full object including bookmarks array.
 router.get('/me/bookmarks', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const uid = req.user?.uid;
-        const { limit = '20', offset = '0' } = req.query; // Offset based for array
+        if (!uid) return res.status(401).json({ error: 'Unauthorized' });
+
+        const user = await getUserUseCase.execute(uid);
+        const bookmarks = user?.bookmarks || [];
+
+        // Sorting / Slicing
+        const { limit = '20', offset = '0' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
         const offsetNum = parseInt(offset as string) || 0;
 
-        if (!uid) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-        const userDoc = await db.collection('users').doc(uid).get();
-        const bookmarks = userDoc.data()?.bookmarks || [];
-
-        // Sort by bookmarkedAt desc
         bookmarks.sort((a: any, b: any) => new Date(b.bookmarkedAt).getTime() - new Date(a.bookmarkedAt).getTime());
+        const sliced = bookmarks.slice(offsetNum, offsetNum + limitNum);
 
-        // Slice
-        const slicedBookmarks = bookmarks.slice(offsetNum, offsetNum + limitNum);
-
-        // Enrich with Solution Names
-        const enrichedBookmarks = await Promise.all(slicedBookmarks.map(async (b: any) => {
-            if (b.solutionId) {
-                try {
+        // Enrichment (Infra dependency here is DB access... ideally Use Case handles this)
+        // But for MVP Refactor, keeping enrichment here is safer than building complex Use Case for enrichment right now.
+        // Valid CLEAN way: `GetEnrichedBookmarksUseCase`.
+        // Let's do inline for expedience given task constraints, verifying functionality.
+        const enriched = await Promise.all(sliced.map(async (b: any) => {
+            try {
+                if (b.solutionId) {
                     const solDoc = await db.collection('solutions').doc(b.solutionId).get();
-                    if (solDoc.exists) {
-                        return { ...b, solutionName: solDoc.data()?.name || 'Unknown' };
-                    }
-                } catch (e) {
-                    console.error(`Failed to fetch solution for bookmark ${b.solutionId}`, e);
+                    if (solDoc.exists) return { ...b, solutionName: solDoc.data()?.name || 'Unknown' };
                 }
-            }
+            } catch (e) { }
             return { ...b, solutionName: 'Unknown' };
         }));
 
         res.json({
-            items: enrichedBookmarks,
+            items: enriched,
             total: bookmarks.length,
             limit: limitNum,
             offset: offsetNum
         });
     } catch (error) {
+        console.error('Error getting bookmarks:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -151,20 +153,16 @@ router.post('/me/bookmarks', authenticate, async (req: AuthRequest, res: Respons
     try {
         const uid = req.user?.uid;
         const { solutionId } = req.body;
-        if (!uid || !solutionId) {
-            res.status(400).json({ error: 'Missing solutionId' });
-            return;
-        }
+        if (!uid || !solutionId) return res.status(400).json({ error: 'Missing solutionId' });
 
-        await db.collection('users').doc(uid).update({
-            bookmarks: admin.firestore.FieldValue.arrayUnion({
-                solutionId,
-                bookmarkedAt: new Date().toISOString()
-            })
-        });
+        await manageBookmarksUseCase.addBookmark(uid, solutionId);
         res.status(201).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        if (error instanceof Error && error.message.includes('not found')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 });
 
@@ -173,246 +171,73 @@ router.delete('/me/bookmarks/:solutionId', authenticate, async (req: AuthRequest
     try {
         const uid = req.user?.uid;
         const { solutionId } = req.params;
+        if (!uid) return res.status(401).json({ error: 'Unauthorized' });
 
-        // Note: Removing from array of objects is tricky in Firestore if we don't have the exact object.
-        // We might need to read, filter, and write back, or change structure to map.
-        // For now, let's assume we read-modify-write.
-
-        const userRef = db.collection('users').doc(uid!);
-        await db.runTransaction(async (t) => {
-            const doc = await t.get(userRef);
-            const bookmarks = doc.data()?.bookmarks || [];
-            const newBookmarks = bookmarks.filter((b: any) => b.solutionId !== solutionId);
-            t.update(userRef, { bookmarks: newBookmarks });
-        });
-
+        await manageBookmarksUseCase.removeBookmark(uid, solutionId);
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// GET /users - List Users (Admin Only)
+// GET /users - List (Admin)
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
-        if (req.user?.role !== 'ADMIN') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
+        if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Unauthorized' });
 
         const { role, q, limit = '20', page = '1' } = req.query;
         const limitNum = parseInt(limit as string) || 20;
         const pageNum = parseInt(page as string) || 1;
         const offset = (pageNum - 1) * limitNum;
 
-        let query: admin.firestore.Query = db.collection('users');
+        const result = await listUsersUseCase.execute({
+            limit: limitNum,
+            offset,
+            filters: { role: role as string },
+            search: q as string
+        });
 
-        if (role) {
-            query = query.where('role', '==', role);
-        }
-
-        // Use new pagination
-        const paged = await paginate(query, limitNum, offset);
-        let items = paged.items;
-        let total = paged.total;
-        let totalPages = paged.totalPages;
-
-        // In-memory search (Applied AFTER pagination for now, AI search later)
-        if (q) {
-            const search = (q as string).toLowerCase();
-            items = items.filter((u: any) =>
-                u.email?.toLowerCase().includes(search) ||
-                u.firstName?.toLowerCase().includes(search) ||
-                u.lastName?.toLowerCase().includes(search)
-            );
-        }
-
-        res.json({ items, total, page: pageNum, totalPages });
+        res.json({ items: result.items, total: result.total, page: pageNum, totalPages: Math.ceil(result.total / limitNum) });
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error listing users:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// PUT /users/:id - Edit User (Admin Only)
-router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
-    try {
-        if (req.user?.role !== 'ADMIN') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
-        const { id } = req.params;
-        const data = req.body;
-
-        // Prevent modifying sensitive fields if necessary, but for now allow full edit
-        // Ideally validate with Zod, but reusing UserSchema might be too strict if we want to edit roles
-
-        await db.collection('users').doc(id).update(data);
-
-        // If role is changed, we might need to update Custom Claims too?
-        // For this MVP, we'll assume the 'role' in Firestore is the source of truth for the UI,
-        // but for actual security, Custom Claims need to be updated.
-        if (data.role) {
-            await auth.setCustomUserClaims(id, { role: data.role });
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error updating user:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// POST /users/:id/associations - Request Association
+// POST /users/:id/associations
 router.post('/:id/associations', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { partnerId } = req.body;
+        if (!partnerId) return res.status(400).json({ error: 'Missing partnerId' });
 
-        if (!partnerId) {
-            return res.status(400).json({ error: 'Missing partnerId' });
-        }
-
-        // Allow if requesting for self
-        if (req.user?.uid !== id) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
-        // Check if partner exists
-        const partnerDoc = await db.collection('partners').doc(partnerId).get();
-        if (!partnerDoc.exists) {
-            return res.status(404).json({ error: 'Partner not found' });
-        }
-
-        const userRef = db.collection('users').doc(id);
-
-        await db.runTransaction(async (t) => {
-            const userDoc = await t.get(userRef);
-            if (!userDoc.exists) throw new Error('User not found');
-
-            const userData = userDoc.data();
-            const associations = userData?.associatedPartners || [];
-
-            // Check if already associated
-            const existing = associations.find((a: any) => a.partnerId === partnerId);
-            if (existing) {
-                if (existing.status === 'REJECTED') {
-                    // Start fresh? Or throw? Let's allow retry.
-                } else {
-                    res.status(400).json({ error: 'Association already exists or pending' });
-                    return; // Early return in transaction handler? No, throw to exit or manage logic outside. 
-                    // Actually, can't express res inside transaction easily. 
-                }
-            }
-
-            // We need to handle this logic more cleanly.
-        });
-
-        // Simplified: ArrayUnion doesn't work well for "updates" or "checks" inside arrays of objects if we want uniqueness by ID.
-        // We have to read-modify-write.
-
-        await db.runTransaction(async (t) => {
-            const userDoc = await t.get(userRef);
-            const userData = userDoc.data();
-            const associations = userData?.associatedPartners || [];
-
-            // Check if already exists
-            const index = associations.findIndex((a: any) => a.partnerId === partnerId);
-
-            const newAssociation = {
-                partnerId,
-                status: 'PENDING',
-                requestedAt: new Date().toISOString()
-            };
-
-            if (index > -1) {
-                const current = associations[index];
-                if (current.status === 'PENDING' || current.status === 'APPROVED') {
-                    throw new Error('ALREADY_EXISTS');
-                }
-                // Override if REJECTED
-                associations[index] = newAssociation;
-            } else {
-                associations.push(newAssociation);
-            }
-
-            t.update(userRef, { associatedPartners: associations });
-        });
-
-        // Create a ticket for admins to approve
-        // We'll create a generic ticket for now.
-        const partnerName = partnerDoc.data()?.organizationName;
-        const userName = req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : 'Unknown';
-
-        await db.collection('tickets').add({
-            title: `Association Request: ${userName} - ${partnerName}`,
-            description: `User ${userName} (${req.user?.email}) requested association with Partner ${partnerName}`,
-            type: 'ASSOCIATION_APPROVAL', // We might need to add this type to schema/tickets.ts if strict, or handled conceptually
-            status: 'NEW',
-            relatedUserId: id,
-            relatedPartnerId: partnerId,
-            createdByUserId: req.user?.uid,
-            createdAt: new Date().toISOString(),
-            comments: [],
-            ticketId: `TKT-${Date.now()}`
-        });
-
+        await manageAssociationsUseCase.requestAssociation(id, partnerId, req.user as unknown as User);
         res.status(201).json({ success: true });
-    } catch (error: any) {
-        if (error.message === 'ALREADY_EXISTS') {
-            res.status(400).json({ error: 'Association already pending or approved' });
-        } else {
-            console.error('Error requesting association:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.includes('Unauthorized')) return res.status(403).json({ error: error.message });
+            if (error.message.includes('not found')) return res.status(404).json({ error: error.message });
+            if (error.message.includes('already exists')) return res.status(400).json({ error: error.message });
         }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// PUT /users/:id/associations/:partnerId - Approve/Reject (Admin/Support)
+// PUT /users/:id/associations/:partnerId
 router.put('/:id/associations/:partnerId', authenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { id, partnerId } = req.params;
-        const { status } = req.body; // APPROVED or REJECTED
+        const { status } = req.body;
 
-        if (!['APPROVED', 'REJECTED'].includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
-        }
+        if (!['APPROVED', 'REJECTED'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
-        // Check permissions: Admin or Support
-        if (req.user?.role !== 'ADMIN' && req.user?.role !== 'ICP_SUPPORT') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
-        const userRef = db.collection('users').doc(id);
-
-        await db.runTransaction(async (t) => {
-            const userDoc = await t.get(userRef);
-            if (!userDoc.exists) throw new Error('User not found');
-
-            const userData = userDoc.data();
-            const associations = userData?.associatedPartners || [];
-
-            const index = associations.findIndex((a: any) => a.partnerId === partnerId);
-            if (index === -1) {
-                throw new Error('ASSOCIATION_NOT_FOUND');
-            }
-
-            associations[index] = {
-                ...associations[index],
-                status,
-                approvedAt: new Date().toISOString()
-            };
-
-            t.update(userRef, { associatedPartners: associations });
-        });
-
+        await manageAssociationsUseCase.updateAssociationStatus(id, partnerId, status, req.user as unknown as User);
         res.json({ success: true });
-    } catch (error: any) {
-        if (error.message === 'ASSOCIATION_NOT_FOUND') {
-            res.status(404).json({ error: 'Association request not found' });
-        } else {
-            console.error('Error updating association:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.includes('Unauthorized')) return res.status(403).json({ error: error.message });
         }
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 

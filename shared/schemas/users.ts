@@ -42,6 +42,7 @@ export const UserInputSchema = z.object({
     createdAt: SystemFields.createdAt.optional(),
     updatedAt: SystemFields.updatedAt.optional(),
 });
+export type UserInput = z.infer<typeof UserInputSchema>;
 
 // Entity Schema
 export const UserSchema = z.object({

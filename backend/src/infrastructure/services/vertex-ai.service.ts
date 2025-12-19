@@ -12,6 +12,17 @@ const ai = genkit({
 
 export class VertexAIService implements IAIService {
 
+    async generateResponse(prompt: string): Promise<string> {
+        const result = await ai.generate({
+            model: 'vertexai/gemini-2.5-flash',
+            prompt: prompt,
+            config: {
+                temperature: 0.7,
+            }
+        });
+        return result.text;
+    }
+
     async researchTopic(topic: string, instructions?: string): Promise<string> {
         const researchPrompt = `
         You are an expert analyst. Research and synthesize information about: ${topic}.
